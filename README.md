@@ -1,6 +1,6 @@
 # DesktopMemo 桌面便签
 
-> 一个功能强大、界面简洁的Windows桌面便签应用程序
+> 一个简单的Windows桌面便签应用程序
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-purple)
 ![Platform](https://img.shields.io/badge/Platform-Windows-blue)
@@ -8,7 +8,7 @@
 
 ## 📋 项目简介
 
-DesktopMemo 是一个基于 WPF 技术开发的桌面便签应用。它旨在为用户提供一个简洁、易用的便签管理工具，帮助用户在 Windows 桌面上快速记录和查看重要信息。
+DesktopMemo 是一个基于 WPF 技术开发的桌面便签应用，提供了丰富的窗口管理功能和便签管理能力。无论是日常记事、工作备忘还是灵感记录，都能为您提供便捷的解决方案。
 
 ## ✨ 主要功能
 
@@ -138,6 +138,7 @@ dotnet publish --configuration Release --output ./publish
 
 ## 🎯 更新意向
 
+- [ ] 尽可能减少存储占用
 - [ ] 添加更多主题颜色
 - [ ] 优化UI布局
 
