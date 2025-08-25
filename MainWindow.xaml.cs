@@ -1290,7 +1290,13 @@ namespace DesktopMemo
                 {
                     if (enabled)
                     {
-                        string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                        string exePath = GetExecutablePath();
+                        if (string.IsNullOrEmpty(exePath))
+                        {
+                            System.Windows.MessageBox.Show("无法获取程序路径，开机自启动设置失败。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+                        
                         key.SetValue("DesktopMemo", exePath);
                         if (StatusText != null)
                         {
@@ -1310,6 +1316,56 @@ namespace DesktopMemo
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show($"设置开机自启动失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 获取当前可执行文件的完整路径
+        /// </summary>
+        private string GetExecutablePath()
+        {
+            try
+            {
+                // .NET 6+ 推荐的方法，适用于单文件发布
+                string? processPath = Environment.ProcessPath;
+                if (!string.IsNullOrEmpty(processPath) && System.IO.File.Exists(processPath))
+                {
+                    return processPath;
+                }
+
+                // 备用方法1：使用Process.MainModule
+                var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+                string? mainModulePath = currentProcess.MainModule?.FileName;
+                if (!string.IsNullOrEmpty(mainModulePath) && System.IO.File.Exists(mainModulePath))
+                {
+                    return mainModulePath;
+                }
+
+                // 备用方法2：使用Assembly.Location（适用于非单文件发布）
+                string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                if (!string.IsNullOrEmpty(assemblyLocation) && System.IO.File.Exists(assemblyLocation))
+                {
+                    return assemblyLocation;
+                }
+
+                // 备用方法3：使用命令行参数
+                string[] args = Environment.GetCommandLineArgs();
+                if (args.Length > 0)
+                {
+                    string firstArg = args[0];
+                    if (System.IO.File.Exists(firstArg))
+                    {
+                        return System.IO.Path.GetFullPath(firstArg);
+                    }
+                }
+
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不抛出异常
+                System.Diagnostics.Debug.WriteLine($"获取可执行文件路径时出错: {ex.Message}");
+                return string.Empty;
             }
         }
         
