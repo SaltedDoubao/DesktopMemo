@@ -373,3 +373,8 @@ bld/
 publish*/
 cache/
 Data/
+
+# User data cleanup scripts (not for git repository)
+clean_user_data.bat
+clean_user_data.ps1
+清理说明.txt
