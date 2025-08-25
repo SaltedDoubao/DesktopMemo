@@ -218,7 +218,7 @@ namespace DesktopMemo
             if (AppInfoText != null)
             {
                 var appDataDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-                AppInfoText.Text = $"版本：1.0 | 数据目录：{appDataDir}";
+                AppInfoText.Text = $"版本：1.2.0 | 数据目录：{appDataDir}";
             }
             
             // 更新状态信息
