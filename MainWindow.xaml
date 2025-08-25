@@ -922,7 +922,7 @@
                                         <Ellipse Grid.Column="0" Width="6" Height="6" Fill="#FF4CAF50" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                         <TextBlock x:Name="StatusText" Grid.Column="1" Text="就绪" Foreground="#B0FFFFFF" FontSize="12"/>
                                     </Grid>
-                                    <TextBlock x:Name="AppInfoText" Text="版本：1.0" Foreground="#90FFFFFF" FontSize="11" Margin="14,6,0,0"/>
+                                    <TextBlock x:Name="AppInfoText" Text="版本：1.2.0" Foreground="#90FFFFFF" FontSize="11" Margin="14,6,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
