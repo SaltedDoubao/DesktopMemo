@@ -50,6 +50,7 @@ namespace DesktopMemo
         
         // 退出提示设置
         private bool _showExitPrompt = true; // 默认显示退出提示
+        private bool _showDeletePrompt = true; // 默认显示删除提示
         private bool _isHandlingActivation = false;
         private bool _isClickThroughEnabled = false;
         private bool _isSettingsPanelVisible = false;
@@ -228,20 +229,6 @@ namespace DesktopMemo
             
             // 初始化位置相关控件
             InitializePositionControls();
-            
-            // 设置自动恢复位置复选框状态
-            if (AutoRestorePositionCheckBox != null)
-            {
-                // 暂时移除事件处理，避免触发
-                AutoRestorePositionCheckBox.Checked -= AutoRestorePositionCheckBox_Checked;
-                AutoRestorePositionCheckBox.Unchecked -= AutoRestorePositionCheckBox_Unchecked;
-                
-                AutoRestorePositionCheckBox.IsChecked = _autoRestorePositionEnabled;
-                
-                // 重新添加事件处理
-                AutoRestorePositionCheckBox.Checked += AutoRestorePositionCheckBox_Checked;
-                AutoRestorePositionCheckBox.Unchecked += AutoRestorePositionCheckBox_Unchecked;
-            }
         }
 
         // Windows消息常量
@@ -554,6 +541,14 @@ namespace DesktopMemo
                 SaveSettingsToDisk();
                 _notifyIcon.ShowBalloonTip(2000, "设置已更新", "已重新启用退出提示", Forms.ToolTipIcon.Info);
             };
+            
+            var deletePromptItem = new Forms.ToolStripMenuItem("🗑️ 重新启用删除提示");
+            deletePromptItem.Click += (s, e) => 
+            {
+                _showDeletePrompt = true;
+                SaveSettingsToDisk();
+                _notifyIcon.ShowBalloonTip(2000, "设置已更新", "已重新启用删除确认提示", Forms.ToolTipIcon.Info);
+            };
 
             var exitItem = new Forms.ToolStripMenuItem("❌ 退出");
             exitItem.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold);
@@ -566,7 +561,7 @@ namespace DesktopMemo
                 separator2,
                 toolsGroup,
                 separator3,
-                aboutItem, exitPromptItem, exitItem
+                aboutItem, exitPromptItem, deletePromptItem, exitItem
             });
 
             _notifyIcon.ContextMenuStrip = menu;
@@ -919,6 +914,20 @@ namespace DesktopMemo
             {
                 // 关闭设置面板，返回主页面
                 ToggleSettingsPanel();
+            }
+        }
+
+        private void MainContentArea_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // 如果设置面板可见，点击主内容区域关闭设置面板
+            if (_isSettingsPanelVisible)
+            {
+                // 检查点击的不是设置按钮本身，避免点击设置按钮时立即关闭
+                if (e.Source != SettingsToggle)
+                {
+                    ToggleSettingsPanel();
+                    e.Handled = true; // 阻止事件继续传播
+                }
             }
         }
 
@@ -1571,6 +1580,7 @@ namespace DesktopMemo
             public string NoteContent { get; init; } = string.Empty;
             public bool ShowExitPrompt { get; init; } = true;
             public bool WindowPinned { get; init; } = false;
+            public bool ShowDeletePrompt { get; init; } = true;
         }
         
         /// <summary>
@@ -1582,20 +1592,6 @@ namespace DesktopMemo
             {
                 CustomXTextBox.Text = ((int)Left).ToString();
                 CustomYTextBox.Text = ((int)Top).ToString();
-            }
-            
-            // 设置自动恢复位置复选框状态
-            if (AutoRestorePositionCheckBox != null)
-            {
-                // 暂时移除事件处理，避免触发
-                AutoRestorePositionCheckBox.Checked -= AutoRestorePositionCheckBox_Checked;
-                AutoRestorePositionCheckBox.Unchecked -= AutoRestorePositionCheckBox_Unchecked;
-                
-                AutoRestorePositionCheckBox.IsChecked = _autoRestorePositionEnabled;
-                
-                // 重新添加事件处理
-                AutoRestorePositionCheckBox.Checked += AutoRestorePositionCheckBox_Checked;
-                AutoRestorePositionCheckBox.Unchecked += AutoRestorePositionCheckBox_Unchecked;
             }
             
             UpdateCurrentPositionDisplay();
@@ -1868,6 +1864,7 @@ namespace DesktopMemo
                         _isClickThroughEnabled = settings.ClickThroughEnabled;
                         _showExitPrompt = settings.ShowExitPrompt;
                         _isWindowPinned = settings.WindowPinned;
+                        _showDeletePrompt = settings.ShowDeletePrompt;
                         
                         // 如果有保存的位置且启用了自动恢复，自动恢复位置
                         if (_positionRemembered && _autoRestorePositionEnabled)
@@ -1902,7 +1899,8 @@ namespace DesktopMemo
                     AutoStartEnabled = IsAutoStartEnabled(),
                     NoteContent = NoteTextBox?.Text ?? string.Empty,
                     ShowExitPrompt = _showExitPrompt,
-                    WindowPinned = _isWindowPinned // 新增：保存窗口固定状态
+                    WindowPinned = _isWindowPinned,
+                    ShowDeletePrompt = _showDeletePrompt
                 };
                 
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
@@ -1964,33 +1962,7 @@ namespace DesktopMemo
                 Forms.ToolTipIcon.Info);
         }
         
-        /// <summary>
-        /// 自动恢复位置复选框选中事件
-        /// </summary>
-        private void AutoRestorePositionCheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            _autoRestorePositionEnabled = true;
-            SaveSettingsToDisk();
-            
-            if (StatusText != null)
-            {
-                StatusText.Text = "已启用启动时自动恢复位置";
-            }
-        }
-        
-        /// <summary>
-        /// 自动恢复位置复选框取消选中事件
-        /// </summary>
-        private void AutoRestorePositionCheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            _autoRestorePositionEnabled = false;
-            SaveSettingsToDisk();
-            
-            if (StatusText != null)
-            {
-                StatusText.Text = "已禁用启动时自动恢复位置";
-            }
-        }
+
         
         #endregion
         
@@ -2309,31 +2281,125 @@ namespace DesktopMemo
         {
             if (_currentMemo == null) return;
             
-            var result = System.Windows.MessageBox.Show(
-                $"确定要删除备忘录 \"{_currentMemo.DisplayTitle}\" 吗？",
-                "删除确认",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-            
-            if (result == MessageBoxResult.Yes)
+            if (_showDeletePrompt)
             {
-                _memos.RemoveAll(m => m.Id == _currentMemo.Id);
-                SaveMemosToDisk();
-                
-                // 如果删除后没有备忘录了，创建一个默认的
-                if (!_memos.Any())
-                {
-                    CreateDefaultMemo();
-                }
-                
-                RefreshMemoList();
-                ShowMemoList();
-                
-                if (StatusText != null)
-                {
-                    StatusText.Text = "备忘录已删除";
-                }
+                // 显示自定义删除确认对话框
+                bool shouldDelete = ShowDeleteConfirmDialog(_currentMemo.DisplayTitle);
+                if (!shouldDelete) return;
             }
+            
+            // 执行删除操作
+            _memos.RemoveAll(m => m.Id == _currentMemo.Id);
+            SaveMemosToDisk();
+            
+            // 如果删除后没有备忘录了，创建一个默认的
+            if (!_memos.Any())
+            {
+                CreateDefaultMemo();
+            }
+            
+            RefreshMemoList();
+            ShowMemoList();
+            
+            if (StatusText != null)
+            {
+                StatusText.Text = "备忘录已删除";
+            }
+        }
+
+        /// <summary>
+        /// 显示删除确认对话框
+        /// </summary>
+        private bool ShowDeleteConfirmDialog(string memoTitle)
+        {
+            var dialog = new Window
+            {
+                Title = "删除确认",
+                Width = 400,
+                Height = 180,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = this,
+                ResizeMode = ResizeMode.NoResize,
+                WindowStyle = WindowStyle.ToolWindow
+            };
+
+            var grid = new Grid();
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            // 消息文本
+            var messageText = new TextBlock
+            {
+                Text = $"确定要删除备忘录 \"{memoTitle}\" 吗？",
+                TextAlignment = TextAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 14,
+                Margin = new Thickness(20),
+                TextWrapping = TextWrapping.Wrap
+            };
+            Grid.SetRow(messageText, 0);
+            grid.Children.Add(messageText);
+
+            // "不再提示"复选框
+            var dontAskCheckBox = new System.Windows.Controls.CheckBox
+            {
+                Content = "不再提示，直接删除",
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                Margin = new Thickness(20, 0, 20, 10)
+            };
+            Grid.SetRow(dontAskCheckBox, 1);
+            grid.Children.Add(dontAskCheckBox);
+
+            // 按钮面板
+            var buttonPanel = new StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                Margin = new Thickness(20, 0, 20, 20)
+            };
+
+            var deleteButton = new System.Windows.Controls.Button
+            {
+                Content = "删除",
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5)
+            };
+
+            var cancelButton = new System.Windows.Controls.Button
+            {
+                Content = "取消",
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5)
+            };
+
+            bool result = false;
+
+            deleteButton.Click += (s, e) =>
+            {
+                if (dontAskCheckBox.IsChecked == true)
+                {
+                    _showDeletePrompt = false;
+                    SaveSettingsToDisk();
+                }
+                result = true;
+                dialog.Close();
+            };
+
+            cancelButton.Click += (s, e) => dialog.Close();
+
+            buttonPanel.Children.Add(deleteButton);
+            buttonPanel.Children.Add(cancelButton);
+
+            Grid.SetRow(buttonPanel, 2);
+            grid.Children.Add(buttonPanel);
+
+            dialog.Content = grid;
+            dialog.ShowDialog();
+
+            return result;
         }
         
         /// <summary>

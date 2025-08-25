@@ -206,7 +206,7 @@
         
         <Grid ClipToBounds="True">
             <!-- 主内容区域 -->
-            <Grid>
+            <Grid PreviewMouseLeftButtonDown="MainContentArea_PreviewMouseLeftButtonDown">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="44" />
                     <RowDefinition Height="*" />
@@ -795,50 +795,7 @@
                                             Style="{StaticResource GlassButton}"/>
                                 </Grid>
                                 
-                                <!-- 自动恢复选项 -->
-                                <CheckBox x:Name="AutoRestorePositionCheckBox" Content="启动时自动恢复位置" Foreground="#E0FFFFFF" 
-                                          Margin="0,8,0,12" Checked="AutoRestorePositionCheckBox_Checked" Unchecked="AutoRestorePositionCheckBox_Unchecked">
-                                    <CheckBox.Style>
-                                        <Style TargetType="CheckBox">
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="CheckBox">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <Border x:Name="CheckMark" Width="16" Height="16" 
-                                                                    Background="Transparent" 
-                                                                    BorderBrush="#80FFFFFF" 
-                                                                    BorderThickness="2" 
-                                                                    CornerRadius="3" 
-                                                                    Margin="0,0,8,0">
-                                                                <Path x:Name="CheckPath" 
-                                                                      Data="M3,8 L7,12 L13,4" 
-                                                                      Stroke="#FFFFFFFF" 
-                                                                      StrokeThickness="2.5" 
-                                                                      StrokeStartLineCap="Round" 
-                                                                      StrokeEndLineCap="Round" 
-                                                                      Stretch="Uniform"
-                                                                      HorizontalAlignment="Center"
-                                                                      VerticalAlignment="Center"
-                                                                      Visibility="Collapsed"/>
-                                                            </Border>
-                                                            <ContentPresenter VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsChecked" Value="True">
-                                                                <Setter TargetName="CheckMark" Property="Background" Value="#FF4CAF50"/>
-                                                                <Setter TargetName="CheckMark" Property="BorderBrush" Value="#FF4CAF50"/>
-                                                                <Setter TargetName="CheckPath" Property="Visibility" Value="Visible"/>
-                                                            </Trigger>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="CheckMark" Property="BorderBrush" Value="#FFFFFFFF"/>
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </CheckBox.Style>
-                                </CheckBox>
+
                                 
                                 <!-- 操作按钮 -->
                                 <Grid>
