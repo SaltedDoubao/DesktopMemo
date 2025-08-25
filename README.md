@@ -89,6 +89,9 @@ dotnet restore
 # 构建项目
 dotnet build --configuration Release
 
+# 运行项目
+dotnet run
+
 # 发布单文件版本
 dotnet publish --configuration Release --output ./publish
 ```
