@@ -37,6 +37,7 @@ namespace DesktopMemo
         private bool _positionRemembered = false;
         private bool _autoRestorePositionEnabled = true; // 默认启用自动恢复位置
         private System.Windows.Threading.DispatcherTimer _positionUpdateTimer;
+        private System.Windows.Threading.DispatcherTimer _autoSavePositionTimer;
         
         // 窗口置顶模式枚举
         public enum TopmostMode
@@ -283,6 +284,11 @@ namespace DesktopMemo
                 _positionUpdateTimer = new System.Windows.Threading.DispatcherTimer();
                 _positionUpdateTimer.Interval = TimeSpan.FromMilliseconds(500); // 每500ms更新一次位置显示
                 _positionUpdateTimer.Tick += PositionUpdateTimer_Tick;
+                
+                // 初始化自动保存位置定时器（防抖）
+                _autoSavePositionTimer = new System.Windows.Threading.DispatcherTimer();
+                _autoSavePositionTimer.Interval = TimeSpan.FromMilliseconds(1000); // 停止移动1秒后自动保存
+                _autoSavePositionTimer.Tick += AutoSavePositionTimer_Tick;
             
                 ConfigureWindow();
                 ConfigureTrayIcon();
@@ -428,18 +434,32 @@ namespace DesktopMemo
             
             // 透明度控制
             var opacityGroup = new Forms.ToolStripMenuItem("🔍 透明度");
-            var opacity100Item = new Forms.ToolStripMenuItem("100%");
+            var opacity100Item = new Forms.ToolStripMenuItem("100% (不透明)");
+            var opacity90Item = new Forms.ToolStripMenuItem("90%");
             var opacity80Item = new Forms.ToolStripMenuItem("80%");
+            var opacity70Item = new Forms.ToolStripMenuItem("70%");
             var opacity60Item = new Forms.ToolStripMenuItem("60%");
+            var opacity50Item = new Forms.ToolStripMenuItem("50%");
             var opacity40Item = new Forms.ToolStripMenuItem("40%");
+            var opacity30Item = new Forms.ToolStripMenuItem("30%");
+            var opacity20Item = new Forms.ToolStripMenuItem("20%");
+            var opacity10Item = new Forms.ToolStripMenuItem("10% (几乎透明)");
             
             opacity100Item.Click += (s, e) => SetWindowOpacity(1.0);
+            opacity90Item.Click += (s, e) => SetWindowOpacity(0.9);
             opacity80Item.Click += (s, e) => SetWindowOpacity(0.8);
+            opacity70Item.Click += (s, e) => SetWindowOpacity(0.7);
             opacity60Item.Click += (s, e) => SetWindowOpacity(0.6);
+            opacity50Item.Click += (s, e) => SetWindowOpacity(0.5);
             opacity40Item.Click += (s, e) => SetWindowOpacity(0.4);
+            opacity30Item.Click += (s, e) => SetWindowOpacity(0.3);
+            opacity20Item.Click += (s, e) => SetWindowOpacity(0.2);
+            opacity10Item.Click += (s, e) => SetWindowOpacity(0.1);
             
             opacityGroup.DropDownItems.AddRange(new Forms.ToolStripItem[] {
-                opacity100Item, opacity80Item, opacity60Item, opacity40Item
+                opacity100Item, opacity90Item, opacity80Item, opacity70Item, opacity60Item,
+                new Forms.ToolStripSeparator(),
+                opacity50Item, opacity40Item, opacity30Item, opacity20Item, opacity10Item
             });
             
             // 窗口位置控制
@@ -838,14 +858,37 @@ namespace DesktopMemo
         {
             base.OnClosing(e);
             
-            // 程序关闭时自动保存当前位置
-            if (_positionRemembered)
-            {
-                _savedPosition = new System.Windows.Point(Left, Top);
-                SaveSettingsToDisk();
-            }
+            // 程序关闭时自动保存所有应用状态
+            AutoSaveAllSettings();
             
             _notifyIcon?.Dispose();
+        }
+        
+        /// <summary>
+        /// 自动保存所有应用设置状态
+        /// </summary>
+        private void AutoSaveAllSettings()
+        {
+            try
+            {
+                // 自动保存当前位置
+                _savedPosition = new System.Windows.Point(Left, Top);
+                _positionRemembered = true;
+                
+                // 保存所有设置
+                SaveSettingsToDisk();
+                
+                // 如果正在编辑备忘录，保存当前内容
+                if (_isEditMode)
+                {
+                    SaveCurrentMemo();
+                }
+            }
+            catch (Exception ex)
+            {
+                // 保存失败时不影响程序退出
+                System.Diagnostics.Debug.WriteLine($"自动保存设置失败: {ex.Message}");
+            }
         }
 
         // 事件处理
@@ -867,6 +910,16 @@ namespace DesktopMemo
             // 关闭设置面板
             if (_isSettingsPanelVisible)
             {
+                ToggleSettingsPanel();
+            }
+        }
+
+        private void SettingsPanel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // 检查点击的是否是设置面板的背景区域（空白处）
+            if (e.Source == sender && _isSettingsPanelVisible)
+            {
+                // 关闭设置面板，返回主页面
                 ToggleSettingsPanel();
             }
         }
@@ -933,6 +986,16 @@ namespace DesktopMemo
             if (StatusText != null)
             {
                 StatusText.Text = "穿透模式已启用";
+            }
+            
+            // 启动穿透模式后自动关闭设置页面
+            if (_isSettingsPanelVisible)
+            {
+                // 延迟一点关闭，让用户看到状态变化
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ToggleSettingsPanel();
+                }), System.Windows.Threading.DispatcherPriority.Background);
             }
         }
 
@@ -1494,6 +1557,7 @@ namespace DesktopMemo
             public bool AutoStartEnabled { get; init; } = false;
             public string NoteContent { get; init; } = string.Empty;
             public bool ShowExitPrompt { get; init; } = true;
+            public bool WindowPinned { get; init; } = false;
         }
         
         /// <summary>
@@ -1545,6 +1609,29 @@ namespace DesktopMemo
             {
                 CustomXTextBox.Text = ((int)Left).ToString();
                 CustomYTextBox.Text = ((int)Top).ToString();
+            }
+            
+            // 启动自动保存位置定时器（防抖）
+            _autoSavePositionTimer.Stop();
+            _autoSavePositionTimer.Start();
+        }
+        
+        /// <summary>
+        /// 自动保存位置定时器事件（防抖）
+        /// </summary>
+        private void AutoSavePositionTimer_Tick(object sender, EventArgs e)
+        {
+            _autoSavePositionTimer.Stop();
+            
+            // 自动记住当前位置
+            _savedPosition = new System.Windows.Point(Left, Top);
+            _positionRemembered = true;
+            SaveSettingsToDisk();
+            
+            // 更新状态信息（如果设置面板可见）
+            if (StatusText != null && _isSettingsPanelVisible)
+            {
+                StatusText.Text = $"位置已自动保存 (X: {(int)Left}, Y: {(int)Top})";
             }
         }
         
@@ -1767,6 +1854,7 @@ namespace DesktopMemo
                         _currentTopmostMode = settings.TopmostMode;
                         _isClickThroughEnabled = settings.ClickThroughEnabled;
                         _showExitPrompt = settings.ShowExitPrompt;
+                        _isWindowPinned = settings.WindowPinned;
                         
                         // 如果有保存的位置且启用了自动恢复，自动恢复位置
                         if (_positionRemembered && _autoRestorePositionEnabled)
@@ -1800,7 +1888,8 @@ namespace DesktopMemo
                     ClickThroughEnabled = _isClickThroughEnabled,
                     AutoStartEnabled = IsAutoStartEnabled(),
                     NoteContent = NoteTextBox?.Text ?? string.Empty,
-                    ShowExitPrompt = _showExitPrompt
+                    ShowExitPrompt = _showExitPrompt,
+                    WindowPinned = _isWindowPinned // 新增：保存窗口固定状态
                 };
                 
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });

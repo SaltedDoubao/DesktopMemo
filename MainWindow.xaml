@@ -123,33 +123,41 @@
             </Setter>
         </Style>
         
-        <!-- 动画资源 -->
+        <!-- 动画资源 - 优化流畅度 -->
         <Storyboard x:Key="FadeInAnimation">
-            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.4">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.35">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <ExponentialEase EasingMode="EaseOut" Exponent="4"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
         </Storyboard>
         
         <Storyboard x:Key="SlideInAnimation">
             <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
-                             From="280" To="0" Duration="0:0:0.5">
+                             From="320" To="0" Duration="0:0:0.45">
                 <DoubleAnimation.EasingFunction>
-                    <BackEase EasingMode="EaseOut" Amplitude="0.2"/>
+                    <ExponentialEase EasingMode="EaseOut" Exponent="5"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.4"/>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.35">
+                <DoubleAnimation.EasingFunction>
+                    <ExponentialEase EasingMode="EaseOut" Exponent="3"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
         </Storyboard>
         
         <Storyboard x:Key="SlideOutAnimation">
             <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
-                             From="0" To="280" Duration="0:0:0.3">
+                             From="0" To="320" Duration="0:0:0.25">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseIn"/>
+                    <ExponentialEase EasingMode="EaseIn" Exponent="4"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.2">
+                <DoubleAnimation.EasingFunction>
+                    <ExponentialEase EasingMode="EaseIn" Exponent="3"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
         </Storyboard>
         
         <!-- 玻璃拟态按钮样式 -->
@@ -497,7 +505,8 @@
                     BorderBrush="#30FFFFFF" 
                     BorderThickness="1,0,0,0" 
                     CornerRadius="0,16,16,0"
-                    Visibility="Collapsed">
+                    Visibility="Collapsed"
+                    MouseLeftButtonDown="SettingsPanel_MouseLeftButtonDown">
                 <Border.RenderTransform>
                     <TranslateTransform X="320"/>
                 </Border.RenderTransform>
@@ -632,7 +641,7 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0" Text="窗口透明度" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
-                                <Slider x:Name="OpacitySlider" Grid.Row="1" Minimum="0.4" Maximum="1.0" Value="1.0" 
+                                <Slider x:Name="OpacitySlider" Grid.Row="1" Minimum="0.1" Maximum="1.0" Value="1.0" 
                                         ValueChanged="OpacitySlider_ValueChanged" Margin="0,0,0,8">
                                     <Slider.Style>
                                         <Style TargetType="Slider">
