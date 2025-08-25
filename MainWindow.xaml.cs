@@ -25,8 +25,6 @@ namespace DesktopMemo
         private readonly string _settingsFilePath;
         private Forms.NotifyIcon _notifyIcon = null!;
         private bool _isLoadedFromDisk;
-        private bool _clickThroughEnabled;
-        
         // 备忘录管理
         private List<MemoModel> _memos = new List<MemoModel>();
         private MemoModel? _currentMemo = null;
@@ -55,10 +53,10 @@ namespace DesktopMemo
         private bool _isHandlingActivation = false;
         private bool _isClickThroughEnabled = false;
         private bool _isSettingsPanelVisible = false;
-        private Forms.ToolStripMenuItem _trayClickThroughItem;
-        private Forms.ToolStripMenuItem _normalModeMenuItem;
-        private Forms.ToolStripMenuItem _desktopModeMenuItem;
-        private Forms.ToolStripMenuItem _alwaysModeMenuItem;
+        private Forms.ToolStripMenuItem _trayClickThroughItem = null!;
+        private Forms.ToolStripMenuItem _normalModeMenuItem = null!;
+        private Forms.ToolStripMenuItem _desktopModeMenuItem = null!;
+        private Forms.ToolStripMenuItem _alwaysModeMenuItem = null!;
         
         // 窗口固定状态
         private bool _isWindowPinned = false;
@@ -586,7 +584,7 @@ namespace DesktopMemo
         /// <summary>
         /// 托盘菜单穿透模式状态变化处理
         /// </summary>
-        private void TrayClickThrough_CheckedChanged(object sender, EventArgs e)
+        private void TrayClickThrough_CheckedChanged(object? sender, EventArgs e)
         {
             _isClickThroughEnabled = _trayClickThroughItem.Checked;
             ApplyClickThrough(_isClickThroughEnabled);
@@ -685,7 +683,7 @@ namespace DesktopMemo
                     CreateDefaultMemo();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 加载失败时创建默认备忘录
                 CreateDefaultMemo();
@@ -721,7 +719,7 @@ namespace DesktopMemo
                     SaveMemosToDisk();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 迁移失败，不影响程序运行
             }
@@ -758,7 +756,7 @@ namespace DesktopMemo
                 var json = JsonSerializer.Serialize(memosData, new JsonSerializerOptions { WriteIndented = true });
                 System.IO.File.WriteAllText(_memosFilePath, json, Encoding.UTF8);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 保存失败时不显示错误信息
             }
@@ -814,7 +812,7 @@ namespace DesktopMemo
         /// <summary>
         /// 窗口激活事件处理 - 在桌面模式下延迟重新设置层级
         /// </summary>
-        private void MainWindow_Activated(object sender, EventArgs e)
+        private void MainWindow_Activated(object? sender, EventArgs e)
         {
             if (_currentTopmostMode == TopmostMode.Desktop)
             {
@@ -827,7 +825,7 @@ namespace DesktopMemo
         /// <summary>
         /// 窗口取消激活事件处理
         /// </summary>
-        private void MainWindow_Deactivated(object sender, EventArgs e)
+        private void MainWindow_Deactivated(object? sender, EventArgs e)
         {
             // 停止定时器
             _desktopModeTimer.Stop();
@@ -1405,13 +1403,28 @@ namespace DesktopMemo
                 }
 
                 // 备用方法2：使用Assembly.Location（适用于非单文件发布）
+                // 注意：在单文件发布中，Assembly.Location会返回空字符串
                 string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
                 if (!string.IsNullOrEmpty(assemblyLocation) && System.IO.File.Exists(assemblyLocation))
                 {
                     return assemblyLocation;
                 }
+                
+                // 备用方法3：使用AppContext.BaseDirectory（推荐用于单文件发布）
+                string baseDirectory = AppContext.BaseDirectory;
+                if (!string.IsNullOrEmpty(baseDirectory))
+                {
+                    // 在单文件发布中，可执行文件位于临时目录
+                    // 我们需要查找实际的可执行文件
+                    var executableName = System.IO.Path.GetFileNameWithoutExtension(Environment.ProcessPath ?? "DesktopMemo") + ".exe";
+                    var executablePath = System.IO.Path.Combine(baseDirectory, executableName);
+                    if (System.IO.File.Exists(executablePath))
+                    {
+                        return executablePath;
+                    }
+                }
 
-                // 备用方法3：使用命令行参数
+                // 备用方法4：使用命令行参数
                 string[] args = Environment.GetCommandLineArgs();
                 if (args.Length > 0)
                 {
@@ -1602,7 +1615,7 @@ namespace DesktopMemo
         /// <summary>
         /// 窗口位置变化事件处理
         /// </summary>
-        private void MainWindow_LocationChanged(object sender, EventArgs e)
+        private void MainWindow_LocationChanged(object? sender, EventArgs e)
         {
             UpdateCurrentPositionDisplay();
             if (CustomXTextBox != null && CustomYTextBox != null)
@@ -1619,7 +1632,7 @@ namespace DesktopMemo
         /// <summary>
         /// 自动保存位置定时器事件（防抖）
         /// </summary>
-        private void AutoSavePositionTimer_Tick(object sender, EventArgs e)
+        private void AutoSavePositionTimer_Tick(object? sender, EventArgs e)
         {
             _autoSavePositionTimer.Stop();
             
@@ -1638,7 +1651,7 @@ namespace DesktopMemo
         /// <summary>
         /// 位置更新定时器事件
         /// </summary>
-        private void PositionUpdateTimer_Tick(object sender, EventArgs e)
+        private void PositionUpdateTimer_Tick(object? sender, EventArgs e)
         {
             UpdateCurrentPositionDisplay();
         }
@@ -1864,7 +1877,7 @@ namespace DesktopMemo
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 加载失败时不显示错误，使用默认设置
             }
@@ -1895,7 +1908,7 @@ namespace DesktopMemo
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 System.IO.File.WriteAllText(_settingsFilePath, json, Encoding.UTF8);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 保存失败时不显示错误
             }
