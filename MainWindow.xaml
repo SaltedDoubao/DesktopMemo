@@ -190,6 +190,30 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="ModernRadioButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#E0FFFFFF"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="RadioMark" Width="14" Height="14" Stroke="#80FFFFFF" StrokeThickness="2" Margin="0,0,8,0"/>
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="RadioMark" Property="Fill" Value="#FF2196F3"/>
+                                <Setter TargetName="RadioMark" Property="Stroke" Value="#FF2196F3"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RadioMark" Property="Stroke" Value="#FFFFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     
     <!-- 主容器 - 玻璃拟态风格 -->
@@ -550,84 +574,12 @@
                             <StackPanel>
                                 <TextBlock Text="窗口置顶模式" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
                                 <StackPanel>
-                                    <RadioButton x:Name="NormalModeRadio" Content="普通模式" Foreground="#E0FFFFFF" GroupName="TopmostMode" 
-                                                 Margin="0,4" Checked="TopmostModeRadio_Checked">
-                                        <RadioButton.Style>
-                                            <Style TargetType="RadioButton">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="RadioButton">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <Ellipse x:Name="RadioMark" Width="14" Height="14" Stroke="#80FFFFFF" StrokeThickness="2" Margin="0,0,8,0"/>
-                                                                <ContentPresenter VerticalAlignment="Center"/>
-                                                            </StackPanel>
-                                                            <ControlTemplate.Triggers>
-                                                                <Trigger Property="IsChecked" Value="True">
-                                                                    <Setter TargetName="RadioMark" Property="Fill" Value="#FF2196F3"/>
-                                                                    <Setter TargetName="RadioMark" Property="Stroke" Value="#FF2196F3"/>
-                                                                </Trigger>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter TargetName="RadioMark" Property="Stroke" Value="#FFFFFFFF"/>
-                                                                </Trigger>
-                                                            </ControlTemplate.Triggers>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </RadioButton.Style>
-                                    </RadioButton>
-                                    <RadioButton x:Name="DesktopModeRadio" Content="桌面置顶" Foreground="#E0FFFFFF" GroupName="TopmostMode" 
-                                                 Margin="0,4" Checked="TopmostModeRadio_Checked">
-                                        <RadioButton.Style>
-                                            <Style TargetType="RadioButton">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="RadioButton">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <Ellipse x:Name="RadioMark" Width="14" Height="14" Stroke="#80FFFFFF" StrokeThickness="2" Margin="0,0,8,0"/>
-                                                                <ContentPresenter VerticalAlignment="Center"/>
-                                                            </StackPanel>
-                                                            <ControlTemplate.Triggers>
-                                                                <Trigger Property="IsChecked" Value="True">
-                                                                    <Setter TargetName="RadioMark" Property="Fill" Value="#FF2196F3"/>
-                                                                    <Setter TargetName="RadioMark" Property="Stroke" Value="#FF2196F3"/>
-                                                                </Trigger>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter TargetName="RadioMark" Property="Stroke" Value="#FFFFFFFF"/>
-                                                                </Trigger>
-                                                            </ControlTemplate.Triggers>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </RadioButton.Style>
-                                    </RadioButton>
-                                    <RadioButton x:Name="AlwaysModeRadio" Content="总是置顶" Foreground="#E0FFFFFF" GroupName="TopmostMode" 
-                                                 Margin="0,4" Checked="TopmostModeRadio_Checked">
-                                        <RadioButton.Style>
-                                            <Style TargetType="RadioButton">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="RadioButton">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <Ellipse x:Name="RadioMark" Width="14" Height="14" Stroke="#80FFFFFF" StrokeThickness="2" Margin="0,0,8,0"/>
-                                                                <ContentPresenter VerticalAlignment="Center"/>
-                                                            </StackPanel>
-                                                            <ControlTemplate.Triggers>
-                                                                <Trigger Property="IsChecked" Value="True">
-                                                                    <Setter TargetName="RadioMark" Property="Fill" Value="#FF2196F3"/>
-                                                                    <Setter TargetName="RadioMark" Property="Stroke" Value="#FF2196F3"/>
-                                                                </Trigger>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter TargetName="RadioMark" Property="Stroke" Value="#FFFFFFFF"/>
-                                                                </Trigger>
-                                                            </ControlTemplate.Triggers>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </RadioButton.Style>
-                                    </RadioButton>
+                                    <RadioButton x:Name="NormalModeRadio" Content="普通模式" GroupName="TopmostMode" 
+                                                 Checked="TopmostModeRadio_Checked" Style="{StaticResource ModernRadioButton}"/>
+                                    <RadioButton x:Name="DesktopModeRadio" Content="桌面置顶" GroupName="TopmostMode" 
+                                                 Checked="TopmostModeRadio_Checked" Style="{StaticResource ModernRadioButton}"/>
+                                    <RadioButton x:Name="AlwaysModeRadio" Content="总是置顶" GroupName="TopmostMode" 
+                                                 Checked="TopmostModeRadio_Checked" Style="{StaticResource ModernRadioButton}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>

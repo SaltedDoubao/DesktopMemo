@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
@@ -457,13 +457,7 @@ namespace DesktopMemo
             var centerItem = new Forms.ToolStripMenuItem("屏幕中央");
             var bottomLeftItem = new Forms.ToolStripMenuItem("左下角");
             var bottomRightItem = new Forms.ToolStripMenuItem("右下角");
-            
-            topLeftItem.Click += (s, e) => MoveToTrayPresetPosition("TopLeft");
-            topCenterItem.Click += (s, e) => MoveToTrayPresetPosition("TopCenter");
-            topRightItem.Click += (s, e) => MoveToTrayPresetPosition("TopRight");
-            centerItem.Click += (s, e) => MoveToTrayPresetPosition("Center");
-            bottomLeftItem.Click += (s, e) => MoveToTrayPresetPosition("BottomLeft");
-            bottomRightItem.Click += (s, e) => MoveToTrayPresetPosition("BottomRight");
+            Action<object?, EventArgs> createHandler(string pos) => (s, e) => MoveToTrayPresetPosition(pos);
             
             quickPosGroup.DropDownItems.AddRange(new Forms.ToolStripItem[] {
                 topLeftItem, topCenterItem, topRightItem, new Forms.ToolStripSeparator(),
@@ -1659,62 +1653,7 @@ namespace DesktopMemo
         {
             if (sender is not System.Windows.Controls.Button button || button.Tag is not string position)
                 return;
-                
-            var workingArea = SystemParameters.WorkArea;
-            double newX = 0, newY = 0;
-            double windowWidth = Width;
-            double windowHeight = Height;
-            
-            // 计算预设位置
-            switch (position)
-            {
-                case "TopLeft":
-                    newX = workingArea.Left + 10;
-                    newY = workingArea.Top + 10;
-                    break;
-                case "TopCenter":
-                    newX = workingArea.Left + (workingArea.Width - windowWidth) / 2;
-                    newY = workingArea.Top + 10;
-                    break;
-                case "TopRight":
-                    newX = workingArea.Right - windowWidth - 10;
-                    newY = workingArea.Top + 10;
-                    break;
-                case "MiddleLeft":
-                    newX = workingArea.Left + 10;
-                    newY = workingArea.Top + (workingArea.Height - windowHeight) / 2;
-                    break;
-                case "Center":
-                    newX = workingArea.Left + (workingArea.Width - windowWidth) / 2;
-                    newY = workingArea.Top + (workingArea.Height - windowHeight) / 2;
-                    break;
-                case "MiddleRight":
-                    newX = workingArea.Right - windowWidth - 10;
-                    newY = workingArea.Top + (workingArea.Height - windowHeight) / 2;
-                    break;
-                case "BottomLeft":
-                    newX = workingArea.Left + 10;
-                    newY = workingArea.Bottom - windowHeight - 10;
-                    break;
-                case "BottomCenter":
-                    newX = workingArea.Left + (workingArea.Width - windowWidth) / 2;
-                    newY = workingArea.Bottom - windowHeight - 10;
-                    break;
-                case "BottomRight":
-                    newX = workingArea.Right - windowWidth - 10;
-                    newY = workingArea.Bottom - windowHeight - 10;
-                    break;
-                default:
-                    return;
-            }
-            
-            // 设置窗口位置
-            SetWindowPosition(newX, newY);
-            
-            if (StatusText != null)
-            {
-                StatusText.Text = $"已移动到{GetPositionDisplayName(position)}";
-            }
+            MoveToPresetPosition(position);
         }
         
         /// <summary>
@@ -1917,48 +1856,11 @@ namespace DesktopMemo
         /// </summary>
         private void MoveToTrayPresetPosition(string position)
         {
-            var workingArea = SystemParameters.WorkArea;
-            double newX = 0, newY = 0;
-            double windowWidth = Width;
-            double windowHeight = Height;
-            
-            // 计算预设位置
-            switch (position)
-            {
-                case "TopLeft":
-                    newX = workingArea.Left + 10;
-                    newY = workingArea.Top + 10;
-                    break;
-                case "TopCenter":
-                    newX = workingArea.Left + (workingArea.Width - windowWidth) / 2;
-                    newY = workingArea.Top + 10;
-                    break;
-                case "TopRight":
-                    newX = workingArea.Right - windowWidth - 10;
-                    newY = workingArea.Top + 10;
-                    break;
-                case "Center":
-                    newX = workingArea.Left + (workingArea.Width - windowWidth) / 2;
-                    newY = workingArea.Top + (workingArea.Height - windowHeight) / 2;
-                    break;
-                case "BottomLeft":
-                    newX = workingArea.Left + 10;
-                    newY = workingArea.Bottom - windowHeight - 10;
-                    break;
-                case "BottomRight":
-                    newX = workingArea.Right - windowWidth - 10;
-                    newY = workingArea.Bottom - windowHeight - 10;
-                    break;
-                default:
-                    return;
-            }
-            
-            // 设置窗口位置
-            SetWindowPosition(newX, newY);
+            MoveToPresetPosition(position);
             
             // 显示气泡提示
             _notifyIcon.ShowBalloonTip(2000, "位置已更改", 
-                $"已移动到{GetPositionDisplayName(position)} (X: {(int)newX}, Y: {(int)newY})", 
+                $"已移动到{GetPositionDisplayName(position)} (X: {(int)Left}, Y: {(int)Top})", 
                 Forms.ToolTipIcon.Info);
         }
         
@@ -2169,6 +2071,41 @@ namespace DesktopMemo
             else
             {
                 Title = "备忘录";
+            }
+        }
+        
+        /// <summary>
+        /// 移动窗口到预设位置的通用方法
+        /// </summary>
+        private void MoveToPresetPosition(string position)
+        {
+            var workingArea = SystemParameters.WorkArea;
+            double newX = 0, newY = 0;
+            double windowWidth = Width;
+            double windowHeight = Height;
+
+            // 计算预设位置
+            switch (position)
+            {
+                case "TopLeft": newX = workingArea.Left + 10; newY = workingArea.Top + 10; break;
+                case "TopCenter": newX = workingArea.Left + (workingArea.Width - windowWidth) / 2; newY = workingArea.Top + 10; break;
+                case "TopRight": newX = workingArea.Right - windowWidth - 10; newY = workingArea.Top + 10; break;
+                case "MiddleLeft": newX = workingArea.Left + 10; newY = workingArea.Top + (workingArea.Height - windowHeight) / 2; break;
+                case "Center": newX = workingArea.Left + (workingArea.Width - windowWidth) / 2; newY = workingArea.Top + (workingArea.Height - windowHeight) / 2; break;
+                case "MiddleRight": newX = workingArea.Right - windowWidth - 10; newY = workingArea.Top + (workingArea.Height - windowHeight) / 2; break;
+                case "BottomLeft": newX = workingArea.Left + 10; newY = workingArea.Bottom - windowHeight - 10; break;
+                case "BottomCenter": newX = workingArea.Left + (workingArea.Width - windowWidth) / 2; newY = workingArea.Bottom - windowHeight - 10; break;
+                case "BottomRight": newX = workingArea.Right - windowWidth - 10; newY = workingArea.Bottom - windowHeight - 10; break;
+                default: return;
+            }
+
+            // 设置窗口位置
+            SetWindowPosition(newX, newY);
+
+            // 更新状态文本
+            if (StatusText != null && _isSettingsPanelVisible)
+            {
+                StatusText.Text = $"已移动到{GetPositionDisplayName(position)}";
             }
         }
         
