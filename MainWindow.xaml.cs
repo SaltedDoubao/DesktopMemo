@@ -36,6 +36,7 @@ namespace DesktopMemo
         private bool _autoRestorePositionEnabled = true; // 默认启用自动恢复位置
         private System.Windows.Threading.DispatcherTimer _positionUpdateTimer;
         private System.Windows.Threading.DispatcherTimer _autoSavePositionTimer;
+        private System.Windows.Threading.DispatcherTimer _autoSaveMemoTimer;
         
         // 窗口置顶模式枚举
         public enum TopmostMode
@@ -181,12 +182,7 @@ namespace DesktopMemo
             DesktopModeRadio.Checked += TopmostModeRadio_Checked;
             AlwaysModeRadio.Checked += TopmostModeRadio_Checked;
 
-            // 设置透明度
-            if (OpacitySlider != null)
-            {
-                OpacitySlider.Value = this.Opacity;
-                OpacityValueText.Text = $"{(int)(this.Opacity * 100)}%";
-            }
+
             
             // 设置穿透模式
             if (ClickThroughCheckBox != null)
@@ -274,6 +270,11 @@ namespace DesktopMemo
                 _autoSavePositionTimer = new System.Windows.Threading.DispatcherTimer();
                 _autoSavePositionTimer.Interval = TimeSpan.FromMilliseconds(1000); // 停止移动1秒后自动保存
                 _autoSavePositionTimer.Tick += AutoSavePositionTimer_Tick;
+                
+                // 初始化自动保存备忘录定时器（防抖）
+                _autoSaveMemoTimer = new System.Windows.Threading.DispatcherTimer();
+                _autoSaveMemoTimer.Interval = TimeSpan.FromMilliseconds(500); // 停止输入500ms后保存
+                _autoSaveMemoTimer.Tick += AutoSaveMemoTimer_Tick;
             
                 ConfigureWindow();
                 ConfigureTrayIcon();
@@ -374,15 +375,37 @@ namespace DesktopMemo
 
             var menu = new Forms.ContextMenuStrip();
             
+            // 应用暗色主题和圆角设计
+            menu.Renderer = new DarkTrayMenuRenderer();
+            menu.ShowImageMargin = false;
+            menu.ShowCheckMargin = true;
+            menu.AutoSize = true;
+            menu.Padding = new Forms.Padding(8, 4, 8, 4);
+            
+            // 设置菜单背景色以隐藏底层白色窗口
+            menu.BackColor = System.Drawing.Color.FromArgb(45, 45, 48);
+            menu.ForeColor = System.Drawing.Color.FromArgb(241, 241, 241);
+            
+            // 启用双缓冲以减少闪烁
+            typeof(Forms.ToolStripDropDownMenu).InvokeMember("DoubleBuffered",
+                System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+                null, menu, new object[] { true });
+            
+            // 创建统一的字体样式
+            var regularFont = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular);
+            var boldFont = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold);
+            
             // 主要功能组
             var showHideItem = new Forms.ToolStripMenuItem("🏠 显示/隐藏窗口");
-            showHideItem.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold);
+            showHideItem.Font = boldFont;
             showHideItem.Click += (s, e) => ToggleWindowVisibility();
             
             var newNoteItem = new Forms.ToolStripMenuItem("📝 新建便签");
+            newNoteItem.Font = regularFont;
             newNoteItem.Click += (s, e) => CreateNewNote();
             
             var settingsItem = new Forms.ToolStripMenuItem("⚙️ 设置");
+            settingsItem.Font = regularFont;
             settingsItem.Click += (s, e) => {
                 if (Visibility == Visibility.Hidden) Show();
                 ToggleSettingsPanel();
@@ -393,12 +416,17 @@ namespace DesktopMemo
             
             // 窗口控制组
             var windowControlGroup = new Forms.ToolStripMenuItem("🖼️ 窗口控制");
+            windowControlGroup.Font = regularFont;
             
             // 置顶模式子菜单
             var topmostGroup = new Forms.ToolStripMenuItem("📌 置顶模式");
+            topmostGroup.Font = regularFont;
             var normalModeItem = new Forms.ToolStripMenuItem("普通模式");
+            normalModeItem.Font = regularFont;
             var desktopModeItem = new Forms.ToolStripMenuItem("桌面置顶");
+            desktopModeItem.Font = regularFont;
             var alwaysModeItem = new Forms.ToolStripMenuItem("总是置顶");
+            alwaysModeItem.Font = regularFont;
             
             normalModeItem.Click += (s, e) => {
                 SetTopmostMode(TopmostMode.Normal);
@@ -417,47 +445,32 @@ namespace DesktopMemo
                 normalModeItem, desktopModeItem, alwaysModeItem
             });
             
-            // 透明度控制
-            var opacityGroup = new Forms.ToolStripMenuItem("🔍 透明度");
-            var opacity100Item = new Forms.ToolStripMenuItem("100% (不透明)");
-            var opacity90Item = new Forms.ToolStripMenuItem("90%");
-            var opacity80Item = new Forms.ToolStripMenuItem("80%");
-            var opacity70Item = new Forms.ToolStripMenuItem("70%");
-            var opacity60Item = new Forms.ToolStripMenuItem("60%");
-            var opacity50Item = new Forms.ToolStripMenuItem("50%");
-            var opacity40Item = new Forms.ToolStripMenuItem("40%");
-            var opacity30Item = new Forms.ToolStripMenuItem("30%");
-            var opacity20Item = new Forms.ToolStripMenuItem("20%");
-            var opacity10Item = new Forms.ToolStripMenuItem("10% (几乎透明)");
-            
-            opacity100Item.Click += (s, e) => SetWindowOpacity(1.0);
-            opacity90Item.Click += (s, e) => SetWindowOpacity(0.9);
-            opacity80Item.Click += (s, e) => SetWindowOpacity(0.8);
-            opacity70Item.Click += (s, e) => SetWindowOpacity(0.7);
-            opacity60Item.Click += (s, e) => SetWindowOpacity(0.6);
-            opacity50Item.Click += (s, e) => SetWindowOpacity(0.5);
-            opacity40Item.Click += (s, e) => SetWindowOpacity(0.4);
-            opacity30Item.Click += (s, e) => SetWindowOpacity(0.3);
-            opacity20Item.Click += (s, e) => SetWindowOpacity(0.2);
-            opacity10Item.Click += (s, e) => SetWindowOpacity(0.1);
-            
-            opacityGroup.DropDownItems.AddRange(new Forms.ToolStripItem[] {
-                opacity100Item, opacity90Item, opacity80Item, opacity70Item, opacity60Item,
-                new Forms.ToolStripSeparator(),
-                opacity50Item, opacity40Item, opacity30Item, opacity20Item, opacity10Item
-            });
+
             
             // 窗口位置控制
             var positionGroup = new Forms.ToolStripMenuItem("📍 窗口位置");
+            positionGroup.Font = regularFont;
             var quickPosGroup = new Forms.ToolStripMenuItem("快速定位");
+            quickPosGroup.Font = regularFont;
             
             var topLeftItem = new Forms.ToolStripMenuItem("左上角");
+            topLeftItem.Font = regularFont;
+            topLeftItem.Click += (s, e) => MoveToTrayPresetPosition("TopLeft");
             var topCenterItem = new Forms.ToolStripMenuItem("顶部中央");
+            topCenterItem.Font = regularFont;
+            topCenterItem.Click += (s, e) => MoveToTrayPresetPosition("TopCenter");
             var topRightItem = new Forms.ToolStripMenuItem("右上角");
+            topRightItem.Font = regularFont;
+            topRightItem.Click += (s, e) => MoveToTrayPresetPosition("TopRight");
             var centerItem = new Forms.ToolStripMenuItem("屏幕中央");
+            centerItem.Font = regularFont;
+            centerItem.Click += (s, e) => MoveToTrayPresetPosition("Center");
             var bottomLeftItem = new Forms.ToolStripMenuItem("左下角");
+            bottomLeftItem.Font = regularFont;
+            bottomLeftItem.Click += (s, e) => MoveToTrayPresetPosition("BottomLeft");
             var bottomRightItem = new Forms.ToolStripMenuItem("右下角");
-            Action<object?, EventArgs> createHandler(string pos) => (s, e) => MoveToTrayPresetPosition(pos);
+            bottomRightItem.Font = regularFont;
+            bottomRightItem.Click += (s, e) => MoveToTrayPresetPosition("BottomRight");
             
             quickPosGroup.DropDownItems.AddRange(new Forms.ToolStripItem[] {
                 topLeftItem, topCenterItem, topRightItem, new Forms.ToolStripSeparator(),
@@ -466,7 +479,9 @@ namespace DesktopMemo
             });
             
             var rememberPosItem = new Forms.ToolStripMenuItem("记住当前位置");
+            rememberPosItem.Font = regularFont;
             var restorePosItem = new Forms.ToolStripMenuItem("恢复保存位置");
+            restorePosItem.Font = regularFont;
             
             rememberPosItem.Click += (s, e) => {
                 _savedPosition = new System.Windows.Point(Left, Top);
@@ -494,12 +509,13 @@ namespace DesktopMemo
             
             // 添加穿透模式菜单项
             _trayClickThroughItem = new Forms.ToolStripMenuItem("👻 穿透模式");
+            _trayClickThroughItem.Font = regularFont;
             _trayClickThroughItem.Checked = _isClickThroughEnabled;
             _trayClickThroughItem.CheckOnClick = true;
             _trayClickThroughItem.CheckedChanged += TrayClickThrough_CheckedChanged;
             
             windowControlGroup.DropDownItems.AddRange(new Forms.ToolStripItem[] {
-                topmostGroup, opacityGroup, positionGroup, _trayClickThroughItem
+                topmostGroup, positionGroup, _trayClickThroughItem
             });
             
             // 分隔符
@@ -507,14 +523,18 @@ namespace DesktopMemo
             
             // 工具组
             var toolsGroup = new Forms.ToolStripMenuItem("🛠️ 工具");
+            toolsGroup.Font = regularFont;
             
             var exportItem = new Forms.ToolStripMenuItem("📤 导出便签");
+            exportItem.Font = regularFont;
             exportItem.Click += (s, e) => ExportNotes();
             
             var importItem = new Forms.ToolStripMenuItem("📥 导入便签");
+            importItem.Font = regularFont;
             importItem.Click += (s, e) => ImportNotes();
             
             var clearItem = new Forms.ToolStripMenuItem("🗑️ 清空内容");
+            clearItem.Font = regularFont;
             clearItem.Click += (s, e) => ClearNoteContent();
             
             toolsGroup.DropDownItems.AddRange(new Forms.ToolStripItem[] {
@@ -526,9 +546,11 @@ namespace DesktopMemo
             
             // 帮助和关于
             var aboutItem = new Forms.ToolStripMenuItem("ℹ️ 关于");
+            aboutItem.Font = regularFont;
             aboutItem.Click += (s, e) => ShowAboutDialog();
             
             var exitPromptItem = new Forms.ToolStripMenuItem("🔄 重新启用退出提示");
+            exitPromptItem.Font = regularFont;
             exitPromptItem.Click += (s, e) => 
             {
                 _showExitPrompt = true;
@@ -537,6 +559,7 @@ namespace DesktopMemo
             };
             
             var deletePromptItem = new Forms.ToolStripMenuItem("🗑️ 重新启用删除提示");
+            deletePromptItem.Font = regularFont;
             deletePromptItem.Click += (s, e) => 
             {
                 _showDeletePrompt = true;
@@ -545,7 +568,7 @@ namespace DesktopMemo
             };
 
             var exitItem = new Forms.ToolStripMenuItem("❌ 退出");
-            exitItem.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Bold);
+            exitItem.Font = boldFont;
             exitItem.Click += (s, e) => HandleApplicationExit();
 
             menu.Items.AddRange(new Forms.ToolStripItem[] {
@@ -560,6 +583,11 @@ namespace DesktopMemo
 
             _notifyIcon.ContextMenuStrip = menu;
             _notifyIcon.DoubleClick += (s, e) => ToggleWindowVisibility();
+            
+            // 为子菜单也应用暗色主题
+            ApplyDarkThemeToSubMenus(menu);
+            
+            // 主菜单不再设置圆角，以提高性能
             
             // 存储菜单项引用以便后续更新
             _normalModeMenuItem = normalModeItem;
@@ -947,29 +975,7 @@ namespace DesktopMemo
             }
         }
 
-        private void OpacitySlider_ValueChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (this != null && MainContainer != null)
-            {
-                // 对于玻璃拟态设计，我们需要同时调整窗口和主容器的透明度
-                this.Opacity = e.NewValue;
-                
-                // 更新主容器的背景透明度
-                var radialGradient = new RadialGradientBrush();
-                radialGradient.GradientStops.Add(new GradientStop(System.Windows.Media.Color.FromArgb((byte)(32 * e.NewValue), 255, 255, 255), 0));
-                radialGradient.GradientStops.Add(new GradientStop(System.Windows.Media.Color.FromArgb((byte)(8 * e.NewValue), 255, 255, 255), 1));
-                MainContainer.Background = radialGradient;
-                
-                if (OpacityValueText != null)
-                {
-                    OpacityValueText.Text = $"{(int)(e.NewValue * 100)}%";
-                }
-                if (StatusText != null)
-                {
-                    StatusText.Text = $"透明度已设置为 {(int)(e.NewValue * 100)}%";
-                }
-            }
-        }
+
 
         private void ClickThroughCheckBox_Checked(object sender, RoutedEventArgs e)
         {
@@ -1082,10 +1088,12 @@ namespace DesktopMemo
         private void NoteTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (_isLoadedFromDisk || !_isEditMode) return;
-            // 简单的防抖: 短时间内的多次写入避免频繁IO，这里先直接写，后续可优化
-            SaveCurrentMemo();
             
-            // 更新窗口标题
+            // 启动防抖定时器，而不是直接保存
+            _autoSaveMemoTimer.Stop();
+            _autoSaveMemoTimer.Start();
+            
+            // 更新窗口标题可以立即执行
             UpdateWindowTitle();
         }
 
@@ -1154,6 +1162,267 @@ namespace DesktopMemo
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
         #endregion
 
+        #region 自定义暗色托盘菜单渲染器
+        
+        /// <summary>
+        /// 自定义暗色主题托盘菜单渲染器，支持圆角设计
+        /// </summary>
+        private class DarkTrayMenuRenderer : Forms.ToolStripProfessionalRenderer
+        {
+            // 暗色主题颜色配置
+            private readonly System.Drawing.Color _backgroundColor = System.Drawing.Color.FromArgb(45, 45, 48);
+            private readonly System.Drawing.Color _borderColor = System.Drawing.Color.FromArgb(63, 63, 70);
+            private readonly System.Drawing.Color _textColor = System.Drawing.Color.FromArgb(241, 241, 241);
+            private readonly System.Drawing.Color _hoverColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            private readonly System.Drawing.Color _pressedColor = System.Drawing.Color.FromArgb(0, 122, 204);
+            private readonly System.Drawing.Color _separatorColor = System.Drawing.Color.FromArgb(63, 63, 70);
+            private readonly System.Drawing.Color _checkedColor = System.Drawing.Color.FromArgb(51, 153, 255);
+
+            public DarkTrayMenuRenderer() : base(new DarkColorTable())
+            {
+                RoundedEdges = true;
+            }
+
+            protected override void OnRenderMenuItemBackground(Forms.ToolStripItemRenderEventArgs e)
+            {
+                if (!e.Item.Selected && !e.Item.Pressed)
+                    return;
+
+                var rect = new System.Drawing.Rectangle(2, 0, e.Item.Width - 4, e.Item.Height);
+                var color = e.Item.Pressed ? _pressedColor : _hoverColor;
+                
+                using (var brush = new System.Drawing.SolidBrush(color))
+                {
+                    // 绘制圆角矩形背景
+                    DrawRoundedRectangle(e.Graphics, brush, rect, 6);
+                }
+            }
+
+            protected override void OnRenderToolStripBackground(Forms.ToolStripRenderEventArgs e)
+            {
+                // 首先填充整个区域以确保没有白色背景露出
+                using (var brush = new System.Drawing.SolidBrush(_backgroundColor))
+                {
+                    e.Graphics.FillRectangle(brush, 0, 0, e.ToolStrip.Width, e.ToolStrip.Height);
+                }
+                
+                // 然后绘制圆角背景
+                using (var brush = new System.Drawing.SolidBrush(_backgroundColor))
+                {
+                    var rect = new System.Drawing.Rectangle(0, 0, e.ToolStrip.Width, e.ToolStrip.Height);
+                    DrawRoundedRectangle(e.Graphics, brush, rect, 8);
+                }
+            }
+
+            protected override void OnRenderToolStripBorder(Forms.ToolStripRenderEventArgs e)
+            {
+                using (var pen = new System.Drawing.Pen(_borderColor, 1))
+                {
+                    var rect = new System.Drawing.Rectangle(0, 0, e.ToolStrip.Width - 1, e.ToolStrip.Height - 1);
+                    DrawRoundedRectangleBorder(e.Graphics, pen, rect, 8);
+                }
+            }
+
+            protected override void OnRenderItemText(Forms.ToolStripItemTextRenderEventArgs e)
+            {
+                e.TextColor = _textColor;
+                e.TextFont = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular);
+                base.OnRenderItemText(e);
+            }
+
+            protected override void OnRenderSeparator(Forms.ToolStripSeparatorRenderEventArgs e)
+            {
+                var rect = new System.Drawing.Rectangle(10, e.Item.Height / 2, e.Item.Width - 20, 1);
+                using (var brush = new System.Drawing.SolidBrush(_separatorColor))
+                {
+                    e.Graphics.FillRectangle(brush, rect);
+                }
+            }
+
+            protected override void OnRenderImageMargin(Forms.ToolStripRenderEventArgs e)
+            {
+                // 渲染图像边距为暗色背景
+                using (var brush = new System.Drawing.SolidBrush(_backgroundColor))
+                {
+                    e.Graphics.FillRectangle(brush, e.AffectedBounds);
+                }
+            }
+
+            protected override void OnRenderItemCheck(Forms.ToolStripItemImageRenderEventArgs e)
+            {
+                var rect = new System.Drawing.Rectangle(e.ImageRectangle.X - 2, e.ImageRectangle.Y - 2, 
+                    e.ImageRectangle.Width + 4, e.ImageRectangle.Height + 4);
+                
+                using (var brush = new System.Drawing.SolidBrush(_checkedColor))
+                {
+                    DrawRoundedRectangle(e.Graphics, brush, rect, 3);
+                }
+                
+                // 绘制对勾
+                using (var pen = new System.Drawing.Pen(System.Drawing.Color.White, 2))
+                {
+                    var checkRect = e.ImageRectangle;
+                    var points = new System.Drawing.Point[]
+                    {
+                        new System.Drawing.Point(checkRect.X + 3, checkRect.Y + checkRect.Height / 2),
+                        new System.Drawing.Point(checkRect.X + checkRect.Width / 2, checkRect.Y + checkRect.Height - 4),
+                        new System.Drawing.Point(checkRect.X + checkRect.Width - 3, checkRect.Y + 3)
+                    };
+                    e.Graphics.DrawLines(pen, points);
+                }
+            }
+
+            /// <summary>
+            /// 绘制圆角矩形
+            /// </summary>
+            private void DrawRoundedRectangle(System.Drawing.Graphics graphics, System.Drawing.Brush brush, 
+                System.Drawing.Rectangle rect, int radius)
+            {
+                using (var path = CreateRoundedRectanglePath(rect, radius))
+                {
+                    graphics.FillPath(brush, path);
+                }
+            }
+
+            /// <summary>
+            /// 绘制圆角矩形边框
+            /// </summary>
+            private void DrawRoundedRectangleBorder(System.Drawing.Graphics graphics, System.Drawing.Pen pen, 
+                System.Drawing.Rectangle rect, int radius)
+            {
+                using (var path = CreateRoundedRectanglePath(rect, radius))
+                {
+                    graphics.DrawPath(pen, path);
+                }
+            }
+
+            /// <summary>
+            /// 创建圆角矩形路径
+            /// </summary>
+            private System.Drawing.Drawing2D.GraphicsPath CreateRoundedRectanglePath(System.Drawing.Rectangle rect, int radius)
+            {
+                var path = new System.Drawing.Drawing2D.GraphicsPath();
+                var diameter = radius * 2;
+
+                var arc = new System.Drawing.Rectangle(rect.X, rect.Y, diameter, diameter);
+                path.AddArc(arc, 180, 90);
+
+                arc.X = rect.Right - diameter;
+                path.AddArc(arc, 270, 90);
+
+                arc.Y = rect.Bottom - diameter;
+                path.AddArc(arc, 0, 90);
+
+                arc.X = rect.Left;
+                path.AddArc(arc, 90, 90);
+
+                path.CloseFigure();
+                return path;
+            }
+        }
+
+        /// <summary>
+        /// 暗色主题颜色表
+        /// </summary>
+        private class DarkColorTable : Forms.ProfessionalColorTable
+        {
+            public override System.Drawing.Color MenuItemSelected => System.Drawing.Color.FromArgb(62, 62, 66);
+            public override System.Drawing.Color MenuItemBorder => System.Drawing.Color.FromArgb(63, 63, 70);
+            public override System.Drawing.Color MenuBorder => System.Drawing.Color.FromArgb(63, 63, 70);
+            public override System.Drawing.Color MenuItemSelectedGradientBegin => System.Drawing.Color.FromArgb(62, 62, 66);
+            public override System.Drawing.Color MenuItemSelectedGradientEnd => System.Drawing.Color.FromArgb(62, 62, 66);
+            public override System.Drawing.Color MenuItemPressedGradientBegin => System.Drawing.Color.FromArgb(0, 122, 204);
+            public override System.Drawing.Color MenuItemPressedGradientEnd => System.Drawing.Color.FromArgb(0, 122, 204);
+            public override System.Drawing.Color ToolStripDropDownBackground => System.Drawing.Color.FromArgb(45, 45, 48);
+            public override System.Drawing.Color ImageMarginGradientBegin => System.Drawing.Color.FromArgb(45, 45, 48);
+            public override System.Drawing.Color ImageMarginGradientMiddle => System.Drawing.Color.FromArgb(45, 45, 48);
+            public override System.Drawing.Color ImageMarginGradientEnd => System.Drawing.Color.FromArgb(45, 45, 48);
+            public override System.Drawing.Color SeparatorDark => System.Drawing.Color.FromArgb(63, 63, 70);
+            public override System.Drawing.Color SeparatorLight => System.Drawing.Color.FromArgb(63, 63, 70);
+        }
+
+        #endregion
+        
+        #region 托盘菜单辅助方法
+        
+        /// <summary>
+        /// 为子菜单递归应用暗色主题
+        /// </summary>
+        private void ApplyDarkThemeToSubMenus(Forms.ToolStrip toolStrip)
+        {
+            foreach (Forms.ToolStripItem item in toolStrip.Items)
+            {
+                if (item is Forms.ToolStripMenuItem menuItem && menuItem.HasDropDownItems)
+                {
+                    // 设置子菜单的背景色和渲染器
+                    menuItem.DropDown.Renderer = new DarkTrayMenuRenderer();
+                    menuItem.DropDown.BackColor = System.Drawing.Color.FromArgb(45, 45, 48);
+                    menuItem.DropDown.ForeColor = System.Drawing.Color.FromArgb(241, 241, 241);
+                    
+                    // 子菜单不再设置圆角，以提高性能
+                    
+                    // 递归处理更深层的子菜单
+                    ApplyDarkThemeToSubMenus(menuItem.DropDown);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 为菜单设置圆角区域
+        /// </summary>
+        private void SetRoundedRegion(Forms.ToolStrip toolStrip, int radius)
+        {
+            try
+            {
+                // 确保控件已创建且有有效尺寸
+                if (toolStrip == null || !toolStrip.IsHandleCreated || toolStrip.IsDisposed ||
+                    toolStrip.Width <= 0 || toolStrip.Height <= 0 || radius <= 0)
+                {
+                    return;
+                }
+
+                using (var path = new System.Drawing.Drawing2D.GraphicsPath())
+                {
+                    var rect = new System.Drawing.Rectangle(0, 0, toolStrip.Width, toolStrip.Height);
+                    var diameter = Math.Min(radius * 2, Math.Min(rect.Width, rect.Height));
+
+                    // 确保直径不会超过矩形的尺寸
+                    if (diameter >= Math.Min(rect.Width, rect.Height))
+                    {
+                        diameter = Math.Min(rect.Width, rect.Height) / 2;
+                    }
+
+                    // 创建圆角矩形路径
+                    var arc = new System.Drawing.Rectangle(rect.X, rect.Y, diameter, diameter);
+                    path.AddArc(arc, 180, 90);
+
+                    arc.X = rect.Right - diameter;
+                    path.AddArc(arc, 270, 90);
+
+                    arc.Y = rect.Bottom - diameter;
+                    path.AddArc(arc, 0, 90);
+
+                    arc.X = rect.Left;
+                    path.AddArc(arc, 90, 90);
+
+                    path.CloseFigure();
+
+                    // 释放之前的Region（如果存在）
+                    toolStrip.Region?.Dispose();
+                    
+                    // 设置新的圆角区域
+                    toolStrip.Region = new System.Drawing.Region(path);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不抛出异常，确保菜单基本功能不受影响
+                System.Diagnostics.Debug.WriteLine($"设置菜单圆角区域失败: {ex.Message}");
+            }
+        }
+        
+        #endregion
+
         #region 扩展功能方法
         
         /// <summary>
@@ -1169,35 +1438,7 @@ namespace DesktopMemo
             }
         }
         
-        /// <summary>
-        /// 设置窗口透明度
-        /// </summary>
-        private void SetWindowOpacity(double opacity)
-        {
-            this.Opacity = opacity;
-            
-            // 更新主容器的背景透明度
-            if (MainContainer != null)
-            {
-                var radialGradient = new RadialGradientBrush();
-                radialGradient.GradientStops.Add(new GradientStop(System.Windows.Media.Color.FromArgb((byte)(32 * opacity), 255, 255, 255), 0));
-                radialGradient.GradientStops.Add(new GradientStop(System.Windows.Media.Color.FromArgb((byte)(8 * opacity), 255, 255, 255), 1));
-                MainContainer.Background = radialGradient;
-            }
-            
-            if (OpacitySlider != null)
-            {
-                OpacitySlider.Value = opacity;
-            }
-            if (OpacityValueText != null)
-            {
-                OpacityValueText.Text = $"{(int)(opacity * 100)}%";
-            }
-            if (StatusText != null)
-            {
-                StatusText.Text = $"透明度已设置为 {(int)(opacity * 100)}%";
-            }
-        }
+
         
         /// <summary>
         /// 创建新便签（清空内容）
@@ -1332,7 +1573,6 @@ namespace DesktopMemo
                 + "功能特点：\n"
                 + "• 多种置顶模式\n"
                 + "• 穿透模式\n"
-                + "• 透明度调节\n"
                 + "• 自动保存\n"
                 + "• 暗色主题\n\n"
                 + "感谢使用 DesktopMemo！";
@@ -1405,13 +1645,7 @@ namespace DesktopMemo
                     return mainModulePath;
                 }
 
-                // 备用方法2：使用Assembly.Location（适用于非单文件发布）
-                // 注意：在单文件发布中，Assembly.Location会返回空字符串
-                string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                if (!string.IsNullOrEmpty(assemblyLocation) && System.IO.File.Exists(assemblyLocation))
-                {
-                    return assemblyLocation;
-                }
+                
                 
                 // 备用方法3：使用AppContext.BaseDirectory（推荐用于单文件发布）
                 string baseDirectory = AppContext.BaseDirectory;
@@ -1567,7 +1801,6 @@ namespace DesktopMemo
             public double SavedY { get; init; } = 100;
             public bool PositionRemembered { get; init; } = false;
             public bool AutoRestorePositionEnabled { get; init; } = true;
-            public double WindowOpacity { get; init; } = 1.0;
             public TopmostMode TopmostMode { get; init; } = TopmostMode.Desktop;
             public bool ClickThroughEnabled { get; init; } = false;
             public bool AutoStartEnabled { get; init; } = false;
@@ -1614,9 +1847,9 @@ namespace DesktopMemo
                 CustomYTextBox.Text = ((int)Top).ToString();
             }
             
-            // 启动自动保存位置定时器（防抖）
-            _autoSavePositionTimer.Stop();
-            _autoSavePositionTimer.Start();
+            // 启动自动保存位置定时器（防抖） - 功能已禁用
+            // _autoSavePositionTimer.Stop();
+            // _autoSavePositionTimer.Start();
         }
         
         /// <summary>
@@ -1636,6 +1869,15 @@ namespace DesktopMemo
             {
                 StatusText.Text = $"位置已自动保存 (X: {(int)Left}, Y: {(int)Top})";
             }
+        }
+        
+        /// <summary>
+        /// 自动保存备忘录定时器事件（防抖）
+        /// </summary>
+        private void AutoSaveMemoTimer_Tick(object? sender, EventArgs e)
+        {
+            _autoSaveMemoTimer.Stop();
+            SaveCurrentMemo();
         }
         
         /// <summary>
@@ -1798,7 +2040,6 @@ namespace DesktopMemo
                         _autoRestorePositionEnabled = settings.AutoRestorePositionEnabled;
                         
                         // 恢复其他设置
-                        Opacity = settings.WindowOpacity;
                         _currentTopmostMode = settings.TopmostMode;
                         _isClickThroughEnabled = settings.ClickThroughEnabled;
                         _showExitPrompt = settings.ShowExitPrompt;
@@ -1832,7 +2073,6 @@ namespace DesktopMemo
                     SavedY = _savedPosition.Y,
                     PositionRemembered = _positionRemembered,
                     AutoRestorePositionEnabled = _autoRestorePositionEnabled,
-                    WindowOpacity = Opacity,
                     TopmostMode = _currentTopmostMode,
                     ClickThroughEnabled = _isClickThroughEnabled,
                     AutoStartEnabled = IsAutoStartEnabled(),

@@ -218,12 +218,7 @@
     
     <!-- 主容器 - 玻璃拟态风格 -->
     <Border x:Name="MainContainer" Style="{StaticResource GlassmorphismBorder}" Margin="8">
-        <Border.Background>
-            <RadialGradientBrush>
-                <GradientStop Color="#20FFFFFF" Offset="0"/>
-                <GradientStop Color="#08FFFFFF" Offset="1"/>
-            </RadialGradientBrush>
-        </Border.Background>
+        
         <Border.Effect>
             <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="6" Opacity="0.15"/>
         </Border.Effect>
@@ -412,19 +407,37 @@
                         <!-- 备忘录列表视图 -->
                         <Grid x:Name="MemoListView" Visibility="Visible">
                             <!-- 备忘录列表 -->
-                            <ScrollViewer x:Name="MemoListScrollViewer" 
-                                          VerticalScrollBarVisibility="Auto" 
-                                          HorizontalScrollBarVisibility="Disabled"
-                                          Padding="20,15"
-                                          Style="{StaticResource GlassScrollViewer}">
-                                <ItemsControl x:Name="MemoItemsControl">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Vertical"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                            </ScrollViewer>
+                            <ListBox x:Name="MemoItemsControl"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Padding="8,10"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     ScrollViewer.CanContentScroll="True"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling"
+                                     VirtualizingPanel.ScrollUnit="Pixel">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel Orientation="Vertical"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <ContentPresenter/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Top"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
                         </Grid>
                         
                         <!-- 备忘录编辑视图 -->
@@ -584,68 +597,7 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 透明度设置 -->
-                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" Text="窗口透明度" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
-                                <Slider x:Name="OpacitySlider" Grid.Row="1" Minimum="0.1" Maximum="1.0" Value="1.0" 
-                                        ValueChanged="OpacitySlider_ValueChanged" Margin="0,0,0,8">
-                                    <Slider.Style>
-                                        <Style TargetType="Slider">
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Slider">
-                                                        <Grid>
-                                                            <Border x:Name="TrackBackground" 
-                                                                    Background="#40FFFFFF" 
-                                                                    Height="6" 
-                                                                    CornerRadius="3" 
-                                                                    VerticalAlignment="Center"/>
-                                                            <Track x:Name="PART_Track" VerticalAlignment="Center">
-                                                                <Track.DecreaseRepeatButton>
-                                                                    <RepeatButton Command="Slider.DecreaseLarge" Style="{x:Null}">
-                                                                        <RepeatButton.Template>
-                                                                            <ControlTemplate>
-                                                                                <Border Background="#FF2196F3" Height="6" CornerRadius="3"/>
-                                                                            </ControlTemplate>
-                                                                        </RepeatButton.Template>
-                                                                    </RepeatButton>
-                                                                </Track.DecreaseRepeatButton>
-                                                                <Track.Thumb>
-                                                                    <Thumb>
-                                                                        <Thumb.Template>
-                                                                            <ControlTemplate>
-                                                                                <Ellipse Fill="#FF2196F3" Width="16" Height="16" Stroke="#FFFFFFFF" StrokeThickness="2"/>
-                                                                            </ControlTemplate>
-                                                                        </Thumb.Template>
-                                                                    </Thumb>
-                                                                </Track.Thumb>
-                                                                <Track.IncreaseRepeatButton>
-                                                                    <RepeatButton Command="Slider.IncreaseLarge" Style="{x:Null}">
-                                                                        <RepeatButton.Template>
-                                                                            <ControlTemplate>
-                                                                                <Border Background="Transparent"/>
-                                                                            </ControlTemplate>
-                                                                        </RepeatButton.Template>
-                                                                    </RepeatButton>
-                                                                </Track.IncreaseRepeatButton>
-                                                            </Track>
-                                                        </Grid>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </Slider.Style>
-                                </Slider>
-                                <TextBlock x:Name="OpacityValueText" Grid.Row="2" Text="100%" Foreground="#B0FFFFFF" 
-                                           FontSize="12" HorizontalAlignment="Right"/>
-                            </Grid>
-                        </Border>
+
 
                         <!-- 窗口位置设置 -->
                         <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
