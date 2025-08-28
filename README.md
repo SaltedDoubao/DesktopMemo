@@ -17,8 +17,6 @@ DesktopMemo 是一个基于 WPF 技术开发的桌面便签应用，提供了丰
 - **位置记忆**：自动保存和恢复窗口位置
 - **点击穿透**：启用后可点击穿透到桌面，不会影响到您正常工作
 - **窗口固定**：防止意外拖动窗口
-- **透明度调节**：可调节窗口透明度
-> 透明度调节暂时不可用，后续版本会修复
 
 
 ### 🎨 用户体验
@@ -117,7 +115,6 @@ dotnet publish --configuration Release --output ./publish
   "SavedY": 100.0,
   "PositionRemembered": false,
   "AutoRestorePositionEnabled": true,
-  "WindowOpacity": 1.0,
   "TopmostMode": "Desktop",
   "ClickThroughEnabled": false,
   "AutoStartEnabled": false,
