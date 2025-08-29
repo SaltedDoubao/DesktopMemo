@@ -107,7 +107,7 @@
                                        Value="{TemplateBinding VerticalOffset}"
                                        Maximum="{TemplateBinding ScrollableHeight}"
                                        ViewportSize="{TemplateBinding ViewportHeight}"
-                                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+                                       Visibility="{TemplateBinding VerticalScrollBarVisibility}"/>
                             
                             <ScrollBar Name="PART_HorizontalScrollBar"
                                        Grid.Row="1" Grid.Column="0"
@@ -116,7 +116,7 @@
                                        Value="{TemplateBinding HorizontalOffset}"
                                        Maximum="{TemplateBinding ScrollableWidth}"
                                        ViewportSize="{TemplateBinding ViewportWidth}"
-                                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
+                                       Visibility="{TemplateBinding HorizontalScrollBarVisibility}"/>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -405,18 +405,27 @@
                         Margin="0">
                     <Grid>
                         <!-- 备忘录列表视图 -->
-                        <Grid x:Name="MemoListView" Visibility="Visible">
+                        <Grid x:Name="MemoListView" Visibility="Visible" Margin="8,0,0,0">
                             <!-- 备忘录列表 -->
                             <ListBox x:Name="MemoItemsControl"
                                      Background="Transparent"
                                      BorderThickness="0"
-                                     Padding="8,10"
+                                     Padding="8,5,0,0"
                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     ScrollViewer.VerticalScrollBarVisibility="Visible"
                                      ScrollViewer.CanContentScroll="True"
                                      VirtualizingPanel.IsVirtualizing="True"
                                      VirtualizingPanel.VirtualizationMode="Recycling"
                                      VirtualizingPanel.ScrollUnit="Pixel">
+                                <ListBox.Template>
+                                    <ControlTemplate TargetType="ListBox">
+                                        <ScrollViewer Style="{StaticResource GlassScrollViewer}"
+                                                     Focusable="False"
+                                                     Padding="{TemplateBinding Padding}">
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </ControlTemplate>
+                                </ListBox.Template>
                                 <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <VirtualizingStackPanel Orientation="Vertical"/>
@@ -501,21 +510,39 @@
                                     <Style TargetType="TextBox">
                                         <Style.Resources>
                                             <Style TargetType="ScrollBar">
-                                                <Setter Property="Width" Value="6"/>
-                                                <Setter Property="Background" Value="#10FFFFFF"/>
+                                                <Setter Property="Width" Value="8"/>
+                                                <Setter Property="Background" Value="Transparent"/>
                                                 <Setter Property="BorderThickness" Value="0"/>
                                                 <Setter Property="Template">
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="ScrollBar">
-                                                            <Border Background="Transparent" CornerRadius="3">
+                                                            <Border Background="Transparent" CornerRadius="4" Width="8">
                                                                 <Track x:Name="PART_Track" IsDirectionReversed="True">
                                                                     <Track.Thumb>
                                                                         <Thumb>
-                                                                            <Thumb.Template>
-                                                                                <ControlTemplate>
-                                                                                    <Border Background="#4064B5F6" CornerRadius="3" Margin="1"/>
-                                                                                </ControlTemplate>
-                                                                            </Thumb.Template>
+                                                                            <Thumb.Style>
+                                                                                <Style TargetType="Thumb">
+                                                                                    <Setter Property="Background" Value="#3064B5F6"/>
+                                                                                    <Setter Property="Template">
+                                                                                        <Setter.Value>
+                                                                                            <ControlTemplate TargetType="Thumb">
+                                                                                                <Border Background="{TemplateBinding Background}" 
+                                                                                                        CornerRadius="4" 
+                                                                                                        Width="6"
+                                                                                                        HorizontalAlignment="Center"/>
+                                                                                            </ControlTemplate>
+                                                                                        </Setter.Value>
+                                                                                    </Setter>
+                                                                                    <Style.Triggers>
+                                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                                            <Setter Property="Background" Value="#5064B5F6"/>
+                                                                                        </Trigger>
+                                                                                        <Trigger Property="IsDragging" Value="True">
+                                                                                            <Setter Property="Background" Value="#7064B5F6"/>
+                                                                                        </Trigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </Thumb.Style>
                                                                         </Thumb>
                                                                     </Track.Thumb>
                                                                 </Track>
@@ -714,6 +741,107 @@
                                     <Button x:Name="RestorePositionBtn" Grid.Column="1" Content="恢复保存位置" 
                                             Height="30" Margin="4,0,0,0" Click="RestorePosition_Click"
                                             Style="{StaticResource GlassButton}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 外观设置 -->
+                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="外观设置" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
+                                
+                                <!-- 背景透明度设置 -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <!-- 标题和数值显示 -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="背景透明度" Foreground="#E0FFFFFF" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="OpacityValueText" Grid.Column="1" Text="10%" Foreground="#B0FFFFFF" FontSize="12" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    
+                                    <!-- 滑块 -->
+                                    <Slider x:Name="BackgroundOpacitySlider" 
+                                            Grid.Row="1"
+                                            Minimum="0" Maximum="100" 
+                                            Value="10"
+                                            TickFrequency="10"
+                                            IsSnapToTickEnabled="False"
+                                            Margin="0,0,0,8"
+                                            ValueChanged="BackgroundOpacitySlider_ValueChanged">
+                                        <Slider.Style>
+                                            <Style TargetType="Slider">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Slider">
+                                                            <Grid>
+                                                                <!-- 背景轨道 -->
+                                                                <Border x:Name="TrackBackground"
+                                                                        Height="6"
+                                                                        Background="#30FFFFFF"
+                                                                        CornerRadius="3"
+                                                                        VerticalAlignment="Center"
+                                                                        MouseLeftButtonDown="OpacityTrack_MouseLeftButtonDown"/>
+                                                                        
+                                                                <!-- 进度条容器 -->
+                                                                <Border Height="6"
+                                                                        Background="Transparent"
+                                                                        CornerRadius="3"
+                                                                        VerticalAlignment="Center"
+                                                                        ClipToBounds="True">
+                                                                    <Rectangle x:Name="ProgressRect"
+                                                                               Fill="#FF64B5F6"
+                                                                               Height="6"
+                                                                               HorizontalAlignment="Left"
+                                                                               VerticalAlignment="Stretch"/>
+                                                                </Border>
+                                                                        
+                                                                <Track x:Name="PART_Track">
+                                                                    <Track.DecreaseRepeatButton>
+                                                                        <RepeatButton Style="{x:Null}" Background="Transparent"/>
+                                                                    </Track.DecreaseRepeatButton>
+                                                                    <Track.IncreaseRepeatButton>
+                                                                        <RepeatButton Style="{x:Null}" Background="Transparent"/>
+                                                                    </Track.IncreaseRepeatButton>
+                                                                    <Track.Thumb>
+                                                                        <Thumb>
+                                                                            <Thumb.Style>
+                                                                                <Style TargetType="Thumb">
+                                                                                    <Setter Property="Background" Value="#FFFFFFFF"/>
+                                                                                    <Setter Property="Template">
+                                                                                        <Setter.Value>
+                                                                                            <ControlTemplate TargetType="Thumb">
+                                                                                                <Ellipse Fill="{TemplateBinding Background}" 
+                                                                                                         Width="14" Height="14"/>
+                                                                                            </ControlTemplate>
+                                                                                        </Setter.Value>
+                                                                                    </Setter>
+                                                                                </Style>
+                                                                            </Thumb.Style>
+                                                                        </Thumb>
+                                                                    </Track.Thumb>
+                                                                </Track>
+                                                            </Grid>
+
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Slider.Style>
+                                    </Slider>
+                                    
+                                    <!-- 说明文字 -->
+                                    <TextBlock Grid.Row="2" Text="0% = 完全透明，100% = 60%白色背景" 
+                                               Foreground="#80FFFFFF" FontSize="10" 
+                                               HorizontalAlignment="Center"/>
                                 </Grid>
                             </StackPanel>
                         </Border>

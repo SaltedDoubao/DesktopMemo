@@ -62,6 +62,9 @@ namespace DesktopMemo
         
         // 窗口固定状态
         private bool _isWindowPinned = false;
+        
+        // 背景透明度设置 (0.0-1.0，对应0%-100%)
+        private double _backgroundOpacity = 0.1;
 
         // 公共属性
         public TopmostMode CurrentTopmostMode => _currentTopmostMode;
@@ -225,6 +228,22 @@ namespace DesktopMemo
             
             // 初始化位置相关控件
             InitializePositionControls();
+            
+            // 更新固定窗口按钮状态
+            UpdatePinButtonState();
+            
+            // 初始化透明度滑块
+            if (BackgroundOpacitySlider != null)
+            {
+                // 将实际透明度转换回滑块显示值（0-100%）
+                // 公式：滑块值 = 实际透明度 * 100 / 0.6
+                BackgroundOpacitySlider.Value = (_backgroundOpacity * 100) / 0.6;
+                UpdateOpacityValueText();
+                UpdateBackgroundOpacity(); // 应用背景透明度
+                
+                // 延迟更新进度条，确保控件已完全加载
+                Dispatcher.BeginInvoke(new Action(() => UpdateProgressBar(BackgroundOpacitySlider)), System.Windows.Threading.DispatcherPriority.Loaded);
+            }
         }
 
         // Windows消息常量
@@ -284,14 +303,11 @@ namespace DesktopMemo
                 // 监听窗口位置变化
                 this.LocationChanged += MainWindow_LocationChanged;
                 
-                // 在所有控件初始化完成后设置默认状态
+                // 在所有控件初始化完成后设置状态
                 this.Loaded += (s, e) => 
                 {
-                    // 设置默认的桌面置顶RadioButton选中状态
-                    if (DesktopModeRadio != null)
-                    {
-                        DesktopModeRadio.IsChecked = true;
-                    }
+                    // 初始化设置控件状态（应用加载的设置）
+                    InitializeSettingsControls();
                     
                     // 启动位置更新定时器
                     _positionUpdateTimer.Start();
@@ -1808,6 +1824,7 @@ namespace DesktopMemo
             public bool ShowExitPrompt { get; init; } = true;
             public bool WindowPinned { get; init; } = false;
             public bool ShowDeletePrompt { get; init; } = true;
+            public double BackgroundOpacity { get; init; } = 0.1; // 默认10%显示值对应的实际透明度（0.1 = 10% * 0.6 / 60）
         }
         
         /// <summary>
@@ -2045,6 +2062,7 @@ namespace DesktopMemo
                         _showExitPrompt = settings.ShowExitPrompt;
                         _isWindowPinned = settings.WindowPinned;
                         _showDeletePrompt = settings.ShowDeletePrompt;
+                        _backgroundOpacity = settings.BackgroundOpacity;
                         
                         // 如果有保存的位置且启用了自动恢复，自动恢复位置
                         if (_positionRemembered && _autoRestorePositionEnabled)
@@ -2079,7 +2097,8 @@ namespace DesktopMemo
                     NoteContent = NoteTextBox?.Text ?? string.Empty,
                     ShowExitPrompt = _showExitPrompt,
                     WindowPinned = _isWindowPinned,
-                    ShowDeletePrompt = _showDeletePrompt
+                    ShowDeletePrompt = _showDeletePrompt,
+                    BackgroundOpacity = _backgroundOpacity
                 };
                 
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
@@ -2735,6 +2754,100 @@ namespace DesktopMemo
             dialog.ShowDialog();
         }
 
+        #endregion
+        
+        #region 背景透明度管理
+        
+        /// <summary>
+        /// 背景透明度滑块值变更事件
+        /// </summary>
+        private void BackgroundOpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (sender is Slider slider)
+            {
+                // 将滑块的0-100%映射到实际的0-60%效果
+                // 公式：实际透明度 = 滑块值 * 0.6 / 100
+                _backgroundOpacity = (slider.Value * 0.6) / 100.0;
+                UpdateOpacityValueText();
+                UpdateBackgroundOpacity();
+                UpdateProgressBar(slider);
+                
+                // 自动保存设置
+                SaveSettingsToDisk();
+            }
+        }
+        
+        /// <summary>
+        /// 更新进度条宽度
+        /// </summary>
+        private void UpdateProgressBar(Slider slider)
+        {
+            if (slider.Template?.FindName("ProgressRect", slider) is System.Windows.Shapes.Rectangle progressRect)
+            {
+                var percentage = slider.Value / slider.Maximum;
+                progressRect.Width = slider.ActualWidth * percentage;
+            }
+        }
+        
+        /// <summary>
+        /// 透明度轨道点击事件
+        /// </summary>
+        private void OpacityTrack_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border track && BackgroundOpacitySlider != null)
+            {
+                // 获取点击位置相对于轨道的位置
+                var clickPosition = e.GetPosition(track);
+                var trackWidth = track.ActualWidth;
+                
+                if (trackWidth > 0)
+                {
+                    // 计算点击位置对应的百分比
+                    var percentage = clickPosition.X / trackWidth;
+                    
+                    // 限制在有效范围内
+                    percentage = Math.Max(0, Math.Min(1, percentage));
+                    
+                    // 设置新的滑块值（0-100%显示范围）
+                    BackgroundOpacitySlider.Value = percentage * 100;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 更新透明度数值显示
+        /// </summary>
+        private void UpdateOpacityValueText()
+        {
+            if (OpacityValueText != null && BackgroundOpacitySlider != null)
+            {
+                // 显示滑块的值（0-100%），而不是实际透明度
+                OpacityValueText.Text = $"{(int)BackgroundOpacitySlider.Value}%";
+            }
+        }
+        
+        /// <summary>
+        /// 更新窗口背景透明度
+        /// </summary>
+        private void UpdateBackgroundOpacity()
+        {
+            if (MainContainer != null)
+            {
+                // 创建新的背景画刷
+                var backgroundColor = System.Windows.Media.Color.FromArgb(
+                    (byte)(255 * _backgroundOpacity), // Alpha通道
+                    255, 255, 255); // RGB白色
+                
+                MainContainer.Background = new SolidColorBrush(backgroundColor);
+                
+                // 更新状态文本
+                if (StatusText != null && BackgroundOpacitySlider != null)
+                {
+                    StatusText.Text = $"背景透明度已调整为 {(int)BackgroundOpacitySlider.Value}%";
+                }
+            }
+        }
+        
         #endregion
         
         #endregion
