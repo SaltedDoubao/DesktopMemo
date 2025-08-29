@@ -137,7 +137,7 @@ dotnet publish --configuration Release --output ./publish
 
 详见 [Releases](../../releases)
 
-## 🚧 施工规划 (未来会加入的功能)
+## 🚧 施工规划
 
 - [ ] 为应用添加图标
 - [ ] 优化UI布局
