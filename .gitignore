@@ -375,4 +375,5 @@ cache/
 Data/
 
 # User data cleanup scripts (not for git repository)
-suggestions.md
+suggestions_1.md
+suggestions_2.md
