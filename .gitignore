@@ -1,4 +1,4 @@
-# Build results
+# 构建结果
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -14,10 +14,10 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
-# Visual Studio 2015/2017 cache/options directory
+# Visual Studio 2015/2017 缓存/选项目录
 .vs/
 
-# MSTest test Results
+# MSTest 测试结果
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
@@ -30,13 +30,13 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
-# ASP.NET Scaffolding
+# ASP.NET 脚手架
 ScaffoldingReadMe.txt
 
 # StyleCop
 StyleCopReport.xml
 
-# Files built by Visual Studio
+# Visual Studio 生成的文件
 *_i.c
 *_p.c
 *_h.h
@@ -65,10 +65,10 @@ StyleCopReport.xml
 *.svclog
 *.scc
 
-# Chutzpah Test files
+# Chutzpah 测试文件
 _Chutzpah*
 
-# Visual C++ cache files
+# Visual C++ 缓存文件
 ipch/
 *.aps
 *.ncb
@@ -79,42 +79,42 @@ ipch/
 *.VC.db
 *.VC.VC.opendb
 
-# Visual Studio profiler
+# Visual Studio 分析器
 *.psess
 *.vsp
 *.vspx
 *.sap
 
-# Visual Studio Trace Files
+# Visual Studio 跟踪文件
 *.e2e
 
-# TFS 2012 Local Workspace
+# TFS 2012 本地工作区
 $tf/
 
 # Guidance Automation Toolkit
 *.gpState
 
-# ReSharper is a .NET coding add-in
+# ReSharper 是一个 .NET 编码插件
 _ReSharper*/
 *.[Rr]e[Ss]harper
 *.DotSettings.user
 
-# TeamCity is a build add-in
+# TeamCity 是一个构建插件
 _TeamCity*
 
-# DotCover is a Code Coverage Tool
+# DotCover 是一个代码覆盖率工具
 *.dotCover
 
-# AxoCover is a Code Coverage Tool
+# AxoCover 是一个代码覆盖率工具
 .axoCover/*
 !.axoCover/settings.json
 
-# Coverlet is a free, cross platform Code Coverage Tool
+# Coverlet 是一个免费的跨平台代码覆盖率工具
 coverage*.json
 coverage*.xml
 coverage*.info
 
-# Visual Studio code coverage results
+# Visual Studio 代码覆盖率结果
 *.coverage
 *.coveragexml
 
@@ -127,13 +127,13 @@ nCrunchTemp_*
 *.mm.*
 AutoTest.Net/
 
-# Web workbench (sass)
+# Web 工作台 (sass)
 .sass-cache/
 
-# Installshield output folder
+# Installshield 输出文件夹
 [Ee]xpress/
 
-# DocProject is a documentation generator add-in
+# DocProject 是一个文档生成器插件
 DocProject/buildhelp/
 DocProject/Help/*.HxT
 DocProject/Help/*.HxC
@@ -143,45 +143,44 @@ DocProject/Help/*.hhp
 DocProject/Help/Html2
 DocProject/Help/html
 
-# Click-Once directory
+# Click-Once 目录
 publish/
 
-# Publish Web Output
+# 发布 Web 输出
 *.[Pp]ublish.xml
 *.azurePubxml
-# Note: Comment the next line if you want to checkin your web deploy settings,
-# but database connection strings (with potential passwords) will be unencrypted
+# 注意：如果您想签入您的 Web 部署设置，请注释下一行，
+# 但数据库连接字符串（可能包含密码）将是未加密的
 *.pubxml
 *.publishproj
 
-# Microsoft Azure Web App publish settings. Comment the next line if you want to
-# checkin your Azure Web App publish settings, but sensitive information contained
-# in these files may be visible in the repository.
+# Microsoft Azure Web 应用发布设置。如果您想签入您的 Azure Web 应用发布设置，请注释下一行，
+# 但这些文件中包含的敏感信息可能在仓库中可见。
 *.azurePubxml
 
-# NuGet Packages
+# NuGet 包
 *.nupkg
-# NuGet Symbol Packages
+# NuGet 符号包
 *.snupkg
-# The packages folder can be ignored because of Package Restore
+# 由于包还原，packages 文件夹可以被忽略
 **/[Pp]ackages/*
-# except build/, which is used as an MSBuild target.
+# 除了 build/，它被用作 MSBuild 目标
 !**/[Pp]ackages/build/
-# Uncomment if necessary however generally it will be regenerated when needed
+# 如有必要请取消注释，但通常会在需要时重新生成
 #!**/[Pp]ackages/repositories.config
-# NuGet v3's project.json files produces more ignorable files
+# NuGet v3 的 project.json 文件产生更多可忽略的文件
 *.nuget.props
 *.nuget.targets
 
-# Microsoft Azure Build Output
+# Microsoft Azure 构建输出
 csx/
 *.build.csdef
 
-# Microsoft Azure Emulator
+# Microsoft Azure 模拟器
 ecf/
 rcf/
 
-# Windows Store app package directories and files
+# Windows Store 应用程序包目录和文件
 AppPackages/
 BundleArtifacts/
 Package.StoreAssociation.xml
@@ -190,13 +189,13 @@ _pkginfo.txt
 *.appxbundle
 *.appxupload
 
-# Visual Studio cache files
-# files ending in .cache can be ignored
+# Visual Studio 缓存文件
+# 以 .cache 结尾的文件可以被忽略
 *.[Cc]ache
-# but keep track of directories ending in .cache
+# 但跟踪以 .cache 结尾的目录
 !?*.[Cc]ache/
 
-# Others
+# 其他
 ClientBin/
 ~$*
 *~
@@ -207,32 +206,31 @@ ClientBin/
 *.publishsettings
 orleans.codegen.cs
 
-# Including strong name files can present a security risk
+# 包含强名称文件可能存在安全风险
 # (https://github.com/github/gitignore/pull/2483#issue-259490424)
 #*.snk
 
-# Since there are multiple workflows, uncomment next line to ignore bower_components
+# 由于有多个工作流，取消注释下一行以忽略 bower_components
 # (https://github.com/github/gitignore/pull/1529#issuecomment-104372622)
 #bower_components/
 
-# RIA/Silverlight projects
+# RIA/Silverlight 项目
 Generated_Code/
 
-# Backup & report files from converting an old project file
-# to a newer Visual Studio version. Backup files are not needed,
-# because we have git ;-)
+# 将旧项目文件转换为新 Visual Studio 版本时的备份和报告文件。
+# 备份文件不是必需的，因为我们有 git ;-)
 _UpgradeReport_Files/
 Backup*/
 UpgradeLog*.XML
 UpgradeLog*.htm
 CSharpUpgradeLog*.txt
 
-# SQL Server files
+# SQL Server 文件
 *.mdf
 *.ldf
 *.ndf
 
-# Business Intelligence projects
+# 商业智能项目
 *.rdl.data
 *.bim.layout
 *.bim_*.settings
@@ -244,23 +242,23 @@ CSharpUpgradeLog*.txt
 # Microsoft Fakes
 FakesAssemblies/
 
-# GhostDoc plugin setting file
+# GhostDoc 插件设置文件
 *.GhostDoc.xml
 
-# Node.js Tools for Visual Studio
+# Visual Studio 的 Node.js 工具
 .ntvs_analysis.dat
 node_modules/
 
-# Visual Studio 6 build log
+# Visual Studio 6 构建日志
 *.plg
 
-# Visual Studio 6 workspace options file
+# Visual Studio 6 工作区选项文件
 *.opt
 
-# Visual Studio 6 auto-generated workspace file (contains which files were open etc.)
+# Visual Studio 6 自动生成的工作区文件（包含哪些文件是打开的等）
 *.vbw
 
-# Visual Studio LightSwitch build output
+# Visual Studio LightSwitch 构建输出
 **/*.HTMLClient/GeneratedArtifacts
 **/*.DesktopClient/GeneratedArtifacts
 **/*.DesktopClient/ModelManifest.xml
@@ -268,67 +266,67 @@ node_modules/
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
 
-# Paket dependency manager
+# Paket 依赖管理器
 .paket/paket.exe
 paket-files/
 
 # FAKE - F# Make
 .fake/
 
-# CodeRush personal settings
+# CodeRush 个人设置
 .cr/personal
 
-# Python Tools for Visual Studio (PTVS)
+# Visual Studio 的 Python 工具 (PTVS)
 __pycache__/
 *.pyc
 
-# Cake - Uncomment if you are using it
+# Cake - 如果您使用它，请取消注释
 # tools/**
 # !tools/packages.config
 
 # Tabs Studio
 *.tss
 
-# Telerik's JustMock configuration file
+# Telerik 的 JustMock 配置文件
 *.jmconfig
 
-# BizTalk build output
+# BizTalk 构建输出
 *.btp.cs
 *.btm.cs
 *.odx.cs
 *.xsd.cs
 
-# OpenCover UI analysis results
+# OpenCover UI 分析结果
 OpenCover/
 
-# Azure Stream Analytics local run output
+# Azure Stream Analytics 本地运行输出
 ASALocalRun/
 
-# MSBuild Binary and Structured Log
+# MSBuild 二进制和结构化日志
 *.binlog
 
-# NVidia Nsight GPU debugger configuration file
+# NVidia Nsight GPU 调试器配置文件
 *.nvuser
 
-# MFractors (Xamarin productivity tool) working folder
+# MFractors (Xamarin 生产力工具) 工作文件夹
 .mfractor/
 
-# Local History for Visual Studio
+# Visual Studio 本地历史记录
 .localhistory/
 
-# BeatPulse healthcheck temp database
+# BeatPulse 健康检查临时数据库
 healthchecksdb
 
-# Backup folder for Package Reference Convert tool in Visual Studio 2017
+# Visual Studio 2017 中包引用转换工具的备份文件夹
 MigrationBackup/
 
-# Ionide (cross platform F# VS Code tools) working folder
+# Ionide (跨平台 F# VS Code 工具) 工作文件夹
 .ionide/
 
-# Fody - auto-generated XML schema
+# Fody - 自动生成的 XML 模式
 FodyWeavers.xsd
 
-# VS Code files for those working on multiple tools
+# VS Code 文件，适用于使用多种工具的用户
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -336,10 +334,10 @@ FodyWeavers.xsd
 !.vscode/extensions.json
 *.code-workspace
 
-# Local History for Visual Studio Code
+# Visual Studio Code 本地历史记录
 .history/
 
-# Windows Installer files from build outputs
+# 构建输出的 Windows 安装程序文件
 *.cab
 *.msi
 *.msix
@@ -350,13 +348,13 @@ FodyWeavers.xsd
 .idea/
 *.sln.iml
 
-# User-specific files (MonoDevelop/Xamarin Studio)
+# 用户特定文件 (MonoDevelop/Xamarin Studio)
 *.userprefs
 
-# Mono auto generated files
+# Mono 自动生成的文件
 mono_crash.*
 
-# Build results
+# 构建结果
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -368,14 +366,13 @@ bld/
 [Bb]in/
 [Oo]bj/
 
-# Custom additions for this project
+# 此项目的自定义添加
 *.csproj.user
 publish*/
 cache/
 Data/
-
-# User data cleanup scripts (not for git repository)
+CLAUDE.md
 suggestions_1.md
 suggestions_2.md
-suggestions_window.md
+suggestions_3.md
 suggestions_final.md
