@@ -1,6 +1,6 @@
-# DesktopMemo 桌面便签
+<h1 align="center">DesktopMemo 桌面便签</h1>
 
-> 一个简单的Windows桌面便签应用程序
+> <p align="center">一个简单的 Windows 桌面便签应用程序</p>
 
 <div align="center">
 

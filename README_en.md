@@ -1,6 +1,6 @@
-# DesktopMemo
+<h1 align="center">DesktopMemo<h1>
 
-> A simple Windows desktop memo application
+> <p align="center">A simple Windows desktop memo application</p>
 
 <div align="center">
 
