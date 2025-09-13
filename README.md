@@ -2,9 +2,15 @@
 
 > 一个简单的Windows桌面便签应用程序
 
-![.NET](https://img.shields.io/badge/.NET-8.0-purple)
-![Platform](https://img.shields.io/badge/Platform-Windows-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+<div align="center">
+
+<img src="https://img.shields.io/badge/.NET-8.0-purple" />
+<img src="https://img.shields.io/badge/Platform-Windows-blue" />
+<img src="https://img.shields.io/badge/License-MIT-green" />
+
+中文 README | [English README](./README_en.md)
+
+</div>
 
 ## 📋 项目简介
 
