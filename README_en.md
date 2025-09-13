@@ -1,4 +1,4 @@
-<h1 align="center">DesktopMemo<h1>
+<h1 align="center">DesktopMemo</h1>
 
 > <p align="center">A simple Windows desktop memo application</p>
 
@@ -157,7 +157,7 @@ Encountered an issue? Please report it through:
 2. Provide detailed steps to reproduce the issue
 3. Include system environment information and error screenshots
 
-## 📄 License
+## 🏛️ License
 
 This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details
 

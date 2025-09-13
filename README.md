@@ -158,7 +158,7 @@ dotnet publish --configuration Release --output ./publish
 2. 详细描述问题复现步骤
 3. 附上系统环境信息和错误截图
 
-## 📄 许可证
+## 🏛️ 许可证
 
 本项目采用 [MIT 许可证](LICENSE) - 详见 LICENSE 文件
 
