@@ -139,9 +139,9 @@ dotnet publish --configuration Release --output ./publish
 
 ## 🚧 施工规划
 
-- [ ] 为应用添加图标
-- [ ] 优化UI布局
-- [ ] 添加更多主题颜色
+- [ ] 修改文本存储方式
+- [ ] 添加多语言UI
+- [ ] 添加快捷键功能
 - [ ] 优化性能
 
 ## 🐛 问题反馈
