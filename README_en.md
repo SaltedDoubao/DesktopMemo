@@ -163,6 +163,7 @@ See [Releases](../../releases) for details
 ### Future Update Trends
 - [ ] Project refactoring
 - [ ] Multi-language adaptation
+- [ ] Todo-list feature
 
 ## 🐛 Bug Reports
 
