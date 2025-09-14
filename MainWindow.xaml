@@ -464,7 +464,8 @@
                                      FontSize="14"
                                      CaretBrush="#FF64B5F6"
                                      SelectionBrush="#4064B5F6"
-                                     TextChanged="NoteTextBox_TextChanged">
+                                     TextChanged="NoteTextBox_TextChanged"
+                                     PreviewKeyDown="NoteTextBox_PreviewKeyDown">
                                 <TextBox.ContextMenu>
                                     <ContextMenu Background="#F0151515" 
                                                  BorderBrush="#40FFFFFF" 

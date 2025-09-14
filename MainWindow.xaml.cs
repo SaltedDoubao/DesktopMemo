@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
@@ -1104,13 +1105,282 @@ namespace DesktopMemo
         private void NoteTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (_isLoadedFromDisk || !_isEditMode) return;
-            
+
             // 启动防抖定时器，而不是直接保存
             _autoSaveMemoTimer.Stop();
             _autoSaveMemoTimer.Start();
-            
+
             // 更新窗口标题可以立即执行
             UpdateWindowTitle();
+        }
+
+        /// <summary>
+        /// 处理文本框快捷键
+        /// </summary>
+        private void NoteTextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            var textBox = sender as System.Windows.Controls.TextBox;
+            if (textBox == null) return;
+
+            // 处理 Ctrl 组合键
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                switch (e.Key)
+                {
+                    case Key.S:  // Ctrl+S 保存
+                        e.Handled = true;
+                        SaveCurrentMemo();
+                        ShowTemporaryMessage("已保存");
+                        break;
+
+                    case Key.N:  // Ctrl+N 新建备忘录
+                        e.Handled = true;
+                        AddNewMemo();
+                        break;
+
+                    case Key.Tab:  // Ctrl+Tab 切换到下一个备忘录
+                        e.Handled = true;
+                        SwitchToNextMemo();
+                        break;
+
+                    case Key.F:  // Ctrl+F 查找
+                        e.Handled = true;
+                        ShowSearchDialog();
+                        break;
+
+                    case Key.H:  // Ctrl+H 替换
+                        e.Handled = true;
+                        ShowReplaceDialog();
+                        break;
+
+                    case Key.OemCloseBrackets:  // Ctrl+] 增加缩进
+                        e.Handled = true;
+                        IncreaseIndentation(textBox);
+                        break;
+
+                    case Key.OemOpenBrackets:  // Ctrl+[ 减少缩进
+                        e.Handled = true;
+                        DecreaseIndentation(textBox);
+                        break;
+
+                    case Key.D:  // Ctrl+D 复制当前行
+                        e.Handled = true;
+                        DuplicateCurrentLine(textBox);
+                        break;
+                }
+            }
+            // 处理 Ctrl+Shift 组合键
+            else if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                switch (e.Key)
+                {
+                    case Key.Tab:  // Ctrl+Shift+Tab 切换到上一个备忘录
+                        e.Handled = true;
+                        SwitchToPreviousMemo();
+                        break;
+                }
+            }
+            // 处理 Shift 组合键
+            else if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
+            {
+                switch (e.Key)
+                {
+                    case Key.Tab:  // Shift+Tab 减少缩进
+                        e.Handled = true;
+                        DecreaseIndentation(textBox);
+                        break;
+                }
+            }
+            // 处理单独按键
+            else
+            {
+                switch (e.Key)
+                {
+                    case Key.Tab:  // Tab 插入缩进
+                        e.Handled = true;
+                        InsertIndentation(textBox);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 插入缩进（4个空格）
+        /// </summary>
+        private void InsertIndentation(System.Windows.Controls.TextBox textBox)
+        {
+            int caretIndex = textBox.CaretIndex;
+            string indentation = "    "; // 4个空格
+            textBox.Text = textBox.Text.Insert(caretIndex, indentation);
+            textBox.CaretIndex = caretIndex + indentation.Length;
+        }
+
+        /// <summary>
+        /// 增加选中行的缩进
+        /// </summary>
+        private void IncreaseIndentation(System.Windows.Controls.TextBox textBox)
+        {
+            if (textBox.SelectedText.Length > 0)
+            {
+                // 处理多行缩进
+                var selectedText = textBox.SelectedText;
+                var lines = selectedText.Split('\n');
+                var indentedLines = lines.Select(line => "    " + line);
+                var newText = string.Join("\n", indentedLines);
+
+                int selectionStart = textBox.SelectionStart;
+                textBox.SelectedText = newText;
+                textBox.SelectionStart = selectionStart;
+                textBox.SelectionLength = newText.Length;
+            }
+            else
+            {
+                // 单行缩进
+                InsertIndentation(textBox);
+            }
+        }
+
+        /// <summary>
+        /// 减少选中行的缩进
+        /// </summary>
+        private void DecreaseIndentation(System.Windows.Controls.TextBox textBox)
+        {
+            if (textBox.SelectedText.Length > 0)
+            {
+                // 处理多行取消缩进
+                var selectedText = textBox.SelectedText;
+                var lines = selectedText.Split('\n');
+                var unindentedLines = lines.Select(line =>
+                {
+                    if (line.StartsWith("    "))
+                        return line.Substring(4);
+                    else if (line.StartsWith("\t"))
+                        return line.Substring(1);
+                    return line;
+                });
+                var newText = string.Join("\n", unindentedLines);
+
+                int selectionStart = textBox.SelectionStart;
+                textBox.SelectedText = newText;
+                textBox.SelectionStart = selectionStart;
+                textBox.SelectionLength = newText.Length;
+            }
+            else
+            {
+                // 单行取消缩进 - 找到当前行并移除缩进
+                int caretIndex = textBox.CaretIndex;
+                string text = textBox.Text;
+
+                // 找到当前行的开始
+                int lineStart = caretIndex;
+                while (lineStart > 0 && text[lineStart - 1] != '\n')
+                    lineStart--;
+
+                // 检查行开头是否有缩进
+                if (lineStart < text.Length)
+                {
+                    if (lineStart + 4 <= text.Length && text.Substring(lineStart, 4) == "    ")
+                    {
+                        textBox.Text = text.Remove(lineStart, 4);
+                        textBox.CaretIndex = Math.Max(lineStart, caretIndex - 4);
+                    }
+                    else if (lineStart < text.Length && text[lineStart] == '\t')
+                    {
+                        textBox.Text = text.Remove(lineStart, 1);
+                        textBox.CaretIndex = Math.Max(lineStart, caretIndex - 1);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 复制当前行
+        /// </summary>
+        private void DuplicateCurrentLine(System.Windows.Controls.TextBox textBox)
+        {
+            int caretIndex = textBox.CaretIndex;
+            string text = textBox.Text;
+
+            // 找到当前行的开始和结束
+            int lineStart = caretIndex;
+            while (lineStart > 0 && text[lineStart - 1] != '\n')
+                lineStart--;
+
+            int lineEnd = caretIndex;
+            while (lineEnd < text.Length && text[lineEnd] != '\n')
+                lineEnd++;
+
+            // 获取当前行内容
+            string currentLine = text.Substring(lineStart, lineEnd - lineStart);
+
+            // 在当前行后插入重复的行
+            string newLine = "\n" + currentLine;
+            textBox.Text = text.Insert(lineEnd, newLine);
+            textBox.CaretIndex = lineEnd + newLine.Length;
+        }
+
+        /// <summary>
+        /// 切换到下一个备忘录
+        /// </summary>
+        private void SwitchToNextMemo()
+        {
+            if (_memos.Count <= 1) return;
+
+            int currentIndex = _memos.FindIndex(m => m.Id == _currentMemo?.Id);
+            int nextIndex = (currentIndex + 1) % _memos.Count;
+            EditMemo(_memos[nextIndex]);
+        }
+
+        /// <summary>
+        /// 切换到上一个备忘录
+        /// </summary>
+        private void SwitchToPreviousMemo()
+        {
+            if (_memos.Count <= 1) return;
+
+            int currentIndex = _memos.FindIndex(m => m.Id == _currentMemo?.Id);
+            int prevIndex = currentIndex <= 0 ? _memos.Count - 1 : currentIndex - 1;
+            EditMemo(_memos[prevIndex]);
+        }
+
+        /// <summary>
+        /// 显示临时消息
+        /// </summary>
+        private void ShowTemporaryMessage(string message)
+        {
+            // 这里可以实现一个临时的提示消息，比如在状态栏或者弹出提示
+            // 暂时使用窗口标题显示
+            string originalTitle = this.Title;
+            this.Title = $"{message} - {originalTitle}";
+
+            var timer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
+            timer.Tick += (s, e) =>
+            {
+                this.Title = originalTitle;
+                timer.Stop();
+            };
+            timer.Start();
+        }
+
+        /// <summary>
+        /// 显示查找对话框
+        /// </summary>
+        private void ShowSearchDialog()
+        {
+            // 这里调用现有的查找功能
+            FindMenuItem_Click(null!, null!);
+        }
+
+        /// <summary>
+        /// 显示替换对话框
+        /// </summary>
+        private void ShowReplaceDialog()
+        {
+            // 这里调用现有的替换功能
+            ReplaceMenuItem_Click(null!, null!);
         }
 
         /// <summary>
