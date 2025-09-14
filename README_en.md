@@ -1,4 +1,4 @@
-<h1 align="center">DesktopMemo</h1>
+<h1 align="center">SaltedDoubao's DesktopMemo</h1>
 
 > <p align="center">A simple Windows desktop memo application</p>
 
@@ -18,22 +18,16 @@ DesktopMemo is a desktop memo application developed with WPF technology, providi
 
 ## ✨ Key Features
 
-### 🏠 Window Management
 - **Three topmost modes**: Normal mode, pinned to desktop, pinned on top of windows
 - **Position memory**: Automatically saves and restores window position
 - **Click through**: When enabled, allows clicking through to the desktop without affecting your normal work
 - **Window lock**: Prevents accidental window dragging
-
-### 🎨 User Experience
-- **Modern interface**: Clean and beautiful user interface
 - **Quick operations**: Rich keyboard shortcut support
-- **Status indicators**: Real-time status information display
-- **Balloon tips**: Friendly notifications for important operations
 
 ## 🖥️ System Requirements
 
 - **Operating System**: Windows 10 version 1809 or higher
-- **Architecture**: x64
+- **Architecture**: x86_64
 - **.NET Runtime**: No separate installation required (packaged in executable)
 - **Memory**: Recommended 512MB available memory
 - **Storage**: Approximately 200MB disk space
@@ -54,6 +48,40 @@ DesktopMemo is a desktop memo application developed with WPF technology, providi
 2. **Edit content**: Type directly in the text area, first line is the title, second line onwards is the content
 3. **Switch memos**: Use the memo list or shortcuts to switch between memos
 4. **Adjust window**: Drag window edges to resize, drag title bar to move position
+
+### Keyboard Shortcuts
+
+> Global shortcuts
+- Ctrl+N - Quick create new memo
+> Available only in editing interface
+- Tab - Insert indentation (4 spaces)
+- Shift+Tab - Reduce indentation
+- Ctrl + S - Save current memo (seems unnecessary)
+- Ctrl + Tab / Ctrl + Shift + Tab - Switch memos
+- Ctrl + F / Ctrl+H - Find/Replace
+- F3 / Shift + F3 - Find next/previous
+- Ctrl + ] / Ctrl + [ - Increase/decrease indentation
+- Ctrl + D - Duplicate current line downward
+
+### Building the Project
+
+```bash
+# Clone the project
+git clone https://github.com/SaltedDoubao/DesktopMemo.git
+cd DesktopMemo
+
+# Restore dependencies
+dotnet restore
+
+# Build project
+dotnet build --configuration Release
+
+# Run project
+dotnet run
+
+# Publish single-file version
+dotnet publish DesktopMemo.csproj --configuration Release --output ./publish
+```
 
 ## 🛠️ Development Information
 
@@ -79,35 +107,16 @@ DesktopMemo/
 └── README.md             # Documentation
 ```
 
-### Building the Project
-
-```bash
-# Clone the project
-git clone https://github.com/SaltedDoubao/DesktopMemo.git
-cd DesktopMemo
-
-# Restore dependencies
-dotnet restore
-
-# Build project
-dotnet build --configuration Release
-
-# Run project
-dotnet run
-
-# Publish single-file version
-dotnet publish --configuration Release --output ./publish
-```
 
 ## 📄 Data Storage
 
 Application data is saved in the following location:
 
 ```
-%APPDATA%\DesktopMemo\
-├── settings.json         # Application settings
-└── Data\
-    └── memos.json        # Memo data
+DesktopMemo.exe       # Application
+Data\
+├── settings.json     # Application settings
+└── content\          # Memo data
 ```
 
 ## 🔧 Configuration Files
@@ -125,6 +134,7 @@ Application data is saved in the following location:
   "AutoStartEnabled": false,
   "NoteContent": "",
   "ShowExitPrompt": true
+  ...
 }
 ```
 
@@ -144,10 +154,15 @@ See [Releases](../../releases) for details
 
 ## 🚧 Development Roadmap
 
-- [ ] Modify text storage method
-- [ ] Add multi-language UI
-- [ ] Add shortcut key functionality
-- [ ] Performance optimization
+### Upcoming Updates
+- [ ] Use YAML for project configuration storage
+- [ ] Add multi-select and delete functionality
+- [ ] Add preset window size schemes
+- [ ] Add theme switching functionality
+
+### Future Update Trends
+- [ ] Project refactoring
+- [ ] Multi-language adaptation
 
 ## 🐛 Bug Reports
 
@@ -169,7 +184,8 @@ Thanks to all developers and users who have contributed to this project!
 
 <div align="center">
 
-**If this project helped you, please consider giving it a ⭐!**
+**If this project helped you, please consider giving it a ⭐!**\
+**Your ⭐ is the greatest motivation for my updates!**
 
 [Report Bug](../../issues) • [Request Feature](../../issues) • [Contribute](../../pulls)
 
