@@ -17,7 +17,8 @@
         ShowInTaskbar="False"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
-        TextOptions.TextRenderingMode="ClearType">
+        TextOptions.TextRenderingMode="ClearType"
+        KeyDown="MainWindow_KeyDown">
     
     <Window.Resources>
         <!-- 玻璃拟态样式资源 -->

@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
@@ -63,7 +64,12 @@ namespace DesktopMemo
         
         // 窗口固定状态
         private bool _isWindowPinned = false;
-        
+
+        // 搜索状态管理
+        private string _currentSearchText = string.Empty;
+        private int _currentSearchIndex = -1;
+        private List<int> _searchMatches = new List<int>();
+
         // 背景透明度设置 (0.0-1.0，对应0%-100%)
         private double _backgroundOpacity = 0.1;
 
@@ -258,6 +264,10 @@ namespace DesktopMemo
             try
             {
                 InitializeComponent();
+
+                // 设置窗口图标
+                SetWindowIcon();
+
                 _appDataDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
                 _noteFilePath = System.IO.Path.Combine(_appDataDir, "notes.json");
                 _memosFilePath = System.IO.Path.Combine(_appDataDir, "memos.json");
@@ -381,14 +391,55 @@ namespace DesktopMemo
             return IntPtr.Zero;
         }
 
+        /// <summary>
+        /// 设置窗口图标
+        /// </summary>
+        private void SetWindowIcon()
+        {
+            try
+            {
+                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo", "logo_128.png");
+                if (System.IO.File.Exists(iconPath))
+                {
+                    var uri = new Uri(iconPath, UriKind.Absolute);
+                    var bitmapFrame = BitmapFrame.Create(uri);
+                    this.Icon = bitmapFrame;
+                }
+            }
+            catch
+            {
+                // 如果加载失败，使用默认图标（无图标）
+            }
+        }
+
         private void ConfigureTrayIcon()
         {
             _notifyIcon = new Forms.NotifyIcon();
             _notifyIcon.Text = "DesktopMemo 便签 - 桌面便签工具";
             _notifyIcon.Visible = true;
             
-            // 设置更好的图标（如果有自定义图标文件可以替换）
-            _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+            // 设置自定义托盘图标
+            try
+            {
+                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo", "logo_64.png");
+                if (System.IO.File.Exists(iconPath))
+                {
+                    using (var bitmap = new System.Drawing.Bitmap(iconPath))
+                    {
+                        _notifyIcon.Icon = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
+                    }
+                }
+                else
+                {
+                    // 如果文件不存在，使用系统默认图标
+                    _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+                }
+            }
+            catch
+            {
+                // 如果加载失败，使用系统默认图标
+                _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+            }
 
             var menu = new Forms.ContextMenuStrip();
             
@@ -1112,6 +1163,93 @@ namespace DesktopMemo
 
             // 更新窗口标题可以立即执行
             UpdateWindowTitle();
+
+            // 清除搜索状态（文本内容已更改）
+            ClearSearchState();
+        }
+
+        /// <summary>
+        /// 处理全局窗口快捷键（当焦点不在文本框时）
+        /// </summary>
+        private void MainWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            // 如果焦点在文本框上，让文本框的PreviewKeyDown处理
+            if (NoteTextBox != null && NoteTextBox.IsFocused)
+                return;
+
+            // 处理 Ctrl 组合键
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                switch (e.Key)
+                {
+                    case Key.N:  // Ctrl+N 新建备忘录
+                        e.Handled = true;
+                        AddNewMemo();
+                        ShowTemporaryMessage("新建备忘录");
+                        break;
+
+                    case Key.S:  // Ctrl+S 保存
+                        e.Handled = true;
+                        if (_currentMemo != null)
+                        {
+                            SaveCurrentMemo();
+                            ShowTemporaryMessage("已保存");
+                        }
+                        break;
+
+                    case Key.F:  // Ctrl+F 查找
+                        e.Handled = true;
+                        ShowSearchDialog();
+                        break;
+
+                    case Key.H:  // Ctrl+H 替换
+                        e.Handled = true;
+                        ShowReplaceDialog();
+                        break;
+
+                    case Key.Tab:  // Ctrl+Tab 切换到下一个备忘录
+                        e.Handled = true;
+                        SwitchToNextMemo();
+                        break;
+                }
+            }
+            // 处理 Ctrl+Shift 组合键
+            else if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                switch (e.Key)
+                {
+                    case Key.Tab:  // Ctrl+Shift+Tab 切换到上一个备忘录
+                        e.Handled = true;
+                        SwitchToPreviousMemo();
+                        break;
+                }
+            }
+            // 处理 Shift 组合键
+            else if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
+            {
+                switch (e.Key)
+                {
+                    case Key.F3:  // Shift+F3 查找上一个
+                        e.Handled = true;
+                        if (!string.IsNullOrEmpty(_currentSearchText))
+                            FindPrevious();
+                        break;
+                }
+            }
+            // 处理单独按键
+            else
+            {
+                switch (e.Key)
+                {
+                    case Key.F3:  // F3 查找下一个
+                        e.Handled = true;
+                        if (!string.IsNullOrEmpty(_currentSearchText))
+                            FindNext();
+                        else
+                            ShowSearchDialog();
+                        break;
+                }
+            }
         }
 
         /// <summary>
@@ -1189,6 +1327,12 @@ namespace DesktopMemo
                         e.Handled = true;
                         DecreaseIndentation(textBox);
                         break;
+
+                    case Key.F3:  // Shift+F3 查找上一个
+                        e.Handled = true;
+                        if (!string.IsNullOrEmpty(_currentSearchText))
+                            FindPrevious();
+                        break;
                 }
             }
             // 处理单独按键
@@ -1199,6 +1343,14 @@ namespace DesktopMemo
                     case Key.Tab:  // Tab 插入缩进
                         e.Handled = true;
                         InsertIndentation(textBox);
+                        break;
+
+                    case Key.F3:  // F3 查找下一个
+                        e.Handled = true;
+                        if (!string.IsNullOrEmpty(_currentSearchText))
+                            FindNext();
+                        else
+                            ShowSearchDialog();
                         break;
                 }
             }
@@ -1992,32 +2144,111 @@ namespace DesktopMemo
         private void FindMenuItem_Click(object sender, RoutedEventArgs e)
         {
             string searchText = Microsoft.VisualBasic.Interaction.InputBox(
-                "请输入要查找的文本：",
+                "请输入要查找的文本：\n\n提示：\n- 输入相同文本继续查找下一个\n- 输入新文本开始新的搜索",
                 "查找",
-                "");
-                
+                _currentSearchText);
+
             if (!string.IsNullOrEmpty(searchText))
             {
-                int index = NoteTextBox.Text.IndexOf(searchText, StringComparison.OrdinalIgnoreCase);
-                if (index >= 0)
+                // 如果是新的搜索文本，重新搜索
+                if (searchText != _currentSearchText)
                 {
-                    NoteTextBox.Select(index, searchText.Length);
-                    NoteTextBox.Focus();
-                    if (StatusText != null)
-                    {
-                        StatusText.Text = $"找到匹配项：{searchText}";
-                    }
+                    _currentSearchText = searchText;
+                    _currentSearchIndex = -1;
+                    FindAllMatches();
                 }
-                else
-                {
-                    if (StatusText != null)
-                    {
-                        StatusText.Text = $"未找到：{searchText}";
-                    }
-                }
+
+                // 查找下一个匹配项
+                FindNext();
             }
         }
-        
+
+        /// <summary>
+        /// 查找所有匹配项
+        /// </summary>
+        private void FindAllMatches()
+        {
+            _searchMatches.Clear();
+            if (string.IsNullOrEmpty(_currentSearchText) || NoteTextBox == null)
+                return;
+
+            string text = NoteTextBox.Text;
+            int index = 0;
+            while ((index = text.IndexOf(_currentSearchText, index, StringComparison.OrdinalIgnoreCase)) >= 0)
+            {
+                _searchMatches.Add(index);
+                index += _currentSearchText.Length;
+            }
+        }
+
+        /// <summary>
+        /// 查找下一个匹配项
+        /// </summary>
+        private void FindNext()
+        {
+            if (_searchMatches.Count == 0)
+            {
+                if (StatusText != null)
+                {
+                    StatusText.Text = $"未找到：{_currentSearchText}";
+                }
+                return;
+            }
+
+            // 移动到下一个匹配项
+            _currentSearchIndex = (_currentSearchIndex + 1) % _searchMatches.Count;
+            int index = _searchMatches[_currentSearchIndex];
+
+            // 选中并滚动到匹配项
+            NoteTextBox.Select(index, _currentSearchText.Length);
+            NoteTextBox.Focus();
+            NoteTextBox.ScrollToLine(NoteTextBox.GetLineIndexFromCharacterIndex(index));
+
+            if (StatusText != null)
+            {
+                StatusText.Text = $"找到匹配项 {_currentSearchIndex + 1}/{_searchMatches.Count}：{_currentSearchText}";
+            }
+        }
+
+        /// <summary>
+        /// 查找上一个匹配项
+        /// </summary>
+        private void FindPrevious()
+        {
+            if (_searchMatches.Count == 0)
+            {
+                if (StatusText != null)
+                {
+                    StatusText.Text = $"未找到：{_currentSearchText}";
+                }
+                return;
+            }
+
+            // 移动到上一个匹配项
+            _currentSearchIndex = _currentSearchIndex <= 0 ? _searchMatches.Count - 1 : _currentSearchIndex - 1;
+            int index = _searchMatches[_currentSearchIndex];
+
+            // 选中并滚动到匹配项
+            NoteTextBox.Select(index, _currentSearchText.Length);
+            NoteTextBox.Focus();
+            NoteTextBox.ScrollToLine(NoteTextBox.GetLineIndexFromCharacterIndex(index));
+
+            if (StatusText != null)
+            {
+                StatusText.Text = $"找到匹配项 {_currentSearchIndex + 1}/{_searchMatches.Count}：{_currentSearchText}";
+            }
+        }
+
+        /// <summary>
+        /// 清除搜索状态
+        /// </summary>
+        private void ClearSearchState()
+        {
+            _currentSearchText = string.Empty;
+            _currentSearchIndex = -1;
+            _searchMatches.Clear();
+        }
+
         /// <summary>
         /// 替换菜单项点击事件
         /// </summary>
