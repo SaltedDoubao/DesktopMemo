@@ -8,6 +8,9 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
 
+    <!-- 应用程序图标设置 -->
+    <ApplicationIcon>logo\logo.ico</ApplicationIcon>
+
     <!-- 发布优化设置 -->
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
@@ -16,7 +19,8 @@
     <PublishReadyToRun>true</PublishReadyToRun>
     <DebugType>None</DebugType>
     <DebugSymbols>false</DebugSymbols>
-    
+    <PublishDir>publish\</PublishDir>
+
     <!-- 应用程序信息 -->
     <AssemblyTitle>DesktopMemo</AssemblyTitle>
     <AssemblyDescription>桌面便签应用程序</AssemblyDescription>
@@ -33,10 +37,7 @@
 
   <!-- 包含logo文件作为内容 -->
   <ItemGroup>
-    <Content Include="logo\logo_64.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="logo\logo_128.png">
+    <Content Include="logo\logo.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

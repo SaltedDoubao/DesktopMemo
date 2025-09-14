@@ -23,8 +23,10 @@ namespace DesktopMemo
     {
         private readonly string _appDataDir;
         private readonly string _noteFilePath;
-        private readonly string _memosFilePath;
+        private readonly string _memosFilePath; // 旧版本兼容
+        private readonly string _memosMetadataFilePath; // 新版本元数据
         private readonly string _settingsFilePath;
+        private readonly string _contentDir; // Markdown 内容目录
         private Forms.NotifyIcon _notifyIcon = null!;
         private bool _isLoadedFromDisk;
         // 备忘录管理
@@ -271,9 +273,12 @@ namespace DesktopMemo
                 _appDataDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
                 _noteFilePath = System.IO.Path.Combine(_appDataDir, "notes.json");
                 _memosFilePath = System.IO.Path.Combine(_appDataDir, "memos.json");
+                _memosMetadataFilePath = System.IO.Path.Combine(_appDataDir, "memos_metadata.json");
                 _settingsFilePath = System.IO.Path.Combine(_appDataDir, "settings.json");
+                _contentDir = System.IO.Path.Combine(_appDataDir, "content");
 
                 Directory.CreateDirectory(_appDataDir);
+                Directory.CreateDirectory(_contentDir);
             
                 // 监听窗口激活事件，防止在桌面模式下被提升到前台
                 this.Activated += MainWindow_Activated;
@@ -315,19 +320,26 @@ namespace DesktopMemo
                 this.LocationChanged += MainWindow_LocationChanged;
                 
                 // 在所有控件初始化完成后设置状态
-                this.Loaded += (s, e) => 
+                this.Loaded += (s, e) =>
                 {
                     // 初始化设置控件状态（应用加载的设置）
                     InitializeSettingsControls();
-                    
+
                     // 启动位置更新定时器
                     _positionUpdateTimer.Start();
                     UpdateCurrentPositionDisplay();
-                    
+
+                    // 确保备忘录数据已加载后再刷新界面
+                    if (_memos == null || !_memos.Any())
+                    {
+                        // 如果没有备忘录，创建默认的
+                        CreateDefaultMemo();
+                    }
+
                     // 初始化备忘录界面
                     RefreshMemoList();
                     ShowMemoList();
-                    
+
                     // 播放窗口淡入动画
                     if (FindResource("FadeInAnimation") is System.Windows.Media.Animation.Storyboard fadeInStoryboard)
                     {
@@ -398,7 +410,7 @@ namespace DesktopMemo
         {
             try
             {
-                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo", "logo_128.png");
+                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo", "logo.ico");
                 if (System.IO.File.Exists(iconPath))
                 {
                     var uri = new Uri(iconPath, UriKind.Absolute);
@@ -421,13 +433,10 @@ namespace DesktopMemo
             // 设置自定义托盘图标
             try
             {
-                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo", "logo_64.png");
+                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo", "logo.ico");
                 if (System.IO.File.Exists(iconPath))
                 {
-                    using (var bitmap = new System.Drawing.Bitmap(iconPath))
-                    {
-                        _notifyIcon.Icon = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
-                    }
+                    _notifyIcon.Icon = new System.Drawing.Icon(iconPath);
                 }
                 else
                 {
@@ -743,35 +752,89 @@ namespace DesktopMemo
         }
 
         /// <summary>
-        /// 从磁盘加载备忘录数据
+        /// 从磁盘加载备忘录数据（优先加载Markdown格式）
         /// </summary>
-        private void LoadMemosFromDisk()
+        private async void LoadMemosFromDisk()
         {
             try
             {
-                // 先尝试加载新格式的备忘录数据
+                // 优先尝试加载Markdown文件
+                if (Directory.Exists(_contentDir))
+                {
+                    await LoadMemosFromMarkdownAsync();
+
+                    // 如果有数据，返回
+                    if (_memos.Any())
+                        return;
+                }
+
+                // 尝试从旧格式迁移
+                if (System.IO.File.Exists(_memosMetadataFilePath))
+                {
+                    await LoadMemosFromHybridStorageAsync();
+
+                    if (_memos.Any())
+                    {
+                        // 迁移到新的Markdown格式
+                        await MigrateToMarkdownStorageAsync();
+                        return;
+                    }
+                }
+
+                // 尝试加载旧的 JSON 格式
                 if (System.IO.File.Exists(_memosFilePath))
                 {
                     var json = System.IO.File.ReadAllText(_memosFilePath, Encoding.UTF8);
                     var memosData = JsonSerializer.Deserialize<MemosData>(json);
                     _memos = memosData?.Memos ?? new List<MemoModel>();
+
+                    // 迁移到新格式
+                    if (_memos.Any())
+                    {
+                        await MigrateToMarkdownStorageAsync();
+                        return;
+                    }
                 }
-                // 如果没有新格式数据，尝试从旧格式迁移
+                // 如果没有新格式数据，尝试从最旧的格式迁移
                 else if (System.IO.File.Exists(_noteFilePath))
                 {
                     MigrateFromOldNoteFormat();
+
+                    // 迁移到新格式
+                    if (_memos.Any())
+                    {
+                        await MigrateToMarkdownStorageAsync();
+                        return;
+                    }
                 }
-                
+
                 // 如果没有任何备忘录，创建一个默认的
                 if (!_memos.Any())
                 {
                     CreateDefaultMemo();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"加载备忘录失败: {ex.Message}");
                 // 加载失败时创建默认备忘录
                 CreateDefaultMemo();
+            }
+        }
+
+        /// <summary>
+        /// 迁移到简化的Markdown存储格式
+        /// </summary>
+        private async Task MigrateToMarkdownStorageAsync()
+        {
+            try
+            {
+                await SaveMemosToMarkdownAsync();
+                System.Diagnostics.Debug.WriteLine("已成功迁移到Markdown存储格式");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"迁移到Markdown存储格式失败: {ex.Message}");
             }
         }
         
@@ -801,7 +864,7 @@ namespace DesktopMemo
                         ModifiedTime = DateTime.Now
                     };
                     _memos.Add(memo);
-                    SaveMemosToDisk();
+                    SaveMemosAsync();
                 }
             }
             catch (Exception)
@@ -823,11 +886,625 @@ namespace DesktopMemo
                 ModifiedTime = DateTime.Now
             };
             _memos.Add(defaultMemo);
-            SaveMemosToDisk();
+            SaveMemosAsync();
+        }
+
+        #region 简化的Markdown存储模式
+
+        /// <summary>
+        /// 生成基于时间的文件名
+        /// </summary>
+        private string GenerateTimeBasedFileName(DateTime createdTime)
+        {
+            return $"{createdTime:yyyyMMdd_HHmmss}.md";
         }
 
         /// <summary>
-        /// 保存备忘录数据到磁盘
+        /// 从Markdown文件加载所有备忘录
+        /// </summary>
+        private async Task LoadMemosFromMarkdownAsync()
+        {
+            try
+            {
+                if (!Directory.Exists(_contentDir))
+                    return;
+
+                var memosList = new List<MemoModel>();
+                var markdownFiles = Directory.GetFiles(_contentDir, "*.md");
+
+                foreach (var filePath in markdownFiles)
+                {
+                    try
+                    {
+                        var fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
+                        var content = await System.IO.File.ReadAllTextAsync(filePath, Encoding.UTF8);
+
+                        // 解析Markdown文件
+                        var memo = ParseMarkdownFile(fileName, content, System.IO.File.GetCreationTime(filePath), System.IO.File.GetLastWriteTime(filePath));
+                        if (memo != null)
+                        {
+                            memosList.Add(memo);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"加载备忘录文件 {filePath} 失败: {ex.Message}");
+                    }
+                }
+
+                _memos = memosList;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载Markdown备忘录失败: {ex.Message}");
+                _memos.Clear();
+            }
+        }
+
+        /// <summary>
+        /// 解析Markdown文件内容为备忘录对象
+        /// </summary>
+        private MemoModel? ParseMarkdownFile(string fileName, string content, DateTime createdTime, DateTime modifiedTime)
+        {
+            try
+            {
+                var lines = content.Split('\n');
+                string title = "";
+                string bodyContent = "";
+                bool foundFirstHeading = false;
+
+                foreach (var line in lines)
+                {
+                    var trimmedLine = line.Trim();
+
+                    // 找到第一个标题作为备忘录标题
+                    if (!foundFirstHeading && trimmedLine.StartsWith("# "))
+                    {
+                        title = trimmedLine.Substring(2).Trim();
+                        foundFirstHeading = true;
+                        continue;
+                    }
+
+                    // 剩余内容作为正文
+                    if (foundFirstHeading || !trimmedLine.StartsWith("#"))
+                    {
+                        bodyContent += line + "\n";
+                    }
+                }
+
+                // 如果没有找到标题，使用文件名或内容开头
+                if (string.IsNullOrWhiteSpace(title))
+                {
+                    // 尝试从文件名解析时间作为标题的一部分
+                    if (DateTime.TryParseExact(fileName, "yyyyMMdd_HHmmss", null, System.Globalization.DateTimeStyles.None, out var parsedTime))
+                    {
+                        title = $"备忘录 {parsedTime:yyyy年MM月dd日 HH:mm}";
+                    }
+                    else
+                    {
+                        var firstLine = bodyContent.Split('\n').FirstOrDefault()?.Trim();
+                        title = !string.IsNullOrWhiteSpace(firstLine) && firstLine.Length > 30
+                            ? firstLine.Substring(0, 30) + "..."
+                            : firstLine ?? "未命名备忘录";
+                    }
+                }
+
+                return new MemoModel
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Title = title,
+                    Content = bodyContent.Trim(),
+                    CreatedTime = createdTime,
+                    ModifiedTime = modifiedTime
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"解析Markdown文件失败: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 保存所有备忘录为Markdown文件
+        /// </summary>
+        private async Task SaveMemosToMarkdownAsync()
+        {
+            try
+            {
+                // 确保目录存在
+                Directory.CreateDirectory(_contentDir);
+
+                foreach (var memo in _memos)
+                {
+                    // 生成基于创建时间的文件名
+                    var fileName = GenerateTimeBasedFileName(memo.CreatedTime);
+                    var filePath = System.IO.Path.Combine(_contentDir, fileName);
+
+                    // 如果文件名冲突，添加后缀
+                    int suffix = 1;
+                    while (System.IO.File.Exists(filePath))
+                    {
+                        var nameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fileName);
+                        fileName = $"{nameWithoutExt}_{suffix:D2}.md";
+                        filePath = System.IO.Path.Combine(_contentDir, fileName);
+                        suffix++;
+                    }
+
+                    // 创建简化的Markdown内容
+                    var markdownContent = CreateSimpleMarkdownContent(memo.Title, memo.Content);
+                    await System.IO.File.WriteAllTextAsync(filePath, markdownContent, Encoding.UTF8);
+
+                    // 设置文件时间
+                    System.IO.File.SetCreationTime(filePath, memo.CreatedTime);
+                    System.IO.File.SetLastWriteTime(filePath, memo.ModifiedTime);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存Markdown备忘录失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 创建简化的Markdown格式内容
+        /// </summary>
+        private string CreateSimpleMarkdownContent(string title, string content)
+        {
+            var sb = new StringBuilder();
+
+            // 添加标题
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                sb.AppendLine($"# {title}");
+                sb.AppendLine();
+            }
+
+            // 添加内容
+            sb.Append(content);
+
+            return sb.ToString();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 生成内容文件名
+        /// </summary>
+        private string GenerateContentFileName(string memoId, string title)
+        {
+            // 清理标题中的无效字符
+            var cleanTitle = string.IsNullOrWhiteSpace(title) ? "untitled" : title;
+            foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+            {
+                cleanTitle = cleanTitle.Replace(c, '_');
+            }
+
+            // 限制文件名长度
+            if (cleanTitle.Length > 50)
+                cleanTitle = cleanTitle.Substring(0, 50);
+
+            return $"{memoId}_{cleanTitle}.md";
+        }
+
+        /// <summary>
+        /// 保存备忘录内容到 Markdown 文件
+        /// </summary>
+        private async Task SaveMemoContentAsync(string memoId, string title, string content)
+        {
+            try
+            {
+                string fileName = GenerateContentFileName(memoId, title);
+                string filePath = System.IO.Path.Combine(_contentDir, fileName);
+
+                // 创建 Markdown 格式的内容
+                var markdownContent = CreateMarkdownContent(title, content);
+
+                await System.IO.File.WriteAllTextAsync(filePath, markdownContent, Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断程序
+                System.Diagnostics.Debug.WriteLine($"保存备忘录内容失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 从 Markdown 文件加载备忘录内容
+        /// </summary>
+        private async Task<string> LoadMemoContentAsync(string contentFileName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(contentFileName))
+                    return string.Empty;
+
+                string filePath = System.IO.Path.Combine(_contentDir, contentFileName);
+                if (!System.IO.File.Exists(filePath))
+                    return string.Empty;
+
+                string markdownContent = await System.IO.File.ReadAllTextAsync(filePath, Encoding.UTF8);
+                return ExtractContentFromMarkdown(markdownContent);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载备忘录内容失败: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 创建 Markdown 格式的内容
+        /// </summary>
+        private string CreateMarkdownContent(string title, string content)
+        {
+            var sb = new StringBuilder();
+
+            // 添加元数据头部
+            sb.AppendLine("---");
+            sb.AppendLine($"title: \"{title?.Replace("\"", "\\\"")}\"");
+            sb.AppendLine($"created: \"{DateTime.Now:yyyy-MM-ddTHH:mm:ss}\"");
+            sb.AppendLine("---");
+            sb.AppendLine();
+
+            // 添加标题
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                sb.AppendLine($"# {title}");
+                sb.AppendLine();
+            }
+
+            // 添加内容
+            sb.Append(content);
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 从 Markdown 内容中提取纯文本
+        /// </summary>
+        private string ExtractContentFromMarkdown(string markdownContent)
+        {
+            if (string.IsNullOrEmpty(markdownContent))
+                return string.Empty;
+
+            var lines = markdownContent.Split('\n');
+            var contentLines = new List<string>();
+            bool inFrontMatter = false;
+            bool foundContent = false;
+
+            foreach (var line in lines)
+            {
+                // 跳过 YAML front matter
+                if (line.Trim() == "---")
+                {
+                    if (!foundContent)
+                    {
+                        inFrontMatter = !inFrontMatter;
+                        continue;
+                    }
+                }
+
+                if (inFrontMatter)
+                    continue;
+
+                foundContent = true;
+
+                // 跳过第一级标题（通常是标题）
+                if (line.StartsWith("# "))
+                    continue;
+
+                contentLines.Add(line);
+            }
+
+            // 移除开头的空行
+            while (contentLines.Count > 0 && string.IsNullOrWhiteSpace(contentLines[0]))
+            {
+                contentLines.RemoveAt(0);
+            }
+
+            return string.Join("\n", contentLines).TrimEnd();
+        }
+
+        /// <summary>
+        /// 删除备忘录内容文件
+        /// </summary>
+        private void DeleteMemoContentFile(string contentFileName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(contentFileName))
+                    return;
+
+                string filePath = System.IO.Path.Combine(_contentDir, contentFileName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"删除备忘录内容文件失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 保存备忘录数据到混合存储格式
+        /// </summary>
+        private async Task SaveMemosToHybridStorageAsync()
+        {
+            try
+            {
+                // 保存所有备忘录的内容到独立文件
+                var metadataList = new List<MemoMetadata>();
+
+                foreach (var memo in _memos)
+                {
+                    string fileName = GenerateContentFileName(memo.Id, memo.Title);
+                    await SaveMemoContentAsync(memo.Id, memo.Title, memo.Content);
+                    metadataList.Add(memo.ToMetadata(fileName));
+                }
+
+                // 保存元数据
+                var memosMetadata = new MemosMetadata
+                {
+                    Memos = metadataList,
+                    CurrentMemoId = _currentMemo?.Id ?? string.Empty,
+                    Version = 2
+                };
+
+                var json = JsonSerializer.Serialize(memosMetadata, new JsonSerializerOptions { WriteIndented = true });
+                await System.IO.File.WriteAllTextAsync(_memosMetadataFilePath, json, Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存混合存储格式失败: {ex.Message}");
+                // 如果新格式保存失败，回退到旧格式
+                SaveMemosAsync();
+            }
+        }
+
+        /// <summary>
+        /// 从混合存储格式加载备忘录
+        /// </summary>
+        private async Task LoadMemosFromHybridStorageAsync()
+        {
+            try
+            {
+                if (!System.IO.File.Exists(_memosMetadataFilePath))
+                    return;
+
+                var json = await System.IO.File.ReadAllTextAsync(_memosMetadataFilePath, Encoding.UTF8);
+                var memosMetadata = JsonSerializer.Deserialize<MemosMetadata>(json);
+
+                if (memosMetadata?.Memos == null) return;
+
+                var memosList = new List<MemoModel>();
+
+                foreach (var metadata in memosMetadata.Memos)
+                {
+                    string content = await LoadMemoContentAsync(metadata.ContentFileName);
+                    var memo = MemoModel.FromMetadata(metadata, content);
+                    memosList.Add(memo);
+                }
+
+                _memos = memosList;
+
+                // 设置当前备忘录
+                if (!string.IsNullOrEmpty(memosMetadata.CurrentMemoId))
+                {
+                    _currentMemo = _memos.FirstOrDefault(m => m.Id == memosMetadata.CurrentMemoId);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载混合存储格式失败: {ex.Message}");
+                _memos.Clear();
+            }
+        }
+
+        #region Markdown 语法支持
+
+        /// <summary>
+        /// 插入 Markdown 格式
+        /// </summary>
+        private void InsertMarkdownFormat(System.Windows.Controls.TextBox textBox, string prefix, string suffix = "")
+        {
+            if (textBox == null) return;
+
+            int selectionStart = textBox.SelectionStart;
+            int selectionLength = textBox.SelectionLength;
+            string selectedText = textBox.SelectedText;
+
+            if (string.IsNullOrEmpty(suffix))
+                suffix = prefix;
+
+            string formattedText;
+            int newCaretPosition;
+
+            if (selectionLength > 0)
+            {
+                // 有选中文本，包围选中内容
+                formattedText = prefix + selectedText + suffix;
+                newCaretPosition = selectionStart + formattedText.Length;
+            }
+            else
+            {
+                // 没有选中文本，插入格式并将光标置于中间
+                formattedText = prefix + suffix;
+                newCaretPosition = selectionStart + prefix.Length;
+            }
+
+            textBox.SelectedText = formattedText;
+            textBox.CaretIndex = newCaretPosition;
+            textBox.Focus();
+        }
+
+        /// <summary>
+        /// 插入 Markdown 标题
+        /// </summary>
+        private void InsertMarkdownHeading(System.Windows.Controls.TextBox textBox, int level)
+        {
+            if (textBox == null) return;
+
+            string prefix = new string('#', level) + " ";
+            int caretIndex = textBox.CaretIndex;
+
+            // 找到当前行的开始
+            string text = textBox.Text;
+            int lineStart = caretIndex;
+            while (lineStart > 0 && text[lineStart - 1] != '\n')
+                lineStart--;
+
+            // 检查当前行是否已经是标题
+            string currentLine = "";
+            int lineEnd = caretIndex;
+            while (lineEnd < text.Length && text[lineEnd] != '\n')
+                lineEnd++;
+
+            if (lineEnd > lineStart)
+                currentLine = text.Substring(lineStart, lineEnd - lineStart);
+
+            // 如果当前行已经是标题，则替换
+            if (currentLine.StartsWith("#"))
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(currentLine, @"^#+\s*(.*)");
+                if (match.Success)
+                {
+                    string titleContent = match.Groups[1].Value;
+                    string newLine = prefix + titleContent;
+                    textBox.Select(lineStart, lineEnd - lineStart);
+                    textBox.SelectedText = newLine;
+                    textBox.CaretIndex = lineStart + newLine.Length;
+                }
+            }
+            else
+            {
+                // 在行首插入标题格式
+                textBox.CaretIndex = lineStart;
+                textBox.SelectedText = prefix;
+                textBox.CaretIndex = lineStart + prefix.Length;
+            }
+
+            textBox.Focus();
+        }
+
+        /// <summary>
+        /// 插入 Markdown 列表
+        /// </summary>
+        private void InsertMarkdownList(System.Windows.Controls.TextBox textBox, bool isNumbered = false)
+        {
+            if (textBox == null) return;
+
+            int caretIndex = textBox.CaretIndex;
+            string text = textBox.Text;
+
+            // 找到当前行的开始
+            int lineStart = caretIndex;
+            while (lineStart > 0 && text[lineStart - 1] != '\n')
+                lineStart--;
+
+            string listPrefix = isNumbered ? "1. " : "- ";
+
+            // 在行首插入列表标记
+            textBox.CaretIndex = lineStart;
+            textBox.SelectedText = listPrefix;
+            textBox.CaretIndex = lineStart + listPrefix.Length;
+            textBox.Focus();
+        }
+
+        /// <summary>
+        /// 处理 Markdown 快捷键
+        /// </summary>
+        private void HandleMarkdownShortcuts(System.Windows.Controls.TextBox textBox, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                switch (e.Key)
+                {
+                    case Key.B:  // Ctrl+B 加粗
+                        e.Handled = true;
+                        InsertMarkdownFormat(textBox, "**");
+                        break;
+
+                    case Key.I:  // Ctrl+I 斜体
+                        e.Handled = true;
+                        InsertMarkdownFormat(textBox, "*");
+                        break;
+
+                    case Key.U:  // Ctrl+U 下划线（使用HTML标签）
+                        e.Handled = true;
+                        InsertMarkdownFormat(textBox, "<u>", "</u>");
+                        break;
+
+                    case Key.K:  // Ctrl+K 链接
+                        e.Handled = true;
+                        InsertMarkdownFormat(textBox, "[", "](url)");
+                        break;
+
+                    case Key.E:  // Ctrl+E 行内代码
+                        e.Handled = true;
+                        InsertMarkdownFormat(textBox, "`");
+                        break;
+
+                    case Key.D1:  // Ctrl+1 一级标题
+                        e.Handled = true;
+                        InsertMarkdownHeading(textBox, 1);
+                        break;
+
+                    case Key.D2:  // Ctrl+2 二级标题
+                        e.Handled = true;
+                        InsertMarkdownHeading(textBox, 2);
+                        break;
+
+                    case Key.D3:  // Ctrl+3 三级标题
+                        e.Handled = true;
+                        InsertMarkdownHeading(textBox, 3);
+                        break;
+                }
+            }
+            else if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                switch (e.Key)
+                {
+                    case Key.C:  // Ctrl+Shift+C 代码块
+                        e.Handled = true;
+                        InsertMarkdownFormat(textBox, "```\n", "\n```");
+                        break;
+
+                    case Key.L:  // Ctrl+Shift+L 无序列表
+                        e.Handled = true;
+                        InsertMarkdownList(textBox, false);
+                        break;
+
+                    case Key.O:  // Ctrl+Shift+O 有序列表
+                        e.Handled = true;
+                        InsertMarkdownList(textBox, true);
+                        break;
+                }
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 统一的备忘录保存方法
+        /// </summary>
+        private async void SaveMemosAsync()
+        {
+            try
+            {
+                await SaveMemosToMarkdownAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"异步保存失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 保存备忘录数据到磁盘（兼容旧格式）
         /// </summary>
         private void SaveMemosToDisk()
         {
@@ -885,7 +1562,7 @@ namespace DesktopMemo
                     _currentMemo = updatedMemo;
                 }
                 
-                SaveMemosToDisk();
+                SaveMemosAsync();
                 
                 // 确保刷新列表显示
                 RefreshMemoList();
@@ -1260,6 +1937,10 @@ namespace DesktopMemo
             var textBox = sender as System.Windows.Controls.TextBox;
             if (textBox == null) return;
 
+            // 优先处理 Markdown 快捷键
+            HandleMarkdownShortcuts(textBox, e);
+            if (e.Handled) return;
+
             // 处理 Ctrl 组合键
             if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
@@ -1538,6 +2219,23 @@ namespace DesktopMemo
         /// <summary>
         /// 备忘录数据模型
         /// </summary>
+        /// <summary>
+        /// 备忘录元数据模型（不包含内容）
+        /// </summary>
+        private record MemoMetadata
+        {
+            public string Id { get; init; } = Guid.NewGuid().ToString();
+            public string Title { get; init; } = string.Empty;
+            public string ContentFileName { get; init; } = string.Empty; // 内容文件名
+            public DateTime CreatedTime { get; init; } = DateTime.Now;
+            public DateTime ModifiedTime { get; init; } = DateTime.Now;
+            public List<string> Tags { get; init; } = new List<string>(); // 标签支持
+            public string Description { get; init; } = string.Empty; // 描述摘要
+        }
+
+        /// <summary>
+        /// 完整备忘录模型（包含内容，用于内存操作）
+        /// </summary>
         private record MemoModel
         {
             public string Id { get; init; } = Guid.NewGuid().ToString();
@@ -1545,22 +2243,69 @@ namespace DesktopMemo
             public string Content { get; init; } = string.Empty;
             public DateTime CreatedTime { get; init; } = DateTime.Now;
             public DateTime ModifiedTime { get; init; } = DateTime.Now;
-            
+            public List<string> Tags { get; init; } = new List<string>();
+            public string Description { get; init; } = string.Empty;
+
             /// <summary>
             /// 获取备忘录预览内容（前100个字符）
             /// </summary>
             public string Preview => Content.Length > 100 ? Content.Substring(0, 100) + "..." : Content;
-            
+
             /// <summary>
             /// 获取显示标题（如果标题为空则使用内容开头作为标题）
             /// </summary>
-            public string DisplayTitle => !string.IsNullOrWhiteSpace(Title) ? Title : 
-                (Content.Length > 30 ? Content.Substring(0, 30) + "..." : 
+            public string DisplayTitle => !string.IsNullOrWhiteSpace(Title) ? Title :
+                (Content.Length > 30 ? Content.Substring(0, 30) + "..." :
                 (!string.IsNullOrWhiteSpace(Content) ? Content : "未命名备忘录"));
+
+            /// <summary>
+            /// 从元数据模型创建完整模型
+            /// </summary>
+            public static MemoModel FromMetadata(MemoMetadata metadata, string content)
+            {
+                return new MemoModel
+                {
+                    Id = metadata.Id,
+                    Title = metadata.Title,
+                    Content = content,
+                    CreatedTime = metadata.CreatedTime,
+                    ModifiedTime = metadata.ModifiedTime,
+                    Tags = metadata.Tags,
+                    Description = metadata.Description
+                };
+            }
+
+            /// <summary>
+            /// 转换为元数据模型
+            /// </summary>
+            public MemoMetadata ToMetadata(string contentFileName)
+            {
+                return new MemoMetadata
+                {
+                    Id = Id,
+                    Title = Title,
+                    ContentFileName = contentFileName,
+                    CreatedTime = CreatedTime,
+                    ModifiedTime = ModifiedTime,
+                    Tags = Tags,
+                    Description = !string.IsNullOrWhiteSpace(Description) ? Description :
+                        (Content.Length > 150 ? Content.Substring(0, 150).Trim() + "..." : Content.Trim())
+                };
+            }
         }
         
         /// <summary>
-        /// 备忘录集合数据模型
+        /// 备忘录集合元数据模型
+        /// </summary>
+        private record MemosMetadata
+        {
+            public List<MemoMetadata> Memos { get; init; } = new List<MemoMetadata>();
+            public string CurrentMemoId { get; init; } = string.Empty;
+            public int Version { get; init; } = 2; // 存储格式版本号
+        }
+
+        /// <summary>
+        /// 备忘录集合数据模型（向后兼容）
         /// </summary>
         private record MemosData
         {
@@ -2164,25 +2909,46 @@ namespace DesktopMemo
         }
 
         /// <summary>
-        /// 查找所有匹配项
+        /// 查找所有匹配项（优化性能）
         /// </summary>
         private void FindAllMatches()
         {
             _searchMatches.Clear();
+
             if (string.IsNullOrEmpty(_currentSearchText) || NoteTextBox == null)
                 return;
 
-            string text = NoteTextBox.Text;
-            int index = 0;
-            while ((index = text.IndexOf(_currentSearchText, index, StringComparison.OrdinalIgnoreCase)) >= 0)
+            try
             {
-                _searchMatches.Add(index);
-                index += _currentSearchText.Length;
+                string text = NoteTextBox.Text;
+                int index = 0;
+
+                // 查找所有匹配项，但限制最大数量以避免性能问题
+                const int maxMatches = 1000; // 限制最大匹配数量
+                int matchCount = 0;
+
+                while ((index = text.IndexOf(_currentSearchText, index, StringComparison.OrdinalIgnoreCase)) >= 0 && matchCount < maxMatches)
+                {
+                    _searchMatches.Add(index);
+                    index += _currentSearchText.Length;
+                    matchCount++;
+                }
+
+                // 如果达到最大匹配数，提示用户
+                if (matchCount >= maxMatches && StatusText != null)
+                {
+                    StatusText.Text = $"找到匹配项过多（已显示前{maxMatches}个），请使用更具体的搜索词";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"查找匹配项时出错: {ex.Message}");
+                _searchMatches.Clear();
             }
         }
 
         /// <summary>
-        /// 查找下一个匹配项
+        /// 查找下一个匹配项（改进版本）
         /// </summary>
         private void FindNext()
         {
@@ -2195,23 +2961,37 @@ namespace DesktopMemo
                 return;
             }
 
-            // 移动到下一个匹配项
-            _currentSearchIndex = (_currentSearchIndex + 1) % _searchMatches.Count;
-            int index = _searchMatches[_currentSearchIndex];
-
-            // 选中并滚动到匹配项
-            NoteTextBox.Select(index, _currentSearchText.Length);
-            NoteTextBox.Focus();
-            NoteTextBox.ScrollToLine(NoteTextBox.GetLineIndexFromCharacterIndex(index));
-
-            if (StatusText != null)
+            try
             {
-                StatusText.Text = $"找到匹配项 {_currentSearchIndex + 1}/{_searchMatches.Count}：{_currentSearchText}";
+                // 移动到下一个匹配项
+                _currentSearchIndex = (_currentSearchIndex + 1) % _searchMatches.Count;
+                int index = _searchMatches[_currentSearchIndex];
+
+                // 安全地选中文本
+                if (NoteTextBox != null && index >= 0 && index + _currentSearchText.Length <= NoteTextBox.Text.Length)
+                {
+                    NoteTextBox.Select(index, _currentSearchText.Length);
+                    NoteTextBox.Focus();
+                    NoteTextBox.ScrollToLine(NoteTextBox.GetLineIndexFromCharacterIndex(index));
+
+                    if (StatusText != null)
+                    {
+                        StatusText.Text = $"找到匹配项 {_currentSearchIndex + 1}/{_searchMatches.Count}：{_currentSearchText}";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"查找下一个匹配项时出错: {ex.Message}");
+                if (StatusText != null)
+                {
+                    StatusText.Text = "查找时发生错误";
+                }
             }
         }
 
         /// <summary>
-        /// 查找上一个匹配项
+        /// 查找上一个匹配项（改进版本）
         /// </summary>
         private void FindPrevious()
         {
@@ -2224,18 +3004,32 @@ namespace DesktopMemo
                 return;
             }
 
-            // 移动到上一个匹配项
-            _currentSearchIndex = _currentSearchIndex <= 0 ? _searchMatches.Count - 1 : _currentSearchIndex - 1;
-            int index = _searchMatches[_currentSearchIndex];
-
-            // 选中并滚动到匹配项
-            NoteTextBox.Select(index, _currentSearchText.Length);
-            NoteTextBox.Focus();
-            NoteTextBox.ScrollToLine(NoteTextBox.GetLineIndexFromCharacterIndex(index));
-
-            if (StatusText != null)
+            try
             {
-                StatusText.Text = $"找到匹配项 {_currentSearchIndex + 1}/{_searchMatches.Count}：{_currentSearchText}";
+                // 移动到上一个匹配项
+                _currentSearchIndex = _currentSearchIndex <= 0 ? _searchMatches.Count - 1 : _currentSearchIndex - 1;
+                int index = _searchMatches[_currentSearchIndex];
+
+                // 安全地选中文本
+                if (NoteTextBox != null && index >= 0 && index + _currentSearchText.Length <= NoteTextBox.Text.Length)
+                {
+                    NoteTextBox.Select(index, _currentSearchText.Length);
+                    NoteTextBox.Focus();
+                    NoteTextBox.ScrollToLine(NoteTextBox.GetLineIndexFromCharacterIndex(index));
+
+                    if (StatusText != null)
+                    {
+                        StatusText.Text = $"找到匹配项 {_currentSearchIndex + 1}/{_searchMatches.Count}：{_currentSearchText}";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"查找上一个匹配项时出错: {ex.Message}");
+                if (StatusText != null)
+                {
+                    StatusText.Text = "查找时发生错误";
+                }
             }
         }
 
@@ -2636,18 +3430,29 @@ namespace DesktopMemo
         private void RefreshMemoList()
         {
             if (MemoItemsControl == null) return;
-            
+
             MemoItemsControl.Items.Clear();
-            
+
+            // 确保备忘录列表不为空
+            if (_memos == null || !_memos.Any())
+            {
+                // 更新计数为0
+                if (MemoCountText != null)
+                {
+                    MemoCountText.Text = "(0)";
+                }
+                return;
+            }
+
             // 按修改时间倒序排列
             var sortedMemos = _memos.OrderByDescending(m => m.ModifiedTime).ToList();
-            
+
             foreach (var memo in sortedMemos)
             {
                 var memoCard = CreateMemoCard(memo);
                 MemoItemsControl.Items.Add(memoCard);
             }
-            
+
             // 更新计数
             if (MemoCountText != null)
             {
@@ -2883,7 +3688,7 @@ namespace DesktopMemo
             };
             
             _memos.Add(newMemo);
-            SaveMemosToDisk();
+            SaveMemosAsync();
             RefreshMemoList();
             EditMemo(newMemo);
         }
@@ -2912,7 +3717,7 @@ namespace DesktopMemo
             if (result == MessageBoxResult.Yes)
             {
                 _memos.RemoveAll(m => m.Id == _currentMemo.Id);
-                SaveMemosToDisk();
+                SaveMemosAsync();
                 
                 // 如果删除后没有备忘录了，创建一个默认的
                 if (!_memos.Any())
@@ -2966,7 +3771,7 @@ namespace DesktopMemo
             };
             
             _memos.Add(newMemo);
-            SaveMemosToDisk();
+            SaveMemosAsync();
             RefreshMemoList();
             EditMemo(newMemo);
         }
@@ -2987,7 +3792,7 @@ namespace DesktopMemo
             
             // 执行删除操作
             _memos.RemoveAll(m => m.Id == _currentMemo.Id);
-            SaveMemosToDisk();
+            SaveMemosAsync();
             
             // 如果删除后没有备忘录了，创建一个默认的
             if (!_memos.Any())
