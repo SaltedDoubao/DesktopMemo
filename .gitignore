@@ -371,6 +371,7 @@ bld/
 publish*/
 cache/
 Data/
+code_review_report.md
 construction_plans.md
 suggestions_1.md
 suggestions_2.md
