@@ -90,7 +90,7 @@ dotnet publish DesktopMemo.csproj --configuration Release --output ./publish
 - **框架**: .NET 8.0 + WPF
 - **语言**: C# 12.0
 - **UI**: XAML + Code-behind
-- **数据存储**: JSON
+- **数据存储**: Markdown
 - **包管理**: NuGet
 
 ### 项目结构

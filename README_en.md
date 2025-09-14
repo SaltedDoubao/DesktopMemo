@@ -90,7 +90,7 @@ dotnet publish DesktopMemo.csproj --configuration Release --output ./publish
 - **Framework**: .NET 8.0 + WPF
 - **Language**: C# 12.0
 - **UI**: XAML + Code-behind
-- **Data Storage**: JSON
+- **Data Storage**: Markdown
 - **Package Management**: NuGet
 
 ### Project Structure
