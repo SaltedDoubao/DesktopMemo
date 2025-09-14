@@ -97,7 +97,7 @@ dotnet build --configuration Release
 dotnet run
 
 # 发布单文件版本
-dotnet publish --configuration Release --output ./publish
+dotnet publish DesktopMemo.csproj --configuration Release --output ./publish
 ```
 
 ## 📄 数据存储
