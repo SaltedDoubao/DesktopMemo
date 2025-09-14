@@ -226,7 +226,7 @@ namespace DesktopMemo
             if (AppInfoText != null)
             {
                 var appDataDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-                AppInfoText.Text = $"版本：1.2.1 | 数据目录：{appDataDir}";
+                AppInfoText.Text = $"版本：1.3.0 | 数据目录：{appDataDir}";
             }
             
             // 更新状态信息
@@ -320,7 +320,7 @@ namespace DesktopMemo
                 this.LocationChanged += MainWindow_LocationChanged;
                 
                 // 在所有控件初始化完成后设置状态
-                this.Loaded += (s, e) =>
+                this.Loaded += async (s, e) =>
                 {
                     // 初始化设置控件状态（应用加载的设置）
                     InitializeSettingsControls();
@@ -329,12 +329,9 @@ namespace DesktopMemo
                     _positionUpdateTimer.Start();
                     UpdateCurrentPositionDisplay();
 
-                    // 确保备忘录数据已加载后再刷新界面
-                    if (_memos == null || !_memos.Any())
-                    {
-                        // 如果没有备忘录，创建默认的
-                        CreateDefaultMemo();
-                    }
+                    // 等待备忘录数据加载完成（如果还在加载中）
+                    // 由于LoadMemosFromDisk是async void，我们需要重新加载来确保数据完整
+                    await EnsureMemosLoadedAsync();
 
                     // 初始化备忘录界面
                     RefreshMemoList();
@@ -752,9 +749,41 @@ namespace DesktopMemo
         }
 
         /// <summary>
-        /// 从磁盘加载备忘录数据（优先加载Markdown格式）
+        /// 确保备忘录数据已完全加载
         /// </summary>
-        private async void LoadMemosFromDisk()
+        private async Task EnsureMemosLoadedAsync()
+        {
+            try
+            {
+                // 如果数据已经加载且不为空，直接返回
+                if (_memos != null && _memos.Any())
+                    return;
+
+                // 重新尝试加载数据
+                await LoadMemosFromDiskAsync();
+
+                // 如果仍然没有数据，创建默认备忘录
+                if (_memos == null || !_memos.Any())
+                {
+                    if (!HasExistingMemoFiles())
+                    {
+                        await CreateDefaultMemoAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"确保备忘录加载失败: {ex.Message}");
+                // 创建空列表避免空指针异常
+                if (_memos == null)
+                    _memos = new List<MemoModel>();
+            }
+        }
+
+        /// <summary>
+        /// 异步版本的数据加载方法
+        /// </summary>
+        private async Task LoadMemosFromDiskAsync()
         {
             try
             {
@@ -798,7 +827,7 @@ namespace DesktopMemo
                 // 如果没有新格式数据，尝试从最旧的格式迁移
                 else if (System.IO.File.Exists(_noteFilePath))
                 {
-                    MigrateFromOldNoteFormat();
+                    await MigrateFromOldNoteFormatAsync();
 
                     // 迁移到新格式
                     if (_memos.Any())
@@ -807,29 +836,106 @@ namespace DesktopMemo
                         return;
                     }
                 }
-
-                // 如果没有任何备忘录，创建一个默认的
-                if (!_memos.Any())
-                {
-                    CreateDefaultMemo();
-                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"加载备忘录失败: {ex.Message}");
-                // 加载失败时创建默认备忘录
-                CreateDefaultMemo();
+                System.Diagnostics.Debug.WriteLine($"异步加载备忘录失败: {ex.Message}");
+                // 加载失败时确保有空列表
+                if (_memos == null)
+                    _memos = new List<MemoModel>();
             }
         }
 
         /// <summary>
-        /// 迁移到简化的Markdown存储格式
+        /// 创建默认备忘录的异步版本
+        /// </summary>
+        private async Task CreateDefaultMemoAsync()
+        {
+            var defaultMemo = new MemoModel
+            {
+                Title = "欢迎使用DesktopMemo",
+                Content = "这是您的第一条备忘录！\n\n点击此处开始编辑...",
+                CreatedTime = DateTime.Now,
+                ModifiedTime = DateTime.Now
+            };
+
+            if (_memos == null)
+                _memos = new List<MemoModel>();
+
+            _memos.Add(defaultMemo);
+
+            // 只保存这个新创建的备忘录
+            try
+            {
+                await SaveSingleMemoToMarkdownAsync(defaultMemo);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"创建默认备忘录失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 异步版本的旧格式迁移
+        /// </summary>
+        private async Task MigrateFromOldNoteFormatAsync()
+        {
+            try
+            {
+                var json = System.IO.File.ReadAllText(_noteFilePath, Encoding.UTF8);
+                var oldNote = JsonSerializer.Deserialize<JsonElement>(json);
+
+                string content = string.Empty;
+                if (oldNote.TryGetProperty("Content", out var contentProperty))
+                {
+                    content = contentProperty.GetString() ?? string.Empty;
+                }
+
+                if (!string.IsNullOrWhiteSpace(content))
+                {
+                    var memo = new MemoModel
+                    {
+                        Title = "导入的笔记",
+                        Content = content,
+                        CreatedTime = DateTime.Now,
+                        ModifiedTime = DateTime.Now
+                    };
+
+                    if (_memos == null)
+                        _memos = new List<MemoModel>();
+
+                    _memos.Add(memo);
+
+                    // 使用新的单文件保存方式
+                    await SaveSingleMemoToMarkdownAsync(memo);
+                }
+            }
+            catch (Exception)
+            {
+                // 迁移失败，不影响程序运行
+            }
+        }
+
+        /// <summary>
+        /// 从磁盘加载备忘录数据（优先加载Markdown格式）- 保持向后兼容
+        /// </summary>
+        private async void LoadMemosFromDisk()
+        {
+            await LoadMemosFromDiskAsync();
+        }
+
+        /// <summary>
+        /// 迁移到简化的Markdown存储格式（更新为单文件保存）
         /// </summary>
         private async Task MigrateToMarkdownStorageAsync()
         {
             try
             {
-                await SaveMemosToMarkdownAsync();
+                // 使用新的单文件保存方式逐个迁移备忘录
+                foreach (var memo in _memos)
+                {
+                    await SaveSingleMemoToMarkdownAsync(memo);
+                }
                 System.Diagnostics.Debug.WriteLine("已成功迁移到Markdown存储格式");
             }
             catch (Exception ex)
@@ -839,21 +945,21 @@ namespace DesktopMemo
         }
         
         /// <summary>
-        /// 从旧版本笔记格式迁移数据
+        /// 从旧版本笔记格式迁移数据（更新为单文件保存）
         /// </summary>
-        private void MigrateFromOldNoteFormat()
+        private async void MigrateFromOldNoteFormat()
         {
             try
                 {
                     var json = System.IO.File.ReadAllText(_noteFilePath, Encoding.UTF8);
                 var oldNote = JsonSerializer.Deserialize<JsonElement>(json);
-                
+
                 string content = string.Empty;
                 if (oldNote.TryGetProperty("Content", out var contentProperty))
                 {
                     content = contentProperty.GetString() ?? string.Empty;
                 }
-                
+
                 if (!string.IsNullOrWhiteSpace(content))
                 {
                     var memo = new MemoModel
@@ -864,7 +970,9 @@ namespace DesktopMemo
                         ModifiedTime = DateTime.Now
                     };
                     _memos.Add(memo);
-                    SaveMemosAsync();
+
+                    // 使用新的单文件保存方式
+                    await SaveSingleMemoToMarkdownAsync(memo);
                 }
             }
             catch (Exception)
@@ -874,9 +982,37 @@ namespace DesktopMemo
         }
         
         /// <summary>
-        /// 创建默认备忘录
+        /// 检查是否存在现有的备忘录文件
         /// </summary>
-        private void CreateDefaultMemo()
+        private bool HasExistingMemoFiles()
+        {
+            try
+            {
+                // 检查Markdown文件
+                if (Directory.Exists(_contentDir))
+                {
+                    var markdownFiles = Directory.GetFiles(_contentDir, "*.md");
+                    if (markdownFiles.Length > 0)
+                        return true;
+                }
+
+                // 检查旧格式文件
+                if (System.IO.File.Exists(_memosMetadataFilePath) || System.IO.File.Exists(_memosFilePath) || System.IO.File.Exists(_noteFilePath))
+                    return true;
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"检查现有文件时出错: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 创建默认备忘录（新架构：只保存单个文件）
+        /// </summary>
+        private async void CreateDefaultMemo()
         {
             var defaultMemo = new MemoModel
             {
@@ -886,7 +1022,16 @@ namespace DesktopMemo
                 ModifiedTime = DateTime.Now
             };
             _memos.Add(defaultMemo);
-            SaveMemosAsync();
+
+            // 只保存这个新创建的备忘录
+            try
+            {
+                await SaveSingleMemoToMarkdownAsync(defaultMemo);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"创建默认备忘录失败: {ex.Message}");
+            }
         }
 
         #region 简化的Markdown存储模式
@@ -1006,10 +1151,17 @@ namespace DesktopMemo
         }
 
         /// <summary>
-        /// 保存所有备忘录为Markdown文件
+        /// 保存所有备忘录为Markdown文件（已废弃 - 这是产生重复文件问题的根源）
+        /// 新架构使用 SaveSingleMemoToMarkdownAsync() 单独保存文件
         /// </summary>
+        [Obsolete("此方法会产生大量重复MD文件，已被 SaveSingleMemoToMarkdownAsync 替代")]
         private async Task SaveMemosToMarkdownAsync()
         {
+            // 此方法已废弃 - 会导致每次保存时重新生成所有MD文件
+            // 新架构使用单文件保存方式，避免重复文件生成
+            System.Diagnostics.Debug.WriteLine("警告：使用了已废弃的批量保存方法 SaveMemosToMarkdownAsync");
+
+            // 为了向后兼容，保留方法实现但不推荐使用
             try
             {
                 // 确保目录存在
@@ -1021,28 +1173,52 @@ namespace DesktopMemo
                     var fileName = GenerateTimeBasedFileName(memo.CreatedTime);
                     var filePath = System.IO.Path.Combine(_contentDir, fileName);
 
-                    // 如果文件名冲突，添加后缀
+                    // 检查文件是否已存在且内容相同
+                    var markdownContent = CreateSimpleMarkdownContent(memo.Title, memo.Content);
+
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        // 读取现有文件内容
+                        string existingContent = await System.IO.File.ReadAllTextAsync(filePath, Encoding.UTF8);
+
+                        // 如果内容相同，跳过保存
+                        if (existingContent.Trim() == markdownContent.Trim())
+                        {
+                            continue;
+                        }
+                    }
+
+                    // 如果文件名冲突但内容不同，添加后缀
                     int suffix = 1;
                     while (System.IO.File.Exists(filePath))
                     {
+                        string existingContent = await System.IO.File.ReadAllTextAsync(filePath, Encoding.UTF8);
+                        if (existingContent.Trim() == markdownContent.Trim())
+                        {
+                            // 内容相同，不需要保存
+                            break;
+                        }
+
                         var nameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fileName);
                         fileName = $"{nameWithoutExt}_{suffix:D2}.md";
                         filePath = System.IO.Path.Combine(_contentDir, fileName);
                         suffix++;
                     }
 
-                    // 创建简化的Markdown内容
-                    var markdownContent = CreateSimpleMarkdownContent(memo.Title, memo.Content);
-                    await System.IO.File.WriteAllTextAsync(filePath, markdownContent, Encoding.UTF8);
+                    // 只有在内容不同时才保存
+                    if (!System.IO.File.Exists(filePath))
+                    {
+                        await System.IO.File.WriteAllTextAsync(filePath, markdownContent, Encoding.UTF8);
 
-                    // 设置文件时间
-                    System.IO.File.SetCreationTime(filePath, memo.CreatedTime);
-                    System.IO.File.SetLastWriteTime(filePath, memo.ModifiedTime);
+                        // 设置文件时间
+                        System.IO.File.SetCreationTime(filePath, memo.CreatedTime);
+                        System.IO.File.SetLastWriteTime(filePath, memo.ModifiedTime);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"保存Markdown备忘录失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"批量保存Markdown备忘录失败: {ex.Message}");
                 throw;
             }
         }
@@ -1260,8 +1436,19 @@ namespace DesktopMemo
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"保存混合存储格式失败: {ex.Message}");
-                // 如果新格式保存失败，回退到旧格式
-                SaveMemosAsync();
+                // 如果新格式保存失败，尝试使用单文件保存方式
+                try
+                {
+                    foreach (var memo in _memos)
+                    {
+                        await SaveSingleMemoToMarkdownAsync(memo);
+                    }
+                }
+                catch
+                {
+                    // 最后的兜底：使用旧格式保存
+                    SaveMemosToDisk();
+                }
             }
         }
 
@@ -1489,17 +1676,33 @@ namespace DesktopMemo
         #endregion
 
         /// <summary>
-        /// 统一的备忘录保存方法
+        /// 保存单个备忘录到MD文件（新架构：MD文件作为主数据源）
         /// </summary>
-        private async void SaveMemosAsync()
+        private async Task SaveSingleMemoToMarkdownAsync(MemoModel memo)
         {
             try
             {
-                await SaveMemosToMarkdownAsync();
+                // 确保目录存在
+                Directory.CreateDirectory(_contentDir);
+
+                // 生成基于创建时间的文件名
+                var fileName = GenerateTimeBasedFileName(memo.CreatedTime);
+                var filePath = System.IO.Path.Combine(_contentDir, fileName);
+
+                // 创建Markdown格式内容
+                var markdownContent = CreateSimpleMarkdownContent(memo.Title, memo.Content);
+
+                // 保存单个文件
+                await System.IO.File.WriteAllTextAsync(filePath, markdownContent, Encoding.UTF8);
+
+                // 设置文件时间
+                System.IO.File.SetCreationTime(filePath, memo.CreatedTime);
+                System.IO.File.SetLastWriteTime(filePath, memo.ModifiedTime);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"异步保存失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"保存单个备忘录失败: {ex.Message}");
+                throw;
             }
         }
 
@@ -1525,9 +1728,9 @@ namespace DesktopMemo
         }
         
         /// <summary>
-        /// 保存当前编辑的备忘录
+        /// 保存当前编辑的备忘录（新架构：只保存单个修改的文件）
         /// </summary>
-        private void SaveCurrentMemo()
+        private async void SaveCurrentMemo()
         {
             if (_currentMemo != null && NoteTextBox != null)
             {
@@ -1537,13 +1740,13 @@ namespace DesktopMemo
                     Content = NoteTextBox.Text,
                     ModifiedTime = DateTime.Now
                 };
-                
+
                 // 智能更新标题：使用第一行非空内容作为标题
                 var lines = NoteTextBox.Text.Split('\n');
                 var firstNonEmptyLine = lines.FirstOrDefault(line => !string.IsNullOrWhiteSpace(line))?.Trim();
-                
+
                 // 如果有非空内容且与当前标题不同，或者当前标题是默认的"新建备忘录"，则更新标题
-                if (!string.IsNullOrWhiteSpace(firstNonEmptyLine) && 
+                if (!string.IsNullOrWhiteSpace(firstNonEmptyLine) &&
                     (firstNonEmptyLine != _currentMemo.Title || _currentMemo.Title == "新建备忘录"))
                 {
                     updatedMemo = updatedMemo with { Title = firstNonEmptyLine };
@@ -1553,17 +1756,25 @@ namespace DesktopMemo
                 {
                     updatedMemo = updatedMemo with { Title = "空白备忘录" };
                 }
-                
-                // 更新列表中的备忘录
+
+                // 更新内存中的备忘录
                 var index = _memos.FindIndex(m => m.Id == _currentMemo.Id);
                 if (index >= 0)
                 {
                     _memos[index] = updatedMemo;
                     _currentMemo = updatedMemo;
                 }
-                
-                SaveMemosAsync();
-                
+
+                // 只保存当前修改的备忘录到MD文件（新架构）
+                try
+                {
+                    await SaveSingleMemoToMarkdownAsync(updatedMemo);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"保存当前备忘录失败: {ex.Message}");
+                }
+
                 // 确保刷新列表显示
                 RefreshMemoList();
             }
@@ -2750,7 +2961,7 @@ namespace DesktopMemo
         private void ShowAboutDialog()
         {
             var aboutInfo = "📝 DesktopMemo 便签\n\n"
-                + "版本：1.0.0\n"
+                + "版本：1.3.0\n"
                 + "开发者：DesktopMemo Team\n"
                 + "技术框架：.NET 8.0 + WPF\n\n"
                 + "功能特点：\n"
@@ -3675,9 +3886,9 @@ namespace DesktopMemo
         }
         
         /// <summary>
-        /// 新建备忘录按钮点击事件
+        /// 新建备忘录按钮点击事件（更新为单文件保存）
         /// </summary>
-        private void AddMemoButton_Click(object sender, RoutedEventArgs e)
+        private async void AddMemoButton_Click(object sender, RoutedEventArgs e)
         {
             var newMemo = new MemoModel
             {
@@ -3686,9 +3897,19 @@ namespace DesktopMemo
                 CreatedTime = DateTime.Now,
                 ModifiedTime = DateTime.Now
             };
-            
+
             _memos.Add(newMemo);
-            SaveMemosAsync();
+
+            // 使用新的单文件保存方式
+            try
+            {
+                await SaveSingleMemoToMarkdownAsync(newMemo);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"新建备忘录保存失败: {ex.Message}");
+            }
+
             RefreshMemoList();
             EditMemo(newMemo);
         }
@@ -3702,32 +3923,35 @@ namespace DesktopMemo
         }
         
         /// <summary>
-        /// 删除备忘录按钮点击事件
+        /// 删除备忘录按钮点击事件（更新为单文件删除）
         /// </summary>
         private void DeleteMemoButton_Click(object sender, RoutedEventArgs e)
         {
             if (_currentMemo == null) return;
-            
+
             var result = System.Windows.MessageBox.Show(
                 $"确定要删除备忘录 \"{_currentMemo.DisplayTitle}\" 吗？",
                 "删除确认",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
-            
+
             if (result == MessageBoxResult.Yes)
             {
+                // 删除对应的MD文件
+                DeleteSingleMemoFile(_currentMemo);
+
+                // 从内存中删除
                 _memos.RemoveAll(m => m.Id == _currentMemo.Id);
-                SaveMemosAsync();
-                
+
                 // 如果删除后没有备忘录了，创建一个默认的
                 if (!_memos.Any())
                 {
                     CreateDefaultMemo();
                 }
-                
+
                 RefreshMemoList();
                 ShowMemoList();
-                
+
                 if (StatusText != null)
                 {
                     StatusText.Text = "备忘录已删除";
@@ -3758,9 +3982,9 @@ namespace DesktopMemo
         }
         
         /// <summary>
-        /// 添加新备忘录的统一方法
+        /// 添加新备忘录的统一方法（新架构：只保存单个文件）
         /// </summary>
-        private void AddNewMemo()
+        private async void AddNewMemo()
         {
             var newMemo = new MemoModel
             {
@@ -3769,40 +3993,73 @@ namespace DesktopMemo
                 CreatedTime = DateTime.Now,
                 ModifiedTime = DateTime.Now
             };
-            
+
             _memos.Add(newMemo);
-            SaveMemosAsync();
+
+            // 只保存这个新建的备忘录
+            try
+            {
+                await SaveSingleMemoToMarkdownAsync(newMemo);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"新建备忘录保存失败: {ex.Message}");
+            }
+
             RefreshMemoList();
             EditMemo(newMemo);
         }
         
         /// <summary>
-        /// 删除当前备忘录的统一方法
+        /// 删除单个备忘录的MD文件
         /// </summary>
-        private void DeleteCurrentMemo()
+        private void DeleteSingleMemoFile(MemoModel memo)
+        {
+            try
+            {
+                var fileName = GenerateTimeBasedFileName(memo.CreatedTime);
+                var filePath = System.IO.Path.Combine(_contentDir, fileName);
+
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"删除备忘录文件失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 删除当前备忘录的统一方法（新架构：只删除单个文件）
+        /// </summary>
+        private async void DeleteCurrentMemo()
         {
             if (_currentMemo == null) return;
-            
+
             if (_showDeletePrompt)
             {
                 // 显示自定义删除确认对话框
                 bool shouldDelete = ShowDeleteConfirmDialog(_currentMemo.DisplayTitle);
                 if (!shouldDelete) return;
             }
-            
-            // 执行删除操作
+
+            // 删除MD文件
+            DeleteSingleMemoFile(_currentMemo);
+
+            // 从内存中删除
             _memos.RemoveAll(m => m.Id == _currentMemo.Id);
-            SaveMemosAsync();
-            
+
             // 如果删除后没有备忘录了，创建一个默认的
             if (!_memos.Any())
             {
-                CreateDefaultMemo();
+                await Task.Run(() => CreateDefaultMemo());
             }
-            
+
             RefreshMemoList();
             ShowMemoList();
-            
+
             if (StatusText != null)
             {
                 StatusText.Text = "备忘录已删除";
