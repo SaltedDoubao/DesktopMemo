@@ -24,10 +24,12 @@
     <!-- 应用程序信息 -->
     <AssemblyTitle>DesktopMemo</AssemblyTitle>
     <AssemblyDescription>桌面便签应用程序</AssemblyDescription>
-    <AssemblyCompany>Your Company</AssemblyCompany>
     <AssemblyProduct>DesktopMemo</AssemblyProduct>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <!-- 统一版本号配置 -->
+    <Version>1.3.1</Version>
+    <AssemblyVersion>1.3.1</AssemblyVersion>
+    <FileVersion>1.3.1</FileVersion>
+    <AssemblyInformationalVersion>1.3.1</AssemblyInformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,11 +37,15 @@
     <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
   </ItemGroup>
 
-  <!-- 包含logo文件作为内容 -->
-  <ItemGroup>
-    <Content Include="logo\logo.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+  <!-- 性能优化设置 -->
+  <PropertyGroup>
+    <!-- 优化启动性能 -->
+    <TieredCompilation>true</TieredCompilation>
+    <TieredCompilationQuickJit>true</TieredCompilationQuickJit>
+    <!-- 减少程序集大小 -->
+    <TrimUnusedDependencies>true</TrimUnusedDependencies>
+    <!-- 启用增量编译 -->
+    <UseSharedCompilation>true</UseSharedCompilation>
+  </PropertyGroup>
 
 </Project>

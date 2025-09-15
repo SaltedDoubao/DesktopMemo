@@ -1,6 +1,8 @@
 ﻿﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
@@ -28,6 +30,14 @@ namespace DesktopMemo
         private readonly string _settingsFilePath;
         private readonly string _contentDir; // Markdown 内容目录
         private Forms.NotifyIcon _notifyIcon = null!;
+        
+        // 图标缓存 - 静态缓存避免多实例重复加载
+        private static BitmapFrame? _cachedWindowIcon = null;
+        private static System.Drawing.Icon? _cachedTrayIcon = null;
+        private static readonly object _iconLoadLock = new object();
+        
+        // 版本信息管理
+        private static string? _cachedVersion = null;
         private bool _isLoadedFromDisk;
         // 备忘录管理
         private List<MemoModel> _memos = new List<MemoModel>();
@@ -225,8 +235,9 @@ namespace DesktopMemo
             // 更新应用信息
             if (AppInfoText != null)
             {
+                var version = GetApplicationVersion();
                 var appDataDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
-                AppInfoText.Text = $"版本：1.3.0 | 数据目录：{appDataDir}";
+                AppInfoText.Text = $"版本：{version} | 数据目录：{appDataDir}";
             }
             
             // 更新状态信息
@@ -267,8 +278,8 @@ namespace DesktopMemo
             {
                 InitializeComponent();
 
-                // 设置窗口图标
-                SetWindowIcon();
+                // 优化：只在需要时设置窗口图标（避免闪烁）
+                // SetWindowIcon(); // 注释掉运行时图标设置，使用PE头图标
 
                 _appDataDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
                 _noteFilePath = System.IO.Path.Combine(_appDataDir, "notes.json");
@@ -401,23 +412,183 @@ namespace DesktopMemo
         }
 
         /// <summary>
-        /// 设置窗口图标
+        /// 获取应用程序版本号
         /// </summary>
-        private void SetWindowIcon()
+        private static string GetApplicationVersion()
         {
+            if (_cachedVersion != null)
+                return _cachedVersion;
+
             try
             {
-                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo", "logo.ico");
-                if (System.IO.File.Exists(iconPath))
+                // 优先获取 FileVersion（显示版本）
+                var assembly = Assembly.GetExecutingAssembly();
+                // 直接使用 AppContext.BaseDirectory 以支持单文件发布
+                var assemblyPath = System.IO.Path.Combine(AppContext.BaseDirectory, assembly.GetName().Name + ".exe");
+                var fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(assemblyPath);
+                
+                if (!string.IsNullOrEmpty(fileVersionInfo.FileVersion))
                 {
-                    var uri = new Uri(iconPath, UriKind.Absolute);
-                    var bitmapFrame = BitmapFrame.Create(uri);
-                    this.Icon = bitmapFrame;
+                    _cachedVersion = fileVersionInfo.FileVersion;
+                }
+                else
+                {
+                    // 回退到 AssemblyVersion
+                    var version = assembly.GetName().Version;
+                    _cachedVersion = version?.ToString() ?? "1.0.0";
                 }
             }
             catch
             {
-                // 如果加载失败，使用默认图标（无图标）
+                // 最终回退版本
+                _cachedVersion = "1.0.0";
+            }
+
+            return _cachedVersion;
+        }
+
+        /// <summary>
+        /// 获取完整的应用程序信息
+        /// </summary>
+        private static string GetApplicationInfo()
+        {
+            var version = GetApplicationVersion();
+            var assembly = Assembly.GetExecutingAssembly();
+            
+            try
+            {
+                // 直接使用 AppContext.BaseDirectory 以支持单文件发布
+                var assemblyPath = System.IO.Path.Combine(AppContext.BaseDirectory, assembly.GetName().Name + ".exe");
+                var fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(assemblyPath);
+                var productName = fileVersionInfo.ProductName ?? "DesktopMemo";
+                var description = fileVersionInfo.FileDescription ?? "桌面便签应用程序";
+                
+                return $"{productName} - {description}";
+            }
+            catch
+            {
+                return "DesktopMemo - 桌面便签应用程序";
+            }
+        }
+
+        /// <summary>
+        /// 设置窗口图标（优化版本）
+        /// </summary>
+        private void SetWindowIcon()
+        {
+            // 如果缓存存在，直接使用
+            if (_cachedWindowIcon != null)
+            {
+                this.Icon = _cachedWindowIcon;
+                return;
+            }
+
+            // 异步加载图标，避免阻塞UI线程
+            Task.Run(() => LoadWindowIconAsync());
+        }
+
+        /// <summary>
+        /// 异步加载窗口图标
+        /// </summary>
+        private async Task LoadWindowIconAsync()
+        {
+            try
+            {
+                // 从嵌入资源加载图标
+                var assembly = Assembly.GetExecutingAssembly();
+                var resourceName = "DesktopMemo.logo.logo.ico";
+                
+                await using var stream = assembly.GetManifestResourceStream(resourceName);
+                if (stream != null)
+                {
+                    // 优化加载选项：使用延迟加载和缓存
+                    var bitmapFrame = BitmapFrame.Create(stream, 
+                        BitmapCreateOptions.IgnoreColorProfile | BitmapCreateOptions.DelayCreation, 
+                        BitmapCacheOption.OnDemand);
+                    
+                    // 冻结以提高性能
+                    bitmapFrame.Freeze();
+                    
+                    // 缓存图标
+                    _cachedWindowIcon = bitmapFrame;
+                    
+                    // 在UI线程上设置图标
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        if (this.IsLoaded)
+                        {
+                            this.Icon = bitmapFrame;
+                        }
+                    }, System.Windows.Threading.DispatcherPriority.Background);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误，但不影响应用启动
+                System.Diagnostics.Debug.WriteLine($"图标加载失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 设置托盘图标（优化版本 - 从文件系统加载）
+        /// </summary>
+        private void SetTrayIcon()
+        {
+            // 如果缓存存在，直接使用
+            if (_cachedTrayIcon != null)
+            {
+                _notifyIcon.Icon = _cachedTrayIcon;
+                return;
+            }
+
+            try
+            {
+                // 从文件系统加载图标（与PE头图标使用同一文件）
+                var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo", "logo.ico");
+                
+                if (File.Exists(iconPath))
+                {
+                    // 从文件加载图标并缓存
+                    _cachedTrayIcon = new System.Drawing.Icon(iconPath);
+                    _notifyIcon.Icon = _cachedTrayIcon;
+                }
+                else
+                {
+                    // 尝试从应用程序图标中提取
+                    try
+                    {
+                        var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+                        var mainModule = currentProcess.MainModule;
+                        if (mainModule?.FileName != null)
+                        {
+                            var appIcon = System.Drawing.Icon.ExtractAssociatedIcon(mainModule.FileName);
+                            if (appIcon != null)
+                            {
+                                _cachedTrayIcon = appIcon;
+                                _notifyIcon.Icon = _cachedTrayIcon;
+                            }
+                            else
+                            {
+                                _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+                            }
+                        }
+                        else
+                        {
+                            _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+                        }
+                    }
+                    catch
+                    {
+                        // 最终回退：使用系统默认图标
+                        _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"托盘图标加载失败: {ex.Message}");
+                // 如果加载失败，使用系统默认图标
+                _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
             }
         }
 
@@ -427,25 +598,8 @@ namespace DesktopMemo
             _notifyIcon.Text = "DesktopMemo 便签 - 桌面便签工具";
             _notifyIcon.Visible = true;
             
-            // 设置自定义托盘图标
-            try
-            {
-                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo", "logo.ico");
-                if (System.IO.File.Exists(iconPath))
-                {
-                    _notifyIcon.Icon = new System.Drawing.Icon(iconPath);
-                }
-                else
-                {
-                    // 如果文件不存在，使用系统默认图标
-                    _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
-                }
-            }
-            catch
-            {
-                // 如果加载失败，使用系统默认图标
-                _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
-            }
+            // 设置自定义托盘图标（优化版本）
+            SetTrayIcon();
 
             var menu = new Forms.ContextMenuStrip();
             
@@ -2960,9 +3114,10 @@ namespace DesktopMemo
         /// </summary>
         private void ShowAboutDialog()
         {
+            var version = GetApplicationVersion();
             var aboutInfo = "📝 DesktopMemo 便签\n\n"
-                + "版本：1.3.0\n"
-                + "开发者：DesktopMemo Team\n"
+                + $"版本：{version}\n"
+                + "开发者：SaltedDoubao\n"
                 + "技术框架：.NET 8.0 + WPF\n\n"
                 + "功能特点：\n"
                 + "• 多种置顶模式\n"
