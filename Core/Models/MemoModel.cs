@@ -72,6 +72,22 @@ namespace DesktopMemo.Core.Models
             set => SetProperty(ref _priority, value);
         }
 
+        // 兼容性属性（支持原有代码）
+        public DateTime CreatedTime
+        {
+            get => CreatedAt;
+            set => CreatedAt = value;
+        }
+
+        public DateTime ModifiedTime
+        {
+            get => UpdatedAt;
+            set => UpdatedAt = value;
+        }
+
+        // 从旧格式支持的方法
+        public string Preview => Content.Length > 100 ? Content.Substring(0, 100) + "..." : Content;
+
         // Computed properties
         public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? "无标题" : Title;
         public string FormattedDate => UpdatedAt.ToString("yyyy/MM/dd HH:mm");
@@ -134,6 +150,24 @@ namespace DesktopMemo.Core.Models
         public override string ToString()
         {
             return $"{DisplayTitle} - {FormattedDate}";
+        }
+
+        // 为了保持与旧代码的兼容性，添加静态方法和实例方法
+        public static Core.Models.MemoModel FromMetadata(object metadata, string content)
+        {
+            // 这是一个适配方法，实际实现可能需要根据具体的metadata类型调整
+            if (metadata != null)
+            {
+                var model = CreateNew("", content);
+                return model;
+            }
+            return CreateNew("", content);
+        }
+
+        public object ToMetadata(string contentFileName)
+        {
+            // 返回一个兼容的元数据对象，这里简化处理
+            return new { Id, Title, ContentFileName = contentFileName, CreatedTime, ModifiedTime };
         }
     }
 }

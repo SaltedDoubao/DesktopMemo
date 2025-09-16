@@ -74,7 +74,7 @@ echo - 自包含版本: publish\SelfContained
 echo - 依赖框架版本: publish\FrameworkDependent
 echo - 发布版本: publish\Release
 echo.
-echo 版本信息: v2.0.0-refactored
+echo 版本信息: v2.0.0
 echo 目标框架: %TARGET_FRAMEWORK%
 echo 运行时: %RUNTIME%
 echo.

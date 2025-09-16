@@ -1,19 +1,14 @@
-using System.Configuration;
-using System.Data;
+using System;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using DesktopMemo.Core.Interfaces;
 using DesktopMemo.Core.Services;
 using DesktopMemo.Infrastructure;
-using DesktopMemo.Infrastructure.Configuration;
-using DesktopMemo.Infrastructure.Migration;
-using DesktopMemo.Infrastructure.Performance;
-using DesktopMemo.UI.ViewModels;
 
 namespace DesktopMemo
 {
     /// <summary>
-    /// App.xaml 的交互逻辑
+    /// 应用程序主类，配置依赖注入并启动主窗口
     /// </summary>
     public partial class App : System.Windows.Application
     {
@@ -21,97 +16,49 @@ namespace DesktopMemo
         {
             base.OnStartup(e);
 
-            ConfigureServices();
-
-            // Perform data migration if needed
-            _ = Task.Run(async () => await PerformDataMigrationAsync());
-
-            // Create and show main window
-            var mainWindow = new MainWindow();
-            mainWindow.Show();
-        }
-
-        private async Task PerformDataMigrationAsync()
-        {
             try
             {
-                var migrationService = ServiceLocator.GetService<IDataMigrationService>();
+                // 配置依赖注入
+                var services = new ServiceCollection();
+                ConfigureServices(services);
+                ServiceLocator.Initialize(services);
 
-                if (await migrationService.NeedsMigrationAsync())
-                {
-                    var result = await migrationService.MigrateDataAsync();
-
-                    if (result.Success)
-                    {
-                        System.Diagnostics.Debug.WriteLine("数据迁移成功完成");
-                        foreach (var message in result.Messages)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"迁移: {message}");
-                        }
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"数据迁移失败: {result.Error}");
-                    }
-                }
+                // 创建并显示主窗口
+                var memoService = ServiceLocator.GetService<IMemoService>();
+                var settingsService = ServiceLocator.GetService<ISettingsService>();
+                var searchService = ServiceLocator.GetService<ISearchService>();
+                
+                var mainWindow = new MainWindow(memoService, null!, settingsService, searchService);
+                mainWindow.Show();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"数据迁移异常: {ex.Message}");
+                System.Windows.MessageBox.Show($"启动错误:\n{ex.Message}\n\n{ex.StackTrace}",
+                    "DesktopMemo Error",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
+
+                Shutdown();
             }
         }
 
-        private void ConfigureServices()
+        private void ConfigureServices(IServiceCollection services)
         {
-            var services = new ServiceCollection();
-
-            // Register core services
-            services.AddSingleton<IMemoService, MemoService>();
+            // 注册核心服务
+            services.AddSingleton<IMemoService, AdvancedMemoService>();
             services.AddSingleton<ISettingsService, SettingsService>();
-            services.AddSingleton<ISearchService, SearchService>();
-            services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<ILocalizationService, LocalizationService>();
-            services.AddSingleton<IWindowManagementService, WindowManagementService>();
+            services.AddSingleton<IThemeService, ThemeService>();
+            services.AddSingleton<ITrayService, TrayService>();
+            
+            // SearchService 需要 IMemoService
+            services.AddSingleton<ISearchService, SearchService>();
+            
+            // WindowManagementService需要特殊处理，因为它需要Window实例
+            services.AddTransient<IWindowManagementService, WindowManagementService>();
 
-            // Register infrastructure services
-            services.AddSingleton<IYamlConfigurationService, YamlConfigurationService>();
-            services.AddSingleton<IDataMigrationService, DataMigrationService>();
-            services.AddSingleton<IPerformanceService, PerformanceService>();
-            services.AddSingleton<IBackgroundTaskService, BackgroundTaskService>();
-
-            // Register UI services
-            services.AddSingleton<ITrayService>(provider =>
-            {
-                var settingsService = provider.GetRequiredService<ISettingsService>();
-                var windowService = provider.GetRequiredService<IWindowManagementService>();
-                return new TrayService(settingsService, windowService);
-            });
-
-            // Register ViewModels
-            services.AddTransient<MainViewModel>(provider =>
-            {
-                return new MainViewModel(
-                    provider.GetRequiredService<IMemoService>(),
-                    provider.GetRequiredService<IWindowManagementService>(),
-                    provider.GetRequiredService<ISettingsService>(),
-                    provider.GetRequiredService<ILocalizationService>());
-            });
-
-            // Build service provider
-            ServiceLocator.Initialize(services);
-
-            // Initialize theme and localization on startup
-            var themeService = ServiceLocator.GetService<IThemeService>();
-            var localizationService = ServiceLocator.GetService<ILocalizationService>();
-
-            // Apply saved theme
-            var settingsService = ServiceLocator.GetService<ISettingsService>();
-            var savedTheme = settingsService.GetSetting("Theme", "Dark");
-            themeService.SetTheme(savedTheme);
-
-            // Apply saved language
-            var savedLanguage = settingsService.GetSetting("Language", "zh-CN");
-            localizationService.SetLanguage(savedLanguage);
+            // 注册主窗口
+            services.AddTransient<MainWindow>();
         }
 
         protected override void OnExit(ExitEventArgs e)
@@ -120,5 +67,4 @@ namespace DesktopMemo
             base.OnExit(e);
         }
     }
-
 }
