@@ -5,186 +5,59 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DesktopMemo"
         mc:Ignorable="d"
-        Title="备忘录"
+        Title="{Binding WindowTitle}"
         Width="380"
         Height="300"
         WindowStyle="None"
         ResizeMode="CanResizeWithGrip"
         AllowsTransparency="True"
         Background="Transparent"
-        FontFamily="Segoe UI, Microsoft YaHei"
-        FontSize="14"
+        FontFamily="{DynamicResource FontFamily}"
+        FontSize="{DynamicResource FontSize}"
         ShowInTaskbar="False"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
-        TextOptions.TextRenderingMode="ClearType"
-        KeyDown="MainWindow_KeyDown">
-    
+        TextOptions.TextRenderingMode="ClearType">
+
     <Window.Resources>
-        <!-- 玻璃拟态样式资源 -->
-        <Style x:Key="GlassmorphismBorder" TargetType="Border">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <SolidColorBrush Color="#15FFFFFF" Opacity="0.1"/>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="BorderBrush">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#40FFFFFF" Offset="0"/>
-                        <GradientStop Color="#10FFFFFF" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
+        <!-- Dynamic theme resources -->
+        <SolidColorBrush x:Key="PrimaryBrush" Color="{DynamicResource PrimaryColor}"/>
+        <SolidColorBrush x:Key="BackgroundBrush" Color="{DynamicResource BackgroundColor}"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="{DynamicResource SurfaceColor}"/>
+        <SolidColorBrush x:Key="TextBrush" Color="{DynamicResource TextPrimaryColor}"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="{DynamicResource BorderColor}"/>
+
+        <!-- Glassmorphism style -->
+        <Style x:Key="GlassContainer" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Opacity" Value="{DynamicResource BackgroundOpacity}"/>
         </Style>
-        
-        <!-- 半透明滚动条样式 -->
-        <Style x:Key="TransparentScrollBar" TargetType="ScrollBar">
+
+        <!-- Button styles -->
+        <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Width" Value="12"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Grid>
-                            <Border Background="Transparent" CornerRadius="6" Width="12">
-                                <Track Name="PART_Track" IsDirectionReversed="True">
-                                    <Track.Thumb>
-                                        <Thumb>
-                                            <Thumb.Style>
-                                                <Style TargetType="Thumb">
-                                                    <Setter Property="Background" Value="#30FFFFFF"/>
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="Thumb">
-                                                                <Border Background="{TemplateBinding Background}" 
-                                                                        CornerRadius="6" 
-                                                                        Width="8"
-                                                                        HorizontalAlignment="Center"/>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                    <Style.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#50FFFFFF"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsDragging" Value="True">
-                                                            <Setter Property="Background" Value="#70FFFFFF"/>
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Thumb.Style>
-                                        </Thumb>
-                                    </Track.Thumb>
-                                </Track>
-                            </Border>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
-        <!-- 带半透明滚动条的ScrollViewer样式 -->
-        <Style x:Key="GlassScrollViewer" TargetType="ScrollViewer">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollViewer">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            
-                            <ScrollContentPresenter Grid.Row="0" Grid.Column="0"/>
-                            
-                            <ScrollBar Name="PART_VerticalScrollBar"
-                                       Grid.Row="0" Grid.Column="1"
-                                       Style="{StaticResource TransparentScrollBar}"
-                                       Value="{TemplateBinding VerticalOffset}"
-                                       Maximum="{TemplateBinding ScrollableHeight}"
-                                       ViewportSize="{TemplateBinding ViewportHeight}"
-                                       Visibility="{TemplateBinding VerticalScrollBarVisibility}"/>
-                            
-                            <ScrollBar Name="PART_HorizontalScrollBar"
-                                       Grid.Row="1" Grid.Column="0"
-                                       Orientation="Horizontal"
-                                       Style="{StaticResource TransparentScrollBar}"
-                                       Value="{TemplateBinding HorizontalOffset}"
-                                       Maximum="{TemplateBinding ScrollableWidth}"
-                                       ViewportSize="{TemplateBinding ViewportWidth}"
-                                       Visibility="{TemplateBinding HorizontalScrollBarVisibility}"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
-        <!-- 动画资源 - 优化流畅度 -->
-        <Storyboard x:Key="FadeInAnimation">
-            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.35">
-                <DoubleAnimation.EasingFunction>
-                    <ExponentialEase EasingMode="EaseOut" Exponent="4"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
-        
-        <Storyboard x:Key="SlideInAnimation">
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
-                             From="320" To="0" Duration="0:0:0.45">
-                <DoubleAnimation.EasingFunction>
-                    <ExponentialEase EasingMode="EaseOut" Exponent="5"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.35">
-                <DoubleAnimation.EasingFunction>
-                    <ExponentialEase EasingMode="EaseOut" Exponent="3"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
-        
-        <Storyboard x:Key="SlideOutAnimation">
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
-                             From="0" To="320" Duration="0:0:0.25">
-                <DoubleAnimation.EasingFunction>
-                    <ExponentialEase EasingMode="EaseIn" Exponent="4"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.2">
-                <DoubleAnimation.EasingFunction>
-                    <ExponentialEase EasingMode="EaseIn" Exponent="3"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
-        
-        <!-- 玻璃拟态按钮样式 -->
-        <Style x:Key="GlassButton" TargetType="Button">
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" 
-                                Background="#15FFFFFF" 
-                                CornerRadius="8" 
-                                BorderBrush="#25FFFFFF" 
-                                BorderThickness="1"
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
                                 Padding="4">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="2" Opacity="0.1"/>
-                            </Border.Effect>
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#25FFFFFF"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#40FFFFFF"/>
+                                <Setter Property="Background" Value="#20FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#35FFFFFF"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#50FFFFFF"/>
+                                <Setter Property="Background" Value="#30FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -192,777 +65,137 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ModernRadioButton" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#E0FFFFFF"/>
-            <Setter Property="Margin" Value="0,4"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse x:Name="RadioMark" Width="14" Height="14" Stroke="#80FFFFFF" StrokeThickness="2" Margin="0,0,8,0"/>
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="RadioMark" Property="Fill" Value="#FF2196F3"/>
-                                <Setter TargetName="RadioMark" Property="Stroke" Value="#FF2196F3"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RadioMark" Property="Stroke" Value="#FFFFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        <!-- TextBox style -->
+        <Style x:Key="GlassTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="AcceptsReturn" Value="True"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
         </Style>
     </Window.Resources>
-    
-    <!-- 主容器 - 玻璃拟态风格 -->
-    <Border x:Name="MainContainer" Style="{StaticResource GlassmorphismBorder}" Margin="8">
-        
-        <Border.Effect>
-            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="6" Opacity="0.15"/>
-        </Border.Effect>
-        
-        <Grid ClipToBounds="True">
-            <!-- 主内容区域 -->
-            <Grid PreviewMouseLeftButtonDown="MainContentArea_PreviewMouseLeftButtonDown">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="44" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
 
-                <!-- 标题栏（用于拖动、按钮区） -->
-                <Border Grid.Row="0" 
-                        Background="#10FFFFFF" 
-                        CornerRadius="16,16,0,0" 
-                        BorderBrush="#15FFFFFF" 
-                        BorderThickness="0,0,0,1"
-                        MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                    <Grid Margin="16,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        
-                        <!-- 动态标题区域 -->
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Ellipse Width="8" Height="8" Margin="0,0,10,0">
-                                <Ellipse.Fill>
-                                    <RadialGradientBrush>
-                                        <GradientStop Color="#FF00E676" Offset="0"/>
-                                        <GradientStop Color="#FF4CAF50" Offset="1"/>
-                                    </RadialGradientBrush>
-                                </Ellipse.Fill>
-                            </Ellipse>
-                            
-                            <!-- 主页标题 -->
-                            <StackPanel x:Name="HomeTitlePanel" Orientation="Horizontal" Visibility="Visible">
-                                <TextBlock Text="备忘录" 
-                                           Foreground="#F0FFFFFF" 
-                                           FontWeight="SemiBold" 
-                                           FontSize="14"
-                                           VerticalAlignment="Center"/>
-                                <TextBlock x:Name="MemoCountText" 
-                                           Text="(0)"
-                                           FontSize="12" 
-                                           Foreground="#B0FFFFFF" 
-                                           Margin="8,0,0,0"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                            
-                            <!-- 编辑标题 -->
-                            <StackPanel x:Name="EditTitlePanel" Orientation="Horizontal" Visibility="Collapsed">
-                                <TextBlock x:Name="EditingMemoTitle" 
-                                           Text="编辑备忘录" 
-                                           Foreground="#F0FFFFFF" 
-                                           FontWeight="SemiBold" 
-                                           FontSize="14"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </StackPanel>
-                        
-                        <!-- 动态按钮区域 -->
-                        <StackPanel x:Name="TitleBarButtons" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- 主页模式按钮 -->
-                            <StackPanel x:Name="HomeModeBtns" Orientation="Horizontal" Visibility="Visible">
-                                <!-- 图钉按钮 -->
-                                <Button x:Name="PinButton" 
-                                        Width="32" Height="32" 
-                                        Margin="0,0,8,0" 
-                                        Click="PinButton_Click" 
-                                        ToolTip="固定窗口"
-                                        Style="{StaticResource GlassButton}">
-                                    <Path x:Name="PinIcon"
-                                          Data="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z" 
-                                          Fill="#E0FFFFFF" 
-                                          Width="16" Height="16" 
-                                          Stretch="Uniform"
-                                          HorizontalAlignment="Center" 
-                                          VerticalAlignment="Center"/>
-                                </Button>
-                                
-                                <!-- 新建备忘录按钮 -->
-                                <Button x:Name="MainAddMemoButton" 
-                                        Width="32" Height="32" 
-                                        Margin="0,0,8,0" 
-                                        Click="MainAddMemoButton_Click" 
-                                        ToolTip="新建备忘录"
-                                        Style="{StaticResource GlassButton}">
-                                    <Path Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" 
-                                          Fill="#E0FFFFFF" 
-                                          Width="16" Height="16" 
-                                          Stretch="Uniform"
-                                          HorizontalAlignment="Center" 
-                                          VerticalAlignment="Center"/>
-                                </Button>
-                                
-                                <!-- 设置按钮 -->
-                                <Button x:Name="SettingsToggle" 
-                                        Width="32" Height="32" 
-                                        Margin="0,0,8,0" 
-                                        Click="SettingsToggle_Click" 
-                                        ToolTip="设置"
-                                        Style="{StaticResource GlassButton}">
-                                    <Path Data="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M10,22C9.75,22 9.54,21.82 9.5,21.58L9.13,18.93C8.5,18.68 7.96,18.34 7.44,17.94L4.95,18.95C4.73,19.03 4.46,18.95 4.34,18.73L2.34,15.27C2.22,15.05 2.27,14.78 2.46,14.63L4.57,12.97C4.53,12.65 4.5,12.33 4.5,12C4.5,11.67 4.53,11.34 4.57,11.03L2.46,9.37C2.27,9.22 2.22,8.95 2.34,8.73L4.34,5.27C4.46,5.05 4.73,4.96 4.95,5.05L7.44,6.05C7.96,5.66 8.5,5.32 9.13,5.07L9.5,2.42C9.54,2.18 9.75,2 10,2H14C14.25,2 14.46,2.18 14.5,2.42L14.87,5.07C15.5,5.32 16.04,5.66 16.56,6.05L19.05,5.05C19.27,4.96 19.54,5.05 19.66,5.27L21.66,8.73C21.78,8.95 21.73,9.22 21.54,9.37L19.43,11.03C19.47,11.34 19.5,11.66 19.5,12C19.5,12.34 19.47,12.65 19.43,12.97L21.54,14.63C21.73,14.78 21.78,15.05 21.66,15.27L19.66,18.73C19.54,18.95 19.27,19.04 19.05,18.95L16.56,17.95C16.04,18.34 15.5,18.68 14.87,18.93L14.5,21.58C14.46,21.82 14.25,22 14,22H10M11.25,4L10.88,6.61C9.68,6.86 8.62,7.5 7.85,8.39L5.44,7.35L4.69,8.65L6.8,10.2C6.4,11.37 6.4,12.64 6.8,13.8L4.68,15.36L5.43,16.66L7.86,15.62C8.63,16.5 9.68,17.14 10.87,17.38L11.24,20H12.76L13.13,17.39C14.32,17.14 15.37,16.5 16.14,15.62L18.57,16.66L19.32,15.36L17.2,13.81C17.6,12.64 17.6,11.37 17.2,10.2L19.31,8.65L18.56,7.35L16.15,8.39C15.38,7.5 14.32,6.86 13.12,6.62L12.75,4H11.25Z" 
-                                          Fill="#E0FFFFFF" 
-                                          Width="16" Height="16" 
-                                          Stretch="Uniform"
-                                          HorizontalAlignment="Center" 
-                                          VerticalAlignment="Center"/>
-                                </Button>
-                            </StackPanel>
-                            
-                            <!-- 编辑模式按钮 -->
-                            <StackPanel x:Name="EditModeBtns" Orientation="Horizontal" Visibility="Collapsed">
-                                <!-- 返回按钮 -->
-                                <Button x:Name="MainBackButton" 
-                                        Width="32" Height="32" 
-                                        Margin="0,0,8,0" 
-                                        Click="MainBackButton_Click" 
-                                        ToolTip="返回列表"
-                                        Style="{StaticResource GlassButton}">
-                                    <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" 
-                                          Fill="#E0FFFFFF" 
-                                          Width="16" Height="16" 
-                                          Stretch="Uniform"
-                                          HorizontalAlignment="Center" 
-                                          VerticalAlignment="Center"/>
-                                </Button>
-                                
-                                <!-- 保存并返回按钮 -->
-                                <Button x:Name="EditSaveAndBackButton" 
-                                        Width="32" Height="32" 
-                                        Margin="0,0,8,0" 
-                                        Click="EditSaveAndBackButton_Click" 
-                                        ToolTip="保存并返回"
-                                        Style="{StaticResource GlassButton}">
-                                    <Path Data="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" 
-                                          Fill="#E0FFFFFF" 
-                                          Width="16" Height="16" 
-                                          Stretch="Uniform"
-                                          HorizontalAlignment="Center" 
-                                          VerticalAlignment="Center"/>
-                                </Button>
-                                
-                                <!-- 删除按钮 -->
-                                <Button x:Name="MainDeleteButton" 
-                                        Width="32" Height="32" 
-                                        Margin="0,0,8,0" 
-                                        Click="MainDeleteButton_Click" 
-                                        ToolTip="删除备忘录"
-                                        Style="{StaticResource GlassButton}">
-                                    <Path Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" 
-                                          Fill="#FFE57373" 
-                                          Width="16" Height="16" 
-                                          Stretch="Uniform"
-                                          HorizontalAlignment="Center" 
-                                          VerticalAlignment="Center"/>
-                                </Button>
-                            </StackPanel>
-                            
-                            <!-- 关闭按钮（始终显示） -->
-                            <Button Width="32" Height="32" 
-                                    Click="CloseButton_Click" 
-                                    ToolTip="关闭"
-                                    Style="{StaticResource GlassButton}">
-                                <Path Data="M13.46,12L19,17.54V19H17.54L12,13.46L6.46,19H5V17.54L10.54,12L5,6.46V5H6.46L12,10.54L17.54,5H19V6.46L13.46,12Z" 
-                                      Fill="#FFE57373" 
-                                      Width="16" Height="16" 
-                                      Stretch="Uniform"
-                                      HorizontalAlignment="Center" 
-                                      VerticalAlignment="Center"/>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </Border>
+    <Border Style="{StaticResource GlassContainer}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <!-- 主内容区 - 支持两种视图模式 -->
-                <Border Grid.Row="1" 
-                        Background="#08FFFFFF" 
-                        CornerRadius="0,0,16,16" 
-                        BorderBrush="#10FFFFFF" 
-                        BorderThickness="0,1,0,0" 
-                        Margin="0">
-                    <Grid>
-                        <!-- 备忘录列表视图 -->
-                        <Grid x:Name="MemoListView" Visibility="Visible" Margin="8,0,0,0">
-                            <!-- 备忘录列表 -->
-                            <ListBox x:Name="MemoItemsControl"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Padding="8,5,0,0"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                     ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                     ScrollViewer.CanContentScroll="True"
-                                     VirtualizingPanel.IsVirtualizing="True"
-                                     VirtualizingPanel.VirtualizationMode="Recycling"
-                                     VirtualizingPanel.ScrollUnit="Pixel">
-                                <ListBox.Template>
-                                    <ControlTemplate TargetType="ListBox">
-                                        <ScrollViewer Style="{StaticResource GlassScrollViewer}"
-                                                     Focusable="False"
-                                                     Padding="{TemplateBinding Padding}">
-                                            <ItemsPresenter/>
-                                        </ScrollViewer>
-                                    </ControlTemplate>
-                                </ListBox.Template>
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <VirtualizingStackPanel Orientation="Vertical"/>
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ListBoxItem">
-                                                    <ContentPresenter/>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Setter Property="Padding" Value="0"/>
-                                        <Setter Property="Margin" Value="0"/>
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                        <Setter Property="VerticalContentAlignment" Value="Top"/>
-                                    </Style>
-                                </ListBox.ItemContainerStyle>
-                            </ListBox>
-                        </Grid>
-                        
-                        <!-- 备忘录编辑视图 -->
-                        <Grid x:Name="MemoEditView" Visibility="Collapsed">
-                            <!-- 编辑文本框 -->
-                            <TextBox x:Name="NoteTextBox"
-                                     AcceptsReturn="True"
-                                     TextWrapping="Wrap"
-                                     VerticalScrollBarVisibility="Auto"
-                                     Background="Transparent"
-                                     Foreground="#F0FFFFFF"
-                                     BorderThickness="0"
-                                     Padding="20"
-                                     SpellCheck.IsEnabled="False"
-                                     FontSize="14"
-                                     CaretBrush="#FF64B5F6"
-                                     SelectionBrush="#4064B5F6"
-                                     TextChanged="NoteTextBox_TextChanged"
-                                     PreviewKeyDown="NoteTextBox_PreviewKeyDown">
-                                <TextBox.ContextMenu>
-                                    <ContextMenu Background="#F0151515" 
-                                                 BorderBrush="#40FFFFFF" 
-                                                 BorderThickness="1">
-                                        <ContextMenu.Effect>
-                                            <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="4" Opacity="0.2"/>
-                                        </ContextMenu.Effect>
-                                            <MenuItem Header="✂️ 剪切(_T)" Command="ApplicationCommands.Cut" Foreground="#F0FFFFFF">
-                                                <MenuItem.Icon>
-                                                    <Path Data="M19,3L13,9L15,11L22,4V3M12,12.5A0.5,0.5 0 0,1 11.5,12A0.5,0.5 0 0,1 12,11.5A0.5,0.5 0 0,1 12.5,12A0.5,0.5 0 0,1 12,12.5M6,20A2,2 0 0,1 4,18C4,16.89 4.9,16 6,16A2,2 0 0,1 8,18C8,19.11 7.1,20 6,20M6,8A2,2 0 0,1 4,6C4,4.89 4.9,4 6,4A2,2 0 0,1 8,6C8,7.11 7.1,8 6,8M9.64,7.64C9.87,7.14 10,6.59 10,6A4,4 0 0,0 6,2A4,4 0 0,0 2,6A4,4 0 0,0 6,10C6.59,10 7.14,9.87 7.64,9.64L10,12L7.64,14.36C7.14,14.13 6.59,14 6,14A4,4 0 0,0 2,18A4,4 0 0,0 6,22A4,4 0 0,0 10,18C10,17.41 9.87,16.86 9.64,16.36L12,14L16.36,18.36C16.86,18.13 17.41,18 18,18A4,4 0 0,0 22,14A4,4 0 0,0 18,10C17.41,10 16.86,10.13 16.36,10.36L14,12L12,10L9.64,7.64Z" Fill="#FFFFFF" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            <MenuItem Header="📋 复制(_C)" Command="ApplicationCommands.Copy" Foreground="#F0FFFFFF">
-                                                <MenuItem.Icon>
-                                                    <Path Data="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" Fill="#FFFFFF" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            <MenuItem Header="📋 粘贴(_P)" Command="ApplicationCommands.Paste" Foreground="#F0FFFFFF">
-                                                <MenuItem.Icon>
-                                                    <Path Data="M19,20H5V4H7V7H17V4H19M12,2A1,1 0 0,1 13,3A1,1 0 0,1 12,4A1,1 0 0,1 11,3A1,1 0 0,1 12,2M19,2H14.82C14.4,0.84 13.3,0 12,0C10.7,0 9.6,0.84 9.18,2H5A2,2 0 0,0 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V4A2,2 0 0,0 19,2Z" Fill="#FFFFFF" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                        <Separator Background="#30FFFFFF"/>
-                                            <MenuItem Header="✅ 全选(_A)" Command="ApplicationCommands.SelectAll" Foreground="#F0FFFFFF">
-                                                <MenuItem.Icon>
-                                                    <Path Data="M3,5H9V11H3V5M5,7V9H7V7H5M11,7H21V9H11V7M11,15H21V17H11V15M5,20V18H7V20H5M3,13H9V19H3V13M11,11H21V13H11V11Z" Fill="#FFFFFF" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                        <Separator Background="#30FFFFFF"/>
-                                            <MenuItem Header="🔍 查找(_F)" Click="FindMenuItem_Click" Foreground="#F0FFFFFF">
-                                                <MenuItem.Icon>
-                                                    <Path Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" Fill="#FFFFFF" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            <MenuItem Header="🔄 替换(_R)" Click="ReplaceMenuItem_Click" Foreground="#F0FFFFFF">
-                                                <MenuItem.Icon>
-                                                    <Path Data="M11,6C12.38,6 13.63,6.56 14.54,7.46L12,10H18V4L15.95,6.05C14.68,4.78 12.93,4 11,4C7.47,4 4.57,6.61 4.08,10H6.1C6.56,7.72 8.58,6 11,6M16.64,15.14C17.3,14.24 17.76,13.17 17.92,12H15.9C15.44,14.28 13.42,16 11,16C9.62,16 8.37,15.44 7.46,14.54L10,12H4V18L6.05,15.95C7.32,17.22 9.07,18 11,18C14.53,18 17.43,15.39 17.92,12H19.92C19.76,13.83 19.16,15.54 18.14,16.95L16.64,15.14Z" Fill="#FFFFFF" Width="12" Height="12" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                        </ContextMenu>
-                                    </TextBox.ContextMenu>
-                                <TextBox.Style>
-                                    <Style TargetType="TextBox">
-                                        <Style.Resources>
-                                            <Style TargetType="ScrollBar">
-                                                <Setter Property="Width" Value="8"/>
-                                                <Setter Property="Background" Value="Transparent"/>
-                                                <Setter Property="BorderThickness" Value="0"/>
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="ScrollBar">
-                                                            <Border Background="Transparent" CornerRadius="4" Width="8">
-                                                                <Track x:Name="PART_Track" IsDirectionReversed="True">
-                                                                    <Track.Thumb>
-                                                                        <Thumb>
-                                                                            <Thumb.Style>
-                                                                                <Style TargetType="Thumb">
-                                                                                    <Setter Property="Background" Value="#3064B5F6"/>
-                                                                                    <Setter Property="Template">
-                                                                                        <Setter.Value>
-                                                                                            <ControlTemplate TargetType="Thumb">
-                                                                                                <Border Background="{TemplateBinding Background}" 
-                                                                                                        CornerRadius="4" 
-                                                                                                        Width="6"
-                                                                                                        HorizontalAlignment="Center"/>
-                                                                                            </ControlTemplate>
-                                                                                        </Setter.Value>
-                                                                                    </Setter>
-                                                                                    <Style.Triggers>
-                                                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                                                            <Setter Property="Background" Value="#5064B5F6"/>
-                                                                                        </Trigger>
-                                                                                        <Trigger Property="IsDragging" Value="True">
-                                                                                            <Setter Property="Background" Value="#7064B5F6"/>
-                                                                                        </Trigger>
-                                                                                    </Style.Triggers>
-                                                                                </Style>
-                                                                            </Thumb.Style>
-                                                                        </Thumb>
-                                                                    </Track.Thumb>
-                                                                </Track>
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </Style.Resources>
-                                    </Style>
-                                </TextBox.Style>
-                            </TextBox>
-                        </Grid>
-                    </Grid>
-                </Border>
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="16,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Title -->
+                <TextBox Grid.Column="0"
+                         Text="{Binding CurrentMemoTitle, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource GlassTextBox}"
+                         FontWeight="Bold"
+                         FontSize="16"
+                         Margin="0,0,8,0"
+                         Padding="8,4"
+                         MaxLines="1"
+                         TextWrapping="NoWrap"
+                         VerticalScrollBarVisibility="Disabled"
+                         IsReadOnly="{Binding IsEditMode, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                <!-- Pin Button -->
+                <Button Grid.Column="1"
+                        Command="{Binding TogglePinCommand}"
+                        Style="{StaticResource IconButton}"
+                        ToolTip="置顶/取消置顶"
+                        Margin="4,0">
+                    <TextBlock Text="{Binding CurrentMemo.IsPinned, Converter={StaticResource PinIconConverter}}"
+                               FontFamily="Segoe UI Symbol"
+                               FontSize="14"/>
+                </Button>
+
+                <!-- Settings Button -->
+                <Button Grid.Column="2"
+                        Style="{StaticResource IconButton}"
+                        ToolTip="设置"
+                        Margin="4,0">
+                    <TextBlock Text="⚙" FontFamily="Segoe UI Symbol" FontSize="14"/>
+                </Button>
+
+                <!-- Close Button -->
+                <Button Grid.Column="3"
+                        Style="{StaticResource IconButton}"
+                        ToolTip="最小化到托盘"
+                        Margin="4,0"
+                        Click="CloseButton_Click">
+                    <TextBlock Text="✕" FontFamily="Segoe UI Symbol" FontSize="14"/>
+                </Button>
             </Grid>
 
-            <!-- 设置面板 - 覆盖层模式 -->
-            <Border x:Name="SettingsPanel" 
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Stretch"
-                    Width="320"
-                    Background="#F0101010" 
-                    BorderBrush="#30FFFFFF" 
-                    BorderThickness="1,0,0,0" 
-                    CornerRadius="0,16,16,0"
-                    Visibility="Collapsed"
-                    MouseLeftButtonDown="SettingsPanel_MouseLeftButtonDown">
-                <Border.RenderTransform>
-                    <TranslateTransform X="320"/>
-                </Border.RenderTransform>
-                <Border.Effect>
-                    <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="-4" Opacity="0.25"/>
-                </Border.Effect>
-                <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                              HorizontalScrollBarVisibility="Disabled"
-                              Style="{StaticResource GlassScrollViewer}">
-                    <StackPanel Margin="20">
-                        <!-- 设置标题 -->
-                        <Grid Margin="0,0,0,20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                <Ellipse Width="8" Height="8" Fill="#FF2196F3" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Text="设置" FontSize="18" FontWeight="SemiBold" Foreground="#F5FFFFFF"/>
-                            </StackPanel>
-                            
-                            <!-- 返回按钮 -->
-                            <Button x:Name="SettingsBackButton"
-                                    Grid.Column="1"
-                                    Width="32" Height="32"
-                                    Click="SettingsBackButton_Click"
-                                    ToolTip="返回"
-                                    Style="{StaticResource GlassButton}">
-                                <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" 
-                                      Fill="#E0FFFFFF" 
-                                      Width="16" Height="16" 
-                                      Stretch="Uniform"
-                                      HorizontalAlignment="Center" 
-                                      VerticalAlignment="Center"/>
-                            </Button>
-                        </Grid>
+            <!-- Content Area -->
+            <ScrollViewer Grid.Row="1"
+                          Margin="16,0"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <TextBox Text="{Binding CurrentMemoContent, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource GlassTextBox}"
+                         MinHeight="100"
+                         IsReadOnly="{Binding IsEditMode, Converter={StaticResource InverseBooleanConverter}}"/>
+            </ScrollViewer>
 
-                        <!-- 置顶模式设置 -->
-                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="窗口置顶模式" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
-                                <StackPanel>
-                                    <RadioButton x:Name="NormalModeRadio" Content="普通模式" GroupName="TopmostMode" 
-                                                 Checked="TopmostModeRadio_Checked" Style="{StaticResource ModernRadioButton}"/>
-                                    <RadioButton x:Name="DesktopModeRadio" Content="桌面置顶" GroupName="TopmostMode" 
-                                                 Checked="TopmostModeRadio_Checked" Style="{StaticResource ModernRadioButton}"/>
-                                    <RadioButton x:Name="AlwaysModeRadio" Content="总是置顶" GroupName="TopmostMode" 
-                                                 Checked="TopmostModeRadio_Checked" Style="{StaticResource ModernRadioButton}"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
+            <!-- Status Bar -->
+            <Grid Grid.Row="2" Margin="16,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
+                <!-- Status Text -->
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusText}"
+                           Foreground="{DynamicResource TextBrush}"
+                           Opacity="0.7"
+                           FontSize="12"
+                           VerticalAlignment="Center"/>
 
+                <!-- Memo Counter -->
+                <TextBlock Grid.Column="1"
+                           Text="{Binding MemoCountText}"
+                           Foreground="{DynamicResource TextBrush}"
+                           Opacity="0.7"
+                           FontSize="12"
+                           Margin="8,0"
+                           VerticalAlignment="Center"/>
 
-                        <!-- 窗口位置设置 -->
-                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="窗口位置" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
-                                
-                                <!-- 当前位置显示 -->
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="当前位置:" Foreground="#B0FFFFFF" FontSize="12" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="CurrentPositionText" Grid.Column="1" Text="X: 0, Y: 0" Foreground="#E0FFFFFF" 
-                                               FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                </Grid>
-                                
-                                <!-- 预设位置 -->
-                                <TextBlock Text="预设位置" FontSize="12" FontWeight="Medium" Foreground="#C0FFFFFF" Margin="0,0,0,8"/>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-                                    
-                                    <Button x:Name="TopLeftBtn" Grid.Row="0" Grid.Column="0" Content="↖" 
-                                            Width="30" Height="30" Margin="2" ToolTip="左上角"
-                                            Click="PresetPosition_Click" Tag="TopLeft"
-                                            Style="{StaticResource GlassButton}"/>
-                                    <Button x:Name="TopCenterBtn" Grid.Row="0" Grid.Column="1" Content="↑" 
-                                            Width="30" Height="30" Margin="2" ToolTip="顶部中央"
-                                            Click="PresetPosition_Click" Tag="TopCenter"
-                                            Style="{StaticResource GlassButton}"/>
-                                    <Button x:Name="TopRightBtn" Grid.Row="0" Grid.Column="2" Content="↗" 
-                                            Width="30" Height="30" Margin="2" ToolTip="右上角"
-                                            Click="PresetPosition_Click" Tag="TopRight"
-                                            Style="{StaticResource GlassButton}"/>
-                                            
-                                    <Button x:Name="MiddleLeftBtn" Grid.Row="1" Grid.Column="0" Content="←" 
-                                            Width="30" Height="30" Margin="2" ToolTip="左侧中央"
-                                            Click="PresetPosition_Click" Tag="MiddleLeft"
-                                            Style="{StaticResource GlassButton}"/>
-                                    <Button x:Name="CenterBtn" Grid.Row="1" Grid.Column="1" Content="●" 
-                                            Width="30" Height="30" Margin="2" ToolTip="屏幕中央"
-                                            Click="PresetPosition_Click" Tag="Center"
-                                            Style="{StaticResource GlassButton}"/>
-                                    <Button x:Name="MiddleRightBtn" Grid.Row="1" Grid.Column="2" Content="→" 
-                                            Width="30" Height="30" Margin="2" ToolTip="右侧中央"
-                                            Click="PresetPosition_Click" Tag="MiddleRight"
-                                            Style="{StaticResource GlassButton}"/>
-                                            
-                                    <Button x:Name="BottomLeftBtn" Grid.Row="2" Grid.Column="0" Content="↙" 
-                                            Width="30" Height="30" Margin="2" ToolTip="左下角"
-                                            Click="PresetPosition_Click" Tag="BottomLeft"
-                                            Style="{StaticResource GlassButton}"/>
-                                    <Button x:Name="BottomCenterBtn" Grid.Row="2" Grid.Column="1" Content="↓" 
-                                            Width="30" Height="30" Margin="2" ToolTip="底部中央"
-                                            Click="PresetPosition_Click" Tag="BottomCenter"
-                                            Style="{StaticResource GlassButton}"/>
-                                    <Button x:Name="BottomRightBtn" Grid.Row="2" Grid.Column="2" Content="↘" 
-                                            Width="30" Height="30" Margin="2" ToolTip="右下角"
-                                            Click="PresetPosition_Click" Tag="BottomRight"
-                                            Style="{StaticResource GlassButton}"/>
-                                </Grid>
-                                
-                                <!-- 自定义位置输入 -->
-                                <TextBlock Text="自定义位置" FontSize="12" FontWeight="Medium" Foreground="#C0FFFFFF" Margin="0,0,0,8"/>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    
-                                    <TextBlock Grid.Column="0" Text="X:" Foreground="#B0FFFFFF" FontSize="12" 
-                                               VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                    <TextBox x:Name="CustomXTextBox" Grid.Column="1" Text="0" 
-                                             Background="#30FFFFFF" Foreground="#FFFFFFFF" BorderBrush="#50FFFFFF" 
-                                             BorderThickness="1" Padding="4,2" Margin="0,0,8,0"
-                                             PreviewTextInput="NumberOnly_PreviewTextInput"/>
-                                             
-                                    <TextBlock Grid.Column="2" Text="Y:" Foreground="#B0FFFFFF" FontSize="12" 
-                                               VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                    <TextBox x:Name="CustomYTextBox" Grid.Column="3" Text="0" 
-                                             Background="#30FFFFFF" Foreground="#FFFFFFFF" BorderBrush="#50FFFFFF" 
-                                             BorderThickness="1" Padding="4,2" Margin="0,0,8,0"
-                                             PreviewTextInput="NumberOnly_PreviewTextInput"/>
-                                             
-                                    <Button x:Name="ApplyCustomPositionBtn" Grid.Column="4" Content="应用" 
-                                            Width="50" Height="25" Click="ApplyCustomPosition_Click"
-                                            Style="{StaticResource GlassButton}"/>
-                                </Grid>
-                                
+                <!-- Previous Button -->
+                <Button Grid.Column="2"
+                        Command="{Binding SwitchToPreviousMemoCommand}"
+                        Style="{StaticResource IconButton}"
+                        Width="24"
+                        Height="24"
+                        ToolTip="上一个备忘录"
+                        Margin="4,0">
+                    <TextBlock Text="◀" FontFamily="Segoe UI Symbol" FontSize="12"/>
+                </Button>
 
-                                
-                                <!-- 操作按钮 -->
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    
-                                    <Button x:Name="RememberPositionBtn" Grid.Column="0" Content="记住当前位置" 
-                                            Height="30" Margin="0,0,4,0" Click="RememberPosition_Click"
-                                            Style="{StaticResource GlassButton}"/>
-                                    <Button x:Name="RestorePositionBtn" Grid.Column="1" Content="恢复保存位置" 
-                                            Height="30" Margin="4,0,0,0" Click="RestorePosition_Click"
-                                            Style="{StaticResource GlassButton}"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- 外观设置 -->
-                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="外观设置" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
-                                
-                                <!-- 背景透明度设置 -->
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    
-                                    <!-- 标题和数值显示 -->
-                                    <Grid Grid.Row="0" Margin="0,0,0,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="背景透明度" Foreground="#E0FFFFFF" FontSize="12" VerticalAlignment="Center"/>
-                                        <TextBlock x:Name="OpacityValueText" Grid.Column="1" Text="10%" Foreground="#B0FFFFFF" FontSize="12" VerticalAlignment="Center"/>
-                                    </Grid>
-                                    
-                                    <!-- 滑块 -->
-                                    <Slider x:Name="BackgroundOpacitySlider" 
-                                            Grid.Row="1"
-                                            Minimum="0" Maximum="100" 
-                                            Value="10"
-                                            TickFrequency="10"
-                                            IsSnapToTickEnabled="False"
-                                            Margin="0,0,0,8"
-                                            ValueChanged="BackgroundOpacitySlider_ValueChanged">
-                                        <Slider.Style>
-                                            <Style TargetType="Slider">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Slider">
-                                                            <Grid>
-                                                                <!-- 背景轨道 -->
-                                                                <Border x:Name="TrackBackground"
-                                                                        Height="6"
-                                                                        Background="#30FFFFFF"
-                                                                        CornerRadius="3"
-                                                                        VerticalAlignment="Center"
-                                                                        MouseLeftButtonDown="OpacityTrack_MouseLeftButtonDown"/>
-                                                                        
-                                                                <!-- 进度条容器 -->
-                                                                <Border Height="6"
-                                                                        Background="Transparent"
-                                                                        CornerRadius="3"
-                                                                        VerticalAlignment="Center"
-                                                                        ClipToBounds="True">
-                                                                    <Rectangle x:Name="ProgressRect"
-                                                                               Fill="#FF64B5F6"
-                                                                               Height="6"
-                                                                               HorizontalAlignment="Left"
-                                                                               VerticalAlignment="Stretch"/>
-                                                                </Border>
-                                                                        
-                                                                <Track x:Name="PART_Track">
-                                                                    <Track.DecreaseRepeatButton>
-                                                                        <RepeatButton Style="{x:Null}" Background="Transparent"/>
-                                                                    </Track.DecreaseRepeatButton>
-                                                                    <Track.IncreaseRepeatButton>
-                                                                        <RepeatButton Style="{x:Null}" Background="Transparent"/>
-                                                                    </Track.IncreaseRepeatButton>
-                                                                    <Track.Thumb>
-                                                                        <Thumb>
-                                                                            <Thumb.Style>
-                                                                                <Style TargetType="Thumb">
-                                                                                    <Setter Property="Background" Value="#FFFFFFFF"/>
-                                                                                    <Setter Property="Template">
-                                                                                        <Setter.Value>
-                                                                                            <ControlTemplate TargetType="Thumb">
-                                                                                                <Ellipse Fill="{TemplateBinding Background}" 
-                                                                                                         Width="14" Height="14"/>
-                                                                                            </ControlTemplate>
-                                                                                        </Setter.Value>
-                                                                                    </Setter>
-                                                                                </Style>
-                                                                            </Thumb.Style>
-                                                                        </Thumb>
-                                                                    </Track.Thumb>
-                                                                </Track>
-                                                            </Grid>
-
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </Slider.Style>
-                                    </Slider>
-                                    
-                                    <!-- 说明文字 -->
-                                    <TextBlock Grid.Row="2" Text="0% = 完全透明，100% = 60%白色背景" 
-                                               Foreground="#80FFFFFF" FontSize="10" 
-                                               HorizontalAlignment="Center"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- 其他选项 -->
-                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="其他选项" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
-                                <CheckBox x:Name="ClickThroughCheckBox" Content="穿透模式" Foreground="#E0FFFFFF" 
-                                          Margin="0,6,0,12" Checked="ClickThroughCheckBox_Checked" Unchecked="ClickThroughCheckBox_Unchecked">
-                                    <CheckBox.Style>
-                                        <Style TargetType="CheckBox">
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="CheckBox">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <Border x:Name="CheckMark" Width="16" Height="16" 
-                                                                    Background="Transparent" 
-                                                                    BorderBrush="#80FFFFFF" 
-                                                                    BorderThickness="2" 
-                                                                    CornerRadius="3" 
-                                                                    Margin="0,0,8,0">
-                                                                <Path x:Name="CheckPath" 
-                                                                      Data="M3,8 L7,12 L13,4" 
-                                                                      Stroke="#FFFFFFFF" 
-                                                                      StrokeThickness="2.5" 
-                                                                      StrokeStartLineCap="Round" 
-                                                                      StrokeEndLineCap="Round" 
-                                                                      Stretch="Uniform"
-                                                                      HorizontalAlignment="Center"
-                                                                      VerticalAlignment="Center"
-                                                                      Visibility="Collapsed"/>
-                                                            </Border>
-                                                            <ContentPresenter VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsChecked" Value="True">
-                                                                <Setter TargetName="CheckMark" Property="Background" Value="#FF2196F3"/>
-                                                                <Setter TargetName="CheckMark" Property="BorderBrush" Value="#FF2196F3"/>
-                                                                <Setter TargetName="CheckPath" Property="Visibility" Value="Visible"/>
-                                                            </Trigger>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="CheckMark" Property="BorderBrush" Value="#FFFFFFFF"/>
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </CheckBox.Style>
-                                </CheckBox>
-                                
-                                <!-- 新增选项 -->
-                                <CheckBox x:Name="AutoStartCheckBox" Content="开机自启动" Foreground="#E0FFFFFF" 
-                                          Margin="0,6,0,12">
-                                    <CheckBox.Style>
-                                        <Style TargetType="CheckBox">
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="CheckBox">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <Border x:Name="CheckMark" Width="16" Height="16" 
-                                                                    Background="Transparent" 
-                                                                    BorderBrush="#80FFFFFF" 
-                                                                    BorderThickness="2" 
-                                                                    CornerRadius="3" 
-                                                                    Margin="0,0,8,0">
-                                                                <Path x:Name="CheckPath" 
-                                                                      Data="M3,8 L7,12 L13,4" 
-                                                                      Stroke="#FFFFFFFF" 
-                                                                      StrokeThickness="2.5" 
-                                                                      StrokeStartLineCap="Round" 
-                                                                      StrokeEndLineCap="Round" 
-                                                                      Stretch="Uniform"
-                                                                      HorizontalAlignment="Center"
-                                                                      VerticalAlignment="Center"
-                                                                      Visibility="Collapsed"/>
-                                                            </Border>
-                                                            <ContentPresenter VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsChecked" Value="True">
-                                                                <Setter TargetName="CheckMark" Property="Background" Value="#FF4CAF50"/>
-                                                                <Setter TargetName="CheckMark" Property="BorderBrush" Value="#FF4CAF50"/>
-                                                                <Setter TargetName="CheckPath" Property="Visibility" Value="Visible"/>
-                                                            </Trigger>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="CheckMark" Property="BorderBrush" Value="#FFFFFFFF"/>
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </CheckBox.Style>
-                                </CheckBox>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- 状态信息 -->
-                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15">
-                            <StackPanel>
-                                <TextBlock Text="状态信息" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
-                                <StackPanel>
-                                    <Grid Margin="0,6">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Ellipse Grid.Column="0" Width="6" Height="6" Fill="#FF4CAF50" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock x:Name="StatusText" Grid.Column="1" Text="就绪" Foreground="#B0FFFFFF" FontSize="12"/>
-                                    </Grid>
-                                    <TextBlock x:Name="AppInfoText" Text="版本：加载中..." Foreground="#90FFFFFF" FontSize="11" Margin="14,6,0,0"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
+                <!-- Next Button -->
+                <Button Grid.Column="3"
+                        Command="{Binding SwitchToNextMemoCommand}"
+                        Style="{StaticResource IconButton}"
+                        Width="24"
+                        Height="24"
+                        ToolTip="下一个备忘录"
+                        Margin="4,0">
+                    <TextBlock Text="▶" FontFamily="Segoe UI Symbol" FontSize="12"/>
+                </Button>
+            </Grid>
         </Grid>
     </Border>
 </Window>
