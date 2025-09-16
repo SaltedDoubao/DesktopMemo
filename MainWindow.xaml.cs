@@ -15,11 +15,11 @@ namespace DesktopMemo
     /// </summary>
     public partial class MainWindow : Window
     {
-        private MainViewModel _viewModel;
-        private ITrayService _trayService;
-        private IThemeService _themeService;
-        private ILocalizationService _localizationService;
-        private ISettingsService _settingsService;
+        private MainViewModel _viewModel = null!;
+        private ITrayService _trayService = null!;
+        private IThemeService _themeService = null!;
+        private ILocalizationService _localizationService = null!;
+        private ISettingsService _settingsService = null!;
 
         public MainWindow()
         {

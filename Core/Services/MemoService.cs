@@ -87,23 +87,26 @@ namespace DesktopMemo.Core.Services
 
         public async Task DeleteMemoAsync(string memoId)
         {
-            try
+            await Task.Run(() =>
             {
-                var fileName = $"{memoId}.json";
-                var filePath = Path.Combine(_dataDirectory, fileName);
-
-                if (File.Exists(filePath))
+                try
                 {
-                    File.Delete(filePath);
-                    var memo = new MemoModel { Id = memoId };
-                    MemoChanged?.Invoke(this, new MemoChangedEventArgs(memo, MemoChangeType.Deleted));
+                    var fileName = $"{memoId}.json";
+                    var filePath = Path.Combine(_dataDirectory, fileName);
+
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                        var memo = new MemoModel { Id = memoId };
+                        MemoChanged?.Invoke(this, new MemoChangedEventArgs(memo, MemoChangeType.Deleted));
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"删除备忘录失败: {ex.Message}");
-                throw;
-            }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"删除备忘录失败: {ex.Message}");
+                    throw;
+                }
+            });
         }
 
         public async Task<MemoModel> CreateMemoAsync(string title = "", string content = "")

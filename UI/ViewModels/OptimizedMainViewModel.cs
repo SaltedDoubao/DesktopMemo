@@ -68,7 +68,7 @@ namespace DesktopMemo.UI.ViewModels
 
                     // Debounced auto-save
                     _performanceService.DebounceAction("save_title",
-                        () => _ = SaveCurrentMemoAsync(), 1000);
+                        () => SaveCurrentMemoAsync(), 1000);
                 }
             }
         }
@@ -85,7 +85,7 @@ namespace DesktopMemo.UI.ViewModels
 
                     // Debounced auto-save
                     _performanceService.DebounceAction("save_content",
-                        () => _ = SaveCurrentMemoAsync(), 500);
+                        () => SaveCurrentMemoAsync(), 500);
                 }
             }
         }
@@ -162,12 +162,12 @@ namespace DesktopMemo.UI.ViewModels
 
         private void InitializeCommands()
         {
-            AddMemoCommand = new RelayCommand(async () => await AddMemoAsync());
+            AddMemoCommand = new RelayCommand(() => AddMemoAsync());
             DeleteMemoCommand = new RelayCommand(
-                async () => await DeleteCurrentMemoAsync(),
+                () => DeleteCurrentMemoAsync(),
                 () => HasCurrentMemo);
             SaveMemoCommand = new RelayCommand(
-                async () => await SaveCurrentMemoAsync(),
+                () => SaveCurrentMemoAsync(),
                 () => HasCurrentMemo);
             SwitchToNextMemoCommand = new RelayCommand(SwitchToNextMemo, () => Memos.Count > 1);
             SwitchToPreviousMemoCommand = new RelayCommand(SwitchToPreviousMemo, () => Memos.Count > 1);
@@ -230,7 +230,7 @@ namespace DesktopMemo.UI.ViewModels
             CurrentMemo = defaultMemo;
         }
 
-        private async Task AddMemoAsync()
+        private void AddMemoAsync()
         {
             // Use background task for non-blocking operation
             _backgroundTaskService.QueueTask(
@@ -249,7 +249,7 @@ namespace DesktopMemo.UI.ViewModels
                 TaskPriority.High);
         }
 
-        private async Task DeleteCurrentMemoAsync()
+        private void DeleteCurrentMemoAsync()
         {
             if (CurrentMemo == null) return;
 
@@ -289,7 +289,7 @@ namespace DesktopMemo.UI.ViewModels
                 });
         }
 
-        private async Task SaveCurrentMemoAsync()
+        private void SaveCurrentMemoAsync()
         {
             if (CurrentMemo == null) return;
 
@@ -322,7 +322,7 @@ namespace DesktopMemo.UI.ViewModels
             if (CurrentMemo == null) return;
 
             CurrentMemo.IsPinned = !CurrentMemo.IsPinned;
-            _ = SaveCurrentMemoAsync();
+            SaveCurrentMemoAsync();
 
             // Re-sort memos
             var sortedMemos = Memos.OrderByDescending(m => m.IsPinned)

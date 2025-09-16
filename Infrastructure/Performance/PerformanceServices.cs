@@ -95,7 +95,7 @@ namespace DesktopMemo.Infrastructure.Performance
             {
                 _cache[key] = new CacheEntry
                 {
-                    Value = result,
+                    Value = result!,
                     CreatedAt = DateTime.Now,
                     ExpiresAt = expiry.HasValue ? DateTime.Now.Add(expiry.Value) : DateTime.MaxValue
                 };
@@ -173,7 +173,7 @@ namespace DesktopMemo.Infrastructure.Performance
 
         public void RegisterLazyProperty<T>(string key, Func<Task<T>> loader)
         {
-            _lazyProperties[key] = new Lazy<Task<object>>(async () => await loader());
+            _lazyProperties[key] = new Lazy<Task<object>>(async () => (object)(await loader())!);
         }
 
         public async Task<T> GetLazyPropertyAsync<T>(string key)
@@ -232,7 +232,7 @@ namespace DesktopMemo.Infrastructure.Performance
                     // Execute callback on UI thread if available
                     if (System.Windows.Application.Current?.Dispatcher != null)
                     {
-                        System.Windows.Application.Current.Dispatcher.BeginInvoke(() => onCompleted(result));
+                        _ = System.Windows.Application.Current.Dispatcher.BeginInvoke(() => onCompleted(result));
                     }
                     else
                     {
