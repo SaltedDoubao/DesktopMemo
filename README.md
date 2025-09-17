@@ -77,7 +77,7 @@ dotnet restore
 dotnet build --configuration Release
 
 # 运行项目
-dotnet run
+dotnet run --configuration Release
 
 # 发布单文件版本
 dotnet publish DesktopMemo.csproj --configuration Release --output ./publish
