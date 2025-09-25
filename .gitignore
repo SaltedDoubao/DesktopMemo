@@ -12,6 +12,9 @@ obj/
 .vs/
 .vscode/
 
+# Cursor
+.cursor/
+
 # Rider / JetBrains
 .idea/
 
