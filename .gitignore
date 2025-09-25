@@ -1,19 +1,16 @@
 # Build artifacts
+bin/
+obj/
 src/DesktopMemo.App/bin/
 src/DesktopMemo.App/obj/
 src/DesktopMemo.Core/bin/
 src/DesktopMemo.Core/obj/
 src/DesktopMemo.Infrastructure/bin/
 src/DesktopMemo.Infrastructure/obj/
-bin/
-obj/
 
 # Visual Studio / VS Code
 .vs/
 .vscode/
-
-# Cursor
-.cursor/
 
 # Rider / JetBrains
 .idea/
@@ -46,4 +43,4 @@ Desktop.ini
 /artifacts/
 .DS_Store
 backups/
-.old/
+temp/

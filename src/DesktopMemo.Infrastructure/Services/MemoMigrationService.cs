@@ -1,0 +1,74 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using DesktopMemo.Core.Models;
+using Markdig;
+
+namespace DesktopMemo.Infrastructure.Services;
+
+public sealed class MemoMigrationService
+{
+    private readonly string _dataDirectory;
+
+    public MemoMigrationService(string dataDirectory)
+    {
+        _dataDirectory = dataDirectory;
+    }
+
+    public async Task<IReadOnlyList<Memo>> LoadFromLegacyAsync()
+    {
+        var results = new List<Memo>();
+        var contentDir = Path.Combine(_dataDirectory, "content");
+
+        if (Directory.Exists(contentDir))
+        {
+            foreach (var file in Directory.GetFiles(contentDir, "*.md"))
+            {
+                var text = await File.ReadAllTextAsync(file, Encoding.UTF8);
+                var memo = ParseMarkdown(Path.GetFileNameWithoutExtension(file), text, File.GetCreationTimeUtc(file), File.GetLastWriteTimeUtc(file));
+                if (memo is not null)
+                {
+                    results.Add(memo);
+                }
+            }
+        }
+
+        // TODO: 支持旧 JSON 格式迁移，可参考 .old 逻辑
+
+        return results;
+    }
+
+    private static Memo? ParseMarkdown(string fileName, string markdown, DateTime created, DateTime updated)
+    {
+        if (string.IsNullOrWhiteSpace(markdown))
+        {
+            return null;
+        }
+
+        var pipeline = new MarkdownPipelineBuilder().Build();
+        var document = Markdown.Parse(markdown, pipeline);
+
+        string title = fileName;
+        var lines = markdown.Split('\n');
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("# ", StringComparison.Ordinal))
+            {
+                title = line[2..].Trim();
+                break;
+            }
+        }
+
+        return new Memo(
+            Guid.NewGuid(),
+            title,
+            markdown,
+            new DateTimeOffset(created),
+            new DateTimeOffset(updated),
+            Array.Empty<string>(),
+            false);
+    }
+}

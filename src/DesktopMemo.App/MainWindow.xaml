@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DesktopMemo.App"
+        xmlns:models="clr-namespace:DesktopMemo.Core.Models;assembly=DesktopMemo.Core"
         mc:Ignorable="d"
         Title="DesktopMemo"
         Width="380"
@@ -21,6 +21,7 @@
         KeyDown="MainWindow_KeyDown">
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
         <!-- 玻璃拟态样式资源 -->
         <Style x:Key="GlassmorphismBorder" TargetType="Border">
             <Setter Property="Background">
@@ -81,112 +82,318 @@
         </Storyboard>
     </Window.Resources>
 
-    <!-- 主容器 - 玻璃拟态风格 -->
-    <Border x:Name="MainContainer" Style="{StaticResource GlassmorphismBorder}" Margin="8">
-
+    <Border Style="{StaticResource GlassmorphismBorder}" Margin="8">
         <Border.Effect>
-            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="6" Opacity="0.15"/>
+            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="6" Opacity="0.15" />
         </Border.Effect>
 
         <Grid ClipToBounds="True">
-            <!-- 主内容区域 -->
-            <Grid PreviewMouseLeftButtonDown="MainContentArea_PreviewMouseLeftButtonDown">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="44" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="44" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-                <!-- 标题栏 -->
-                <Border Grid.Row="0"
-                        Background="#10FFFFFF"
-                        CornerRadius="16,16,0,0"
-                        BorderBrush="#15FFFFFF"
-                        BorderThickness="0,0,0,1"
-                        MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                    <Grid Margin="16,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+            <!-- 顶部标题栏 -->
+            <Border Grid.Row="0"
+                    Background="#10FFFFFF"
+                    CornerRadius="16,16,0,0"
+                    BorderBrush="#15FFFFFF"
+                    BorderThickness="0,0,0,1"
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid Margin="16,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                        <!-- 标题区域 -->
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Ellipse Width="8" Height="8" Margin="0,0,10,0">
-                                <Ellipse.Fill>
-                                    <RadialGradientBrush>
-                                        <GradientStop Color="#FF00E676" Offset="0"/>
-                                        <GradientStop Color="#FF4CAF50" Offset="1"/>
-                                    </RadialGradientBrush>
-                                </Ellipse.Fill>
-                            </Ellipse>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="8" Height="8" Margin="0,0,10,0">
+                            <Ellipse.Fill>
+                                <RadialGradientBrush>
+                                    <GradientStop Color="#FF00E676" Offset="0" />
+                                    <GradientStop Color="#FF4CAF50" Offset="1" />
+                                </RadialGradientBrush>
+                            </Ellipse.Fill>
+                        </Ellipse>
 
+                        <!-- 列表模式标题 -->
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
                             <TextBlock Text="DesktopMemo"
                                        Foreground="#F0FFFFFF"
                                        FontWeight="SemiBold"
                                        FontSize="14"
-                                       VerticalAlignment="Center"/>
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding MemoCount, StringFormat=' ({0})'}"
+                                       FontSize="12"
+                                       Foreground="#B0FFFFFF"
+                                       Margin="8,0,0,0"
+                                       VerticalAlignment="Center" />
                         </StackPanel>
 
-                        <!-- 按钮区域 -->
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- 设置按钮 -->
-                            <Button x:Name="SettingsToggle"
-                                    Width="32" Height="32"
+                        <!-- 编辑模式标题 -->
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="编辑备忘录"
+                                       Foreground="#F0FFFFFF"
+                                       FontWeight="SemiBold"
+                                       FontSize="14"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <!-- 列表模式按钮组 -->
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <Button Width="32" Height="32"
                                     Margin="0,0,8,0"
-                                    Click="SettingsToggle_Click"
-                                    ToolTip="设置"
-                                    Style="{StaticResource GlassButton}">
-                                <Path Data="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M10,22C9.75,22 9.54,21.82 9.5,21.58L9.13,18.93C8.5,18.68 7.96,18.34 7.44,17.94L4.95,18.95C4.73,19.03 4.46,18.95 4.34,18.73L2.34,15.27C2.22,15.05 2.27,14.78 2.46,14.63L4.57,12.97C4.53,12.65 4.5,12.33 4.5,12C4.5,11.67 4.53,11.34 4.57,11.03L2.46,9.37C2.27,9.22 2.22,8.95 2.34,8.73L4.34,5.27C4.46,5.05 4.73,4.96 4.95,5.05L7.44,6.05C7.96,5.66 8.5,5.32 9.13,5.07L9.5,2.42C9.54,2.18 9.75,2 10,2H14C14.25,2 14.46,2.18 14.5,2.42L14.87,5.07C15.5,5.32 16.04,5.66 16.56,6.05L19.05,5.05C19.27,4.96 19.54,5.05 19.66,5.27L21.66,8.73C21.78,8.95 21.73,9.22 21.54,9.37L19.43,11.03C19.47,11.34 19.5,11.66 19.5,12C19.5,12.34 19.47,12.65 19.43,12.97L21.54,14.63C21.73,14.78 21.78,15.05 21.66,15.27L19.66,18.73C19.54,18.95 19.27,19.04 19.05,18.95L16.56,17.95C16.04,18.34 15.5,18.68 14.87,18.93L14.5,21.58C14.46,21.82 14.25,22 14,22H10M11.25,4L10.88,6.61C9.68,6.86 8.62,7.5 7.85,8.39L5.44,7.35L4.69,8.65L6.8,10.2C6.4,11.37 6.4,12.64 6.8,13.8L4.68,15.36L5.43,16.66L7.86,15.62C8.63,16.5 9.68,17.14 10.87,17.38L11.24,20H12.76L13.13,17.39C14.32,17.14 15.37,16.5 16.14,15.62L18.57,16.66L19.32,15.36L17.2,13.81C17.6,12.64 17.6,11.37 17.2,10.2L19.31,8.65L18.56,7.35L16.15,8.39C15.38,7.5 14.32,6.86 13.12,6.62L12.75,4H11.25Z"
+                                    Command="{Binding TogglePinCommand}"
+                                    Style="{StaticResource GlassButton}"
+                                    ToolTip="切换固定">
+                                <Path Data="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z"
                                       Fill="#E0FFFFFF"
                                       Width="16" Height="16"
-                                      Stretch="Uniform"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"/>
+                                      Stretch="Uniform" />
                             </Button>
 
-                            <!-- 关闭按钮 -->
                             <Button Width="32" Height="32"
-                                    Click="CloseButton_Click"
-                                    ToolTip="关闭"
-                                    Style="{StaticResource GlassButton}">
-                                <Path Data="M13.46,12L19,17.54V19H17.54L12,13.46L6.46,19H5V17.54L10.54,12L5,6.46V5H6.46L12,10.54L17.54,5H19V6.46L13.46,12Z"
-                                      Fill="#FFE57373"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding CreateMemoCommand}"
+                                    Style="{StaticResource GlassButton}"
+                                    ToolTip="新建备忘录">
+                                <Path Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"
+                                      Fill="#E0FFFFFF"
                                       Width="16" Height="16"
-                                      Stretch="Uniform"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"/>
+                                      Stretch="Uniform" />
+                            </Button>
+
+                            <Button Width="32" Height="32"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding ToggleSettingsCommand}"
+                                    Style="{StaticResource GlassButton}"
+                                    ToolTip="设置">
+                                <Path Data="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M10,22C9.75,22 9.54,21.82 9.5,21.58L9.13,18.93C8.5,18.68 7.96,18.34 7.44,17.94L4.95,18.95C4.73,19.03 4.46,18.95 4.34,18.73L2.34,15.27C2.22,15.05 2.27,14.78 2.46,14.63L4.57,12.97C4.53,12.65 4.5,12.33 4.5,12C4.5,11.67 4.53,11.34 4.57,11.03L2.46,9.37C2.27,9.22 2.22,8.95 2.34,8.73L4.34,5.27C4.46,5.05 4.73,4.96 4.95,5.05L7.44,6.05C7.96,5.66 8.5,5.32 9.13,5.07L9.5,2.42C9.54,2.18 9.75,2 10,2H14C14.25,2 14.46,2.18 14.5,2.42L14.87,5.07C15.5,5.32 16.04,5.66 16.56,6.05L19.05,5.05C19.27,4.96 19.54,5.05 19.66,5.27L21.66,8.73C21.78,8.95 21.73,9.22 21.54,9.37L19.43,11.03C19.47,11.34 19.5,11.66 19.5,12C19.5,12.34 19.47,12.65 19.43,12.97L21.54,14.63C21.73,14.78 21.78,15.05 21.66,15.27L19.66,18.73C19.54,18.95 19.27,19.04 19.05,18.95L16.56,17.95C16.04,18.34 15.5,18.68 14.87,18.93L14.5,21.58C14.46,21.82 14.25,22 14,22H10"
+                                      Fill="#E0FFFFFF"
+                                      Width="16" Height="16"
+                                      Stretch="Uniform" />
                             </Button>
                         </StackPanel>
+
+                        <!-- 编辑模式按钮组 -->
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <Button Width="32" Height="32"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding BackToListCommand}"
+                                    Style="{StaticResource GlassButton}"
+                                    ToolTip="返回列表">
+                                <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"
+                                      Fill="#E0FFFFFF"
+                                      Width="16" Height="16"
+                                      Stretch="Uniform" />
+                            </Button>
+
+                            <Button Width="32" Height="32"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding SaveAndBackCommand}"
+                                    Style="{StaticResource GlassButton}"
+                                    ToolTip="保存并返回">
+                                <Path Data="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"
+                                      Fill="#E0FFFFFF"
+                                      Width="16" Height="16"
+                                      Stretch="Uniform" />
+                            </Button>
+
+                            <Button Width="32" Height="32"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding DeleteMemoCommand}"
+                                    Style="{StaticResource GlassButton}"
+                                    ToolTip="删除备忘录">
+                                <Path Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
+                                      Fill="#FFE57373"
+                                      Width="16" Height="16"
+                                      Stretch="Uniform" />
+                            </Button>
+                        </StackPanel>
+
+                        <!-- 关闭按钮 -->
+                        <Button Width="32" Height="32"
+                                Click="CloseButton_Click"
+                                Style="{StaticResource GlassButton}"
+                                ToolTip="关闭">
+                            <Path Data="M13.46,12L19,17.54V19H17.54L12,13.46L6.46,19H5V17.54L10.54,12L5,6.46V5H6.46L12,10.54L17.54,5H19V6.46L13.46,12Z"
+                                  Fill="#FFE57373"
+                                  Width="16" Height="16"
+                                  Stretch="Uniform" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 主内容区 -->
+            <Border Grid.Row="1"
+                    Background="#08FFFFFF"
+                    CornerRadius="0,0,16,16"
+                    BorderBrush="#10FFFFFF"
+                    BorderThickness="0,1,0,0">
+                <Grid>
+                    <!-- 列表视图 -->
+                    <Grid>
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+
+                        <ListBox ItemsSource="{Binding Memos}"
+                                 SelectedItem="{Binding SelectedMemo, Mode=TwoWay}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="12,12,6,12"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 PreviewMouseLeftButtonDown="MainContentArea_PreviewMouseLeftButtonDown">
+                            <ListBox.Template>
+                                <ControlTemplate TargetType="ListBox">
+                                    <ScrollViewer Style="{StaticResource GlassScrollViewer}" Focusable="False" Padding="{TemplateBinding Padding}">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ListBox.Template>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Margin" Value="0,0,0,10" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:Memo}">
+                                    <Border Background="#15FFFFFF" CornerRadius="12" Padding="14" BorderBrush="#10FFFFFF" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                                <TextBlock Text="{Binding Title}" Foreground="#F0FFFFFF" FontWeight="SemiBold" FontSize="15" />
+                                                <TextBlock Text="{Binding Content}" Foreground="#B0FFFFFF" FontSize="12" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding UpdatedAt, StringFormat='更新：{0:yyyy/MM/dd HH:mm}'}" Foreground="#80FFFFFF" FontSize="11" Margin="0,6,0,0" />
+                                            </StackPanel>
+                                            <Button Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Command="{Binding DataContext.EnterEditModeCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource GlassButton}"
+                                                    Width="28" Height="28"
+                                                    ToolTip="编辑">
+                                                <Path Data="M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25M20.71,7.04C21.1,6.65 21.1,6 20.71,5.62L18.37,3.28C17.98,2.89 17.33,2.89 16.95,3.28L15.12,5.11L18.87,8.86L20.71,7.04Z"
+                                                      Fill="#E0FFFFFF"
+                                                      Width="14" Height="14"
+                                                      Stretch="Uniform" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Grid>
-                </Border>
 
-                <!-- 主内容区 -->
-                <Border Grid.Row="1"
-                        Background="#08FFFFFF"
-                        CornerRadius="0,0,16,16"
-                        BorderBrush="#10FFFFFF"
-                        BorderThickness="0,1,0,0"
-                        Margin="0">
-                    <!-- 编辑文本框 -->
-                    <TextBox x:Name="NoteTextBox"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"
-                             Background="Transparent"
-                             Foreground="#F0FFFFFF"
-                             BorderThickness="0"
-                             Padding="20"
-                             SpellCheck.IsEnabled="False"
-                             FontSize="14"
-                             CaretBrush="#FF64B5F6"
-                             SelectionBrush="#4064B5F6"
-                             TextChanged="NoteTextBox_TextChanged"
-                             PreviewKeyDown="NoteTextBox_PreviewKeyDown"/>
-                </Border>
-            </Grid>
+                    <!-- 编辑视图 -->
+                    <Grid>
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-            <!-- 设置面板 - 覆盖层模式 -->
+                        <TextBox Grid.Row="0"
+                                 Margin="20,20,20,8"
+                                 FontSize="16"
+                                 FontWeight="SemiBold"
+                                 Background="#20FFFFFF"
+                                 Foreground="#F0FFFFFF"
+                                 BorderBrush="#30FFFFFF"
+                                 BorderThickness="1"
+                                 Padding="10,6"
+                                 Text="{Binding EditorTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBox Grid.Row="1"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Background="Transparent"
+                                 Foreground="#F0FFFFFF"
+                                 BorderThickness="0"
+                                 Padding="20"
+                                 SpellCheck.IsEnabled="False"
+                                 FontSize="14"
+                                 CaretBrush="#FF64B5F6"
+                                 SelectionBrush="#4064B5F6"
+                                 TextChanged="NoteTextBox_TextChanged"
+                                 PreviewKeyDown="NoteTextBox_PreviewKeyDown"
+                                 Text="{Binding EditorContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- 设置面板 -->
             <Border x:Name="SettingsPanel"
+                    Grid.RowSpan="2"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Stretch"
                     Width="320"
@@ -197,59 +404,142 @@
                     Visibility="Collapsed"
                     MouseLeftButtonDown="SettingsPanel_MouseLeftButtonDown">
                 <Border.RenderTransform>
-                    <TranslateTransform X="320"/>
+                    <TranslateTransform X="320" />
                 </Border.RenderTransform>
                 <Border.Effect>
-                    <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="-4" Opacity="0.25"/>
+                    <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="-4" Opacity="0.25" />
                 </Border.Effect>
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
+                              HorizontalScrollBarVisibility="Disabled"
+                              Style="{StaticResource GlassScrollViewer}">
                     <StackPanel Margin="20">
-                        <!-- 设置标题 -->
+                        <!-- 标题 -->
                         <Grid Margin="0,0,0,20">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                <Ellipse Width="8" Height="8" Fill="#FF2196F3" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Text="设置" FontSize="18" FontWeight="SemiBold" Foreground="#F5FFFFFF"/>
+                                <Ellipse Width="8" Height="8" Fill="#FF2196F3" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <TextBlock Text="设置" FontSize="18" FontWeight="SemiBold" Foreground="#F5FFFFFF" />
                             </StackPanel>
-
-                            <!-- 返回按钮 -->
-                            <Button x:Name="SettingsBackButton"
-                                    Grid.Column="1"
+                            <Button Grid.Column="1"
                                     Width="32" Height="32"
-                                    Click="SettingsBackButton_Click"
-                                    ToolTip="返回"
-                                    Style="{StaticResource GlassButton}">
+                                    Command="{Binding ToggleSettingsCommand}"
+                                    Style="{StaticResource GlassButton}"
+                                    ToolTip="返回">
                                 <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"
                                       Fill="#E0FFFFFF"
                                       Width="16" Height="16"
-                                      Stretch="Uniform"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"/>
+                                      Stretch="Uniform" />
                             </Button>
                         </Grid>
 
-                        <!-- 状态信息 -->
-                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15">
+                        <!-- 状态 -->
+                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
                             <StackPanel>
-                                <TextBlock Text="状态信息" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12"/>
-                                <StackPanel>
-                                    <Grid Margin="0,6">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Ellipse Grid.Column="0" Width="6" Height="6" Fill="#FF4CAF50" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock x:Name="StatusText" Grid.Column="1" Text="就绪" Foreground="#B0FFFFFF" FontSize="12"/>
-                                    </Grid>
+                                <TextBlock Text="状态" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding StatusText}" Foreground="#B0FFFFFF" FontSize="12" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 置顶模式 -->
+                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="窗口置顶模式" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
+                                <RadioButton Content="普通模式"
+                                             GroupName="TopmostMode"
+                                             Style="{StaticResource ModernRadioButton}"
+                                             IsChecked="{Binding SelectedTopmostMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Normal}" />
+                                <RadioButton Content="桌面置顶"
+                                             GroupName="TopmostMode"
+                                             Style="{StaticResource ModernRadioButton}"
+                                             IsChecked="{Binding SelectedTopmostMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Desktop}" />
+                                <RadioButton Content="永远置顶"
+                                             GroupName="TopmostMode"
+                                             Style="{StaticResource ModernRadioButton}"
+                                             IsChecked="{Binding SelectedTopmostMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Always}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 窗口位置 -->
+                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="窗口位置" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding CurrentLeft, StringFormat='X: {0:F0}'}"
+                                           Foreground="#B0FFFFFF" FontSize="12" />
+                                <TextBlock Text="{Binding CurrentTop, StringFormat='Y: {0:F0}'}"
+                                           Foreground="#B0FFFFFF" FontSize="12" Margin="0,4,0,12" />
+                                <UniformGrid Columns="3" Rows="3" Margin="0,0,0,12">
+                                    <Button Content="↖" Command="{Binding MoveToPresetCommand}" CommandParameter="TopLeft" Style="{StaticResource GlassButton}" Margin="2" />
+                                    <Button Content="↑" Command="{Binding MoveToPresetCommand}" CommandParameter="TopCenter" Style="{StaticResource GlassButton}" Margin="2" />
+                                    <Button Content="↗" Command="{Binding MoveToPresetCommand}" CommandParameter="TopRight" Style="{StaticResource GlassButton}" Margin="2" />
+                                    <Button Content="←" Command="{Binding MoveToPresetCommand}" CommandParameter="MiddleLeft" Style="{StaticResource GlassButton}" Margin="2" />
+                                    <Button Content="●" Command="{Binding MoveToPresetCommand}" CommandParameter="Center" Style="{StaticResource GlassButton}" Margin="2" />
+                                    <Button Content="→" Command="{Binding MoveToPresetCommand}" CommandParameter="MiddleRight" Style="{StaticResource GlassButton}" Margin="2" />
+                                    <Button Content="↙" Command="{Binding MoveToPresetCommand}" CommandParameter="BottomLeft" Style="{StaticResource GlassButton}" Margin="2" />
+                                    <Button Content="↓" Command="{Binding MoveToPresetCommand}" CommandParameter="BottomCenter" Style="{StaticResource GlassButton}" Margin="2" />
+                                    <Button Content="↘" Command="{Binding MoveToPresetCommand}" CommandParameter="BottomRight" Style="{StaticResource GlassButton}" Margin="2" />
+                                </UniformGrid>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Button Content="记住当前位置" Command="{Binding RememberPositionCommand}" Style="{StaticResource GlassButton}" Margin="0,0,8,0" />
+                                    <Button Content="恢复保存位置" Command="{Binding RestorePositionCommand}" Style="{StaticResource GlassButton}" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
+
+                        <!-- 透明度 -->
+                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="透明度" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding BackgroundOpacity, StringFormat='当前：{0:P0}'}" Foreground="#B0FFFFFF" FontSize="12" Margin="0,0,0,8" />
+                                <Slider Minimum="0.1" Maximum="1" TickFrequency="0.05" Value="{Binding BackgroundOpacity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="0.1 = 几乎透明，1 = 不透明" Foreground="#80FFFFFF" FontSize="10" Margin="0,6,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 其他选项 -->
+                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="其他选项" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
+                                <CheckBox Content="启用窗口穿透" IsChecked="{Binding IsClickThroughEnabled, Mode=TwoWay}" Foreground="#E0FFFFFF" Margin="0,4,0,12" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 托盘选项 -->
+                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="托盘选项" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
+                                <CheckBox Content="启用托盘图标"
+                                          IsChecked="{Binding IsTrayEnabled, Mode=TwoWay}"
+                                          Foreground="#E0FFFFFF" Margin="0,0,0,12" />
+                                <Button Content="显示窗口" Command="{Binding TrayShowWindowCommand}" Style="{StaticResource GlassButton}" Margin="0,0,0,8" />
+                                <Button Content="隐藏窗口" Command="{Binding TrayHideWindowCommand}" Style="{StaticResource GlassButton}" Margin="0,0,0,8" />
+                                <Button Content="重启托盘图标" Command="{Binding TrayRestartCommand}" Style="{StaticResource GlassButton}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 搜索 / 替换 -->
+                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="查找 / 替换" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
+                                <TextBlock Text="查找内容" Foreground="#B0FFFFFF" FontSize="12" />
+                                <TextBox Text="{Binding SearchKeyword, Mode=TwoWay}" Margin="0,0,0,8" />
+                                <TextBlock Text="替换为" Foreground="#B0FFFFFF" FontSize="12" />
+                                <TextBox Text="{Binding ReplaceKeyword, Mode=TwoWay}" Margin="0,0,0,12" />
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <CheckBox Content="区分大小写" IsChecked="{Binding IsCaseSensitive}" Foreground="#E0FFFFFF" Margin="0,0,12,0" />
+                                    <CheckBox Content="使用正则" IsChecked="{Binding UseRegex}" Foreground="#E0FFFFFF" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="查找" Command="{Binding FindNextCommand}" Style="{StaticResource GlassButton}" Margin="0,0,8,0" />
+                                    <Button Content="全部替换" Command="{Binding ReplaceAllCommand}" Style="{StaticResource GlassButton}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Button Content="保存设置" Command="{Binding PersistWindowSettingsCommand}" Style="{StaticResource GlassButton}" Height="32" HorizontalAlignment="Stretch" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>

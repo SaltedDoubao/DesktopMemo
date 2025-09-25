@@ -50,6 +50,11 @@ public interface IWindowService
     void SetWindowOpacity(double opacity);
 
     /// <summary>
+    /// 获取当前透明度
+    /// </summary>
+    double GetWindowOpacity();
+
+    /// <summary>
     /// 播放窗口动画
     /// </summary>
     void PlayFadeInAnimation();

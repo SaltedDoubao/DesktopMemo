@@ -45,10 +45,16 @@ public class WindowService : IWindowService
 
     public void SetTopmostMode(TopmostMode mode)
     {
-        if (_window == null) return;
+        if (_window == null)
+        {
+            return;
+        }
 
         var hwnd = new WindowInteropHelper(_window).Handle;
-        if (hwnd == IntPtr.Zero) return;
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
 
         _currentTopmostMode = mode;
 
@@ -63,7 +69,6 @@ public class WindowService : IWindowService
                 _window.Topmost = false;
                 SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
                 SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-
                 IntPtr progmanHwnd = FindWindow("Progman", "Program Manager");
                 if (progmanHwnd != IntPtr.Zero)
                 {
@@ -82,10 +87,16 @@ public class WindowService : IWindowService
 
     public void SetClickThrough(bool enabled)
     {
-        if (_window == null) return;
+        if (_window == null)
+        {
+            return;
+        }
 
         var hwnd = new WindowInteropHelper(_window).Handle;
-        if (hwnd == IntPtr.Zero) return;
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
 
         int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
 
@@ -106,11 +117,12 @@ public class WindowService : IWindowService
 
     public void SetWindowPosition(double x, double y)
     {
-        if (_window == null) return;
+        if (_window == null)
+        {
+            return;
+        }
 
         var workingArea = SystemParameters.WorkArea;
-
-        // 边界检查，确保窗口不会完全超出屏幕
         double minX = workingArea.Left - _window.Width + 50;
         double maxX = workingArea.Right - 50;
         double minY = workingArea.Top;
@@ -122,16 +134,24 @@ public class WindowService : IWindowService
 
     public (double X, double Y) GetWindowPosition()
     {
-        if (_window == null) return (0, 0);
+        if (_window == null)
+        {
+            return (0, 0);
+        }
+
         return (_window.Left, _window.Top);
     }
 
     public void MoveToPresetPosition(string position)
     {
-        if (_window == null) return;
+        if (_window == null)
+        {
+            return;
+        }
 
         var workingArea = SystemParameters.WorkArea;
-        double newX = 0, newY = 0;
+        double newX = 0,
+            newY = 0;
         double windowWidth = _window.Width;
         double windowHeight = _window.Height;
 
@@ -182,13 +202,30 @@ public class WindowService : IWindowService
 
     public void SetWindowOpacity(double opacity)
     {
-        if (_window == null) return;
+        if (_window == null)
+        {
+            return;
+        }
+
         _window.Opacity = Math.Max(0.1, Math.Min(1.0, opacity));
+    }
+
+    public double GetWindowOpacity()
+    {
+        if (_window == null)
+        {
+            return 1.0;
+        }
+
+        return _window.Opacity;
     }
 
     public void PlayFadeInAnimation()
     {
-        if (_window == null) return;
+        if (_window == null)
+        {
+            return;
+        }
 
         var animation = new DoubleAnimation
         {
@@ -203,7 +240,10 @@ public class WindowService : IWindowService
 
     public void ToggleWindowVisibility()
     {
-        if (_window == null) return;
+        if (_window == null)
+        {
+            return;
+        }
 
         if (_window.Visibility == Visibility.Visible)
         {
@@ -222,13 +262,20 @@ public class WindowService : IWindowService
 
     public void MinimizeToTray()
     {
-        if (_window == null) return;
+        if (_window == null)
+        {
+            return;
+        }
+
         _window.Hide();
     }
 
     public void RestoreFromTray()
     {
-        if (_window == null) return;
+        if (_window == null)
+        {
+            return;
+        }
 
         _window.Show();
         if (_window.WindowState == WindowState.Minimized)

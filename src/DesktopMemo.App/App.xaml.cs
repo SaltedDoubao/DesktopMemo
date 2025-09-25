@@ -28,8 +28,10 @@ public partial class App : WpfApp
         // 核心服务
         services.AddSingleton<IMemoRepository>(_ => new FileMemoRepository(dataDirectory));
         services.AddSingleton<ISettingsService>(_ => new JsonSettingsService(dataDirectory));
+        services.AddSingleton<IMemoSearchService, MemoSearchService>();
+        services.AddSingleton(_ => new MemoMigrationService(dataDirectory));
 
-        // 新增的窗口和托盘服务
+        // 窗口和托盘服务
         services.AddSingleton<IWindowService, WindowService>();
         services.AddSingleton<ITrayService, TrayService>();
 
@@ -49,13 +51,11 @@ public partial class App : WpfApp
 
         var window = new MainWindow(viewModel, windowService, trayService);
 
-        // 初始化窗口服务
         if (windowService is WindowService ws)
         {
             ws.Initialize(window);
         }
 
-        // 初始化托盘服务
         trayService.Initialize();
         trayService.Show();
 
@@ -65,7 +65,6 @@ public partial class App : WpfApp
 
     protected override void OnExit(ExitEventArgs e)
     {
-        // 清理托盘图标
         Services.GetService<ITrayService>()?.Dispose();
         base.OnExit(e);
     }

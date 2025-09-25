@@ -9,7 +9,11 @@ namespace DesktopMemo.Infrastructure.Services;
 public class TrayService : ITrayService
 {
     private Forms.NotifyIcon? _notifyIcon;
-    private bool _isDisposed = false;
+    private bool _isDisposed;
+    private Forms.ToolStripMenuItem? _topmostNormalItem;
+    private Forms.ToolStripMenuItem? _topmostDesktopItem;
+    private Forms.ToolStripMenuItem? _topmostAlwaysItem;
+    private Forms.ToolStripMenuItem? _clickThroughItem;
 
     public event EventHandler? TrayIconDoubleClick;
     public event EventHandler? ShowHideWindowClick;
@@ -19,11 +23,14 @@ public class TrayService : ITrayService
 
     public void Initialize()
     {
-        if (_notifyIcon != null) return;
+        if (_notifyIcon != null)
+        {
+            return;
+        }
 
         _notifyIcon = new Forms.NotifyIcon
         {
-            Text = "DesktopMemo - 桌面便签工具",
+            Text = "DesktopMemo",
             Visible = false,
             Icon = ExtractIconFromExecutable()
         };
@@ -34,82 +41,78 @@ public class TrayService : ITrayService
 
     private void CreateContextMenu()
     {
-        if (_notifyIcon == null) return;
+        if (_notifyIcon == null)
+        {
+            return;
+        }
 
         var menu = new Forms.ContextMenuStrip();
-
-        // 应用暗色主题
         menu.Renderer = new DarkTrayMenuRenderer();
         menu.BackColor = Color.FromArgb(45, 45, 48);
         menu.ForeColor = Color.FromArgb(241, 241, 241);
         menu.Padding = new Forms.Padding(8, 4, 8, 4);
 
-        var regularFont = new Font("Microsoft YaHei", 9F, FontStyle.Regular);
-        var boldFont = new Font("Microsoft YaHei", 9F, FontStyle.Bold);
+        var bold = new Font("Microsoft YaHei", 9F, FontStyle.Bold);
+        var regular = new Font("Microsoft YaHei", 9F, FontStyle.Regular);
 
-        // 主要功能组
-        var showHideItem = new Forms.ToolStripMenuItem("🏠 显示/隐藏窗口")
-        {
-            Font = boldFont
-        };
+        var showHideItem = new Forms.ToolStripMenuItem("🏠 显示/隐藏窗口") { Font = bold };
         showHideItem.Click += (s, e) => ShowHideWindowClick?.Invoke(s, e);
 
-        var newNoteItem = new Forms.ToolStripMenuItem("📝 新建便签")
-        {
-            Font = regularFont
-        };
-        newNoteItem.Click += (s, e) => NewMemoClick?.Invoke(s, e);
+        var newMemoItem = new Forms.ToolStripMenuItem("📝 新建便签") { Font = regular };
+        newMemoItem.Click += (s, e) => NewMemoClick?.Invoke(s, e);
 
-        var settingsItem = new Forms.ToolStripMenuItem("⚙️ 设置")
-        {
-            Font = regularFont
-        };
+        var settingsItem = new Forms.ToolStripMenuItem("⚙️ 设置") { Font = regular };
         settingsItem.Click += (s, e) => SettingsClick?.Invoke(s, e);
 
-        var separator = new Forms.ToolStripSeparator();
-
-        var exitItem = new Forms.ToolStripMenuItem("❌ 退出")
+        var topmostMenu = new Forms.ToolStripMenuItem("窗口置顶模式") { Font = regular };
+        _topmostNormalItem = new Forms.ToolStripMenuItem("普通模式", null, (s, e) => UpdateTopmostState(TopmostMode.Normal));
+        _topmostDesktopItem = new Forms.ToolStripMenuItem("桌面置顶", null, (s, e) => UpdateTopmostState(TopmostMode.Desktop));
+        _topmostAlwaysItem = new Forms.ToolStripMenuItem("永远置顶", null, (s, e) => UpdateTopmostState(TopmostMode.Always));
+        topmostMenu.DropDownItems.AddRange(new Forms.ToolStripItem[]
         {
-            Font = boldFont
+            _topmostNormalItem,
+            _topmostDesktopItem,
+            _topmostAlwaysItem
+        });
+
+        _clickThroughItem = new Forms.ToolStripMenuItem("穿透模式")
+        {
+            Checked = false
         };
+        _clickThroughItem.Click += (s, e) => UpdateClickThroughState(!_clickThroughItem.Checked);
+
+        var exitItem = new Forms.ToolStripMenuItem("❌ 退出") { Font = bold };
         exitItem.Click += (s, e) => ExitClick?.Invoke(s, e);
 
         menu.Items.AddRange(new Forms.ToolStripItem[]
         {
-            showHideItem, newNoteItem, settingsItem, separator, exitItem
+            showHideItem,
+            newMemoItem,
+            settingsItem,
+            new Forms.ToolStripSeparator(),
+            topmostMenu,
+            _clickThroughItem,
+            new Forms.ToolStripSeparator(),
+            exitItem
         });
 
         _notifyIcon.ContextMenuStrip = menu;
     }
 
-    private Icon? ExtractIconFromExecutable()
-    {
-        try
-        {
-            var currentProcess = Process.GetCurrentProcess();
-            var mainModule = currentProcess.MainModule;
-            if (mainModule?.FileName != null)
-            {
-                return Icon.ExtractAssociatedIcon(mainModule.FileName);
-            }
-        }
-        catch
-        {
-            // 忽略错误，使用默认图标
-        }
-        return SystemIcons.Application;
-    }
-
     public void Show()
     {
         if (_notifyIcon != null)
+        {
             _notifyIcon.Visible = true;
+        }
     }
 
     public void Hide()
     {
         if (_notifyIcon != null)
+        {
             _notifyIcon.Visible = false;
+        }
     }
 
     public void ShowBalloonTip(string title, string text, int timeout = 2000)
@@ -120,15 +123,40 @@ public class TrayService : ITrayService
     public void UpdateText(string text)
     {
         if (_notifyIcon != null)
+        {
             _notifyIcon.Text = text;
+        }
+    }
+
+    public void UpdateTopmostState(TopmostMode mode)
+    {
+        if (_topmostNormalItem != null) _topmostNormalItem.Checked = mode == TopmostMode.Normal;
+        if (_topmostDesktopItem != null) _topmostDesktopItem.Checked = mode == TopmostMode.Desktop;
+        if (_topmostAlwaysItem != null) _topmostAlwaysItem.Checked = mode == TopmostMode.Always;
+    }
+
+    public void UpdateClickThroughState(bool enabled)
+    {
+        if (_clickThroughItem != null)
+        {
+            _clickThroughItem.Checked = enabled;
+        }
     }
 
     public void Dispose()
     {
-        if (_isDisposed) return;
+        if (_isDisposed)
+        {
+            return;
+        }
 
-        _notifyIcon?.Dispose();
-        _notifyIcon = null;
+        if (_notifyIcon != null)
+        {
+            _notifyIcon.Visible = false;
+            _notifyIcon.Dispose();
+            _notifyIcon = null;
+        }
+
         _isDisposed = true;
         GC.SuppressFinalize(this);
     }
@@ -138,17 +166,41 @@ public class TrayService : ITrayService
         Dispose();
     }
 
-    /// <summary>
-    /// 暗色主题托盘菜单渲染器
-    /// </summary>
-    private class DarkTrayMenuRenderer : Forms.ToolStripProfessionalRenderer
+    private static Icon ExtractIconFromExecutable()
     {
-        public DarkTrayMenuRenderer() : base(new DarkColorTable()) { }
+        try
+        {
+            var process = Process.GetCurrentProcess();
+            var module = process.MainModule;
+            if (module?.FileName != null)
+            {
+                var icon = Icon.ExtractAssociatedIcon(module.FileName);
+                if (icon != null)
+                {
+                    return icon;
+                }
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+
+        return SystemIcons.Application;
+    }
+
+    private sealed class DarkTrayMenuRenderer : Forms.ToolStripProfessionalRenderer
+    {
+        public DarkTrayMenuRenderer() : base(new DarkColorTable())
+        {
+        }
 
         protected override void OnRenderMenuItemBackground(Forms.ToolStripItemRenderEventArgs e)
         {
             if (!e.Item.Selected && !e.Item.Pressed)
+            {
                 return;
+            }
 
             var rect = new Rectangle(2, 0, e.Item.Width - 4, e.Item.Height);
             var color = e.Item.Pressed ? Color.FromArgb(0, 122, 204) : Color.FromArgb(62, 62, 66);
@@ -184,23 +236,10 @@ public class TrayService : ITrayService
         }
     }
 
-    /// <summary>
-    /// 暗色主题颜色表
-    /// </summary>
-    private class DarkColorTable : Forms.ProfessionalColorTable
+    private sealed class DarkColorTable : Forms.ProfessionalColorTable
     {
         public override Color MenuItemSelected => Color.FromArgb(62, 62, 66);
         public override Color MenuItemBorder => Color.FromArgb(63, 63, 70);
-        public override Color MenuBorder => Color.FromArgb(63, 63, 70);
-        public override Color MenuItemSelectedGradientBegin => Color.FromArgb(62, 62, 66);
-        public override Color MenuItemSelectedGradientEnd => Color.FromArgb(62, 62, 66);
-        public override Color MenuItemPressedGradientBegin => Color.FromArgb(0, 122, 204);
-        public override Color MenuItemPressedGradientEnd => Color.FromArgb(0, 122, 204);
         public override Color ToolStripDropDownBackground => Color.FromArgb(45, 45, 48);
-        public override Color ImageMarginGradientBegin => Color.FromArgb(45, 45, 48);
-        public override Color ImageMarginGradientMiddle => Color.FromArgb(45, 45, 48);
-        public override Color ImageMarginGradientEnd => Color.FromArgb(45, 45, 48);
-        public override Color SeparatorDark => Color.FromArgb(63, 63, 70);
-        public override Color SeparatorLight => Color.FromArgb(63, 63, 70);
     }
 }

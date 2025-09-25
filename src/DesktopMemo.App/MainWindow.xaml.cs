@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
@@ -6,6 +7,8 @@ using System.Windows.Threading;
 using DesktopMemo.App.ViewModels;
 using DesktopMemo.Core.Contracts;
 using WpfApp = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace DesktopMemo.App;
 
@@ -14,7 +17,6 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel;
     private readonly IWindowService _windowService;
     private readonly ITrayService _trayService;
-    private bool _isSettingsPanelVisible = false;
     private DispatcherTimer? _autoSaveTimer;
 
     public MainWindow(MainViewModel viewModel, IWindowService windowService, ITrayService trayService)
@@ -28,6 +30,7 @@ public partial class MainWindow : Window
             _trayService = trayService ?? throw new ArgumentNullException(nameof(trayService));
 
             DataContext = _viewModel;
+            _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
             ConfigureWindow();
             ConfigureTrayService();
@@ -38,7 +41,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"窗口初始化错误: {ex.Message}", "DesktopMemo启动失败",
+            MessageBox.Show($"窗口初始化错误: {ex.Message}", "DesktopMemo启动失败",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             throw;
         }
@@ -46,7 +49,6 @@ public partial class MainWindow : Window
 
     private void ConfigureWindow()
     {
-        // 设置默认桌面模式
         Loaded += (s, e) =>
         {
             _windowService.SetTopmostMode(TopmostMode.Desktop);
@@ -56,7 +58,6 @@ public partial class MainWindow : Window
 
     private void ConfigureTrayService()
     {
-        // 托盘事件处理
         _trayService.TrayIconDoubleClick += (s, e) => _windowService.ToggleWindowVisibility();
         _trayService.ShowHideWindowClick += (s, e) => _windowService.ToggleWindowVisibility();
         _trayService.NewMemoClick += async (s, e) =>
@@ -67,9 +68,9 @@ public partial class MainWindow : Window
         _trayService.SettingsClick += (s, e) =>
         {
             _windowService.RestoreFromTray();
-            if (!_isSettingsPanelVisible)
+            if (!_viewModel.IsSettingsPanelVisible)
             {
-                ToggleSettingsPanel();
+                _viewModel.IsSettingsPanelVisible = true;
             }
         };
         _trayService.ExitClick += (s, e) => WpfApp.Current.Shutdown();
@@ -84,11 +85,17 @@ public partial class MainWindow : Window
         _autoSaveTimer.Tick += AutoSave_Tick;
     }
 
-    private void ToggleSettingsPanel()
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        _isSettingsPanelVisible = !_isSettingsPanelVisible;
+        if (e.PropertyName == nameof(MainViewModel.IsSettingsPanelVisible))
+        {
+            Dispatcher.Invoke(() => ApplySettingsPanelVisibility(_viewModel.IsSettingsPanelVisible));
+        }
+    }
 
-        if (_isSettingsPanelVisible)
+    private void ApplySettingsPanelVisibility(bool show)
+    {
+        if (show)
         {
             SettingsPanel.Visibility = Visibility.Visible;
             AnimateSettingsPanel(true);
@@ -101,8 +108,7 @@ public partial class MainWindow : Window
 
     private void AnimateSettingsPanel(bool show)
     {
-        var transform = SettingsPanel.RenderTransform as System.Windows.Media.TranslateTransform;
-        if (transform == null)
+        if (SettingsPanel.RenderTransform is not System.Windows.Media.TranslateTransform transform)
         {
             transform = new System.Windows.Media.TranslateTransform();
             SettingsPanel.RenderTransform = transform;
@@ -113,7 +119,10 @@ public partial class MainWindow : Window
             From = show ? 320 : 0,
             To = show ? 0 : 320,
             Duration = TimeSpan.FromMilliseconds(300),
-            EasingFunction = new ExponentialEase { EasingMode = show ? EasingMode.EaseOut : EasingMode.EaseIn }
+            EasingFunction = new ExponentialEase
+            {
+                EasingMode = show ? EasingMode.EaseOut : EasingMode.EaseIn
+            }
         };
 
         if (!show)
@@ -128,14 +137,15 @@ public partial class MainWindow : Window
     {
         Loaded -= OnLoaded;
         await _viewModel.InitializeAsync();
+        ApplySettingsPanelVisibility(_viewModel.IsSettingsPanelVisible);
     }
 
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         _autoSaveTimer?.Stop();
+        _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
     }
 
-    // 事件处理程序
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ButtonState == MouseButtonState.Pressed)
@@ -144,40 +154,27 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SettingsToggle_Click(object sender, RoutedEventArgs e)
-    {
-        ToggleSettingsPanel();
-    }
-
-    private void SettingsBackButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_isSettingsPanelVisible)
-        {
-            ToggleSettingsPanel();
-        }
-    }
-
     private void SettingsPanel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.Source == sender && _isSettingsPanelVisible)
+        if (e.Source == sender && _viewModel.IsSettingsPanelVisible)
         {
-            ToggleSettingsPanel();
+            _viewModel.IsSettingsPanelVisible = false;
             e.Handled = true;
         }
     }
 
     private void MainContentArea_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (_isSettingsPanelVisible && e.Source != SettingsToggle)
+        if (_viewModel.IsSettingsPanelVisible)
         {
-            ToggleSettingsPanel();
+            _viewModel.IsSettingsPanelVisible = false;
             e.Handled = true;
         }
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
-        var result = System.Windows.MessageBox.Show(
+        var result = MessageBox.Show(
             "是否最小化到托盘？\n点击'是'最小化到托盘，点击'否'完全退出程序。",
             "退出确认",
             MessageBoxButton.YesNoCancel,
@@ -187,26 +184,22 @@ public partial class MainWindow : Window
         {
             case MessageBoxResult.Yes:
                 _windowService.MinimizeToTray();
-                _trayService.ShowBalloonTip("DesktopMemo", "应用已最小化到托盘，双击图标可恢复窗口");
                 break;
             case MessageBoxResult.No:
                 WpfApp.Current.Shutdown();
-                break;
-            default:
                 break;
         }
     }
 
     private void NoteTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        // 重新启动自动保存计时器
         _autoSaveTimer?.Stop();
         _autoSaveTimer?.Start();
+        _viewModel.MarkEditing();
     }
 
-    private void NoteTextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    private void NoteTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        // 处理快捷键
         if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
         {
             switch (e.Key)
@@ -214,23 +207,21 @@ public partial class MainWindow : Window
                 case Key.S:
                     e.Handled = true;
                     _ = _viewModel.SaveMemoCommand.ExecuteAsync(null);
-                    StatusText.Text = "已保存";
                     break;
-            }
-        }
-    }
-
-    private void MainWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    {
-        if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-        {
-            switch (e.Key)
-            {
                 case Key.N:
                     e.Handled = true;
                     _ = _viewModel.CreateMemoCommand.ExecuteAsync(null);
                     break;
             }
+        }
+    }
+
+    private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.N)
+        {
+            e.Handled = true;
+            _ = _viewModel.CreateMemoCommand.ExecuteAsync(null);
         }
     }
 
@@ -242,10 +233,11 @@ public partial class MainWindow : Window
             try
             {
                 await _viewModel.SaveMemoCommand.ExecuteAsync(null);
+                _viewModel.SetStatus("自动保存");
             }
             catch
             {
-                // 忽略自动保存错误
+                // ignore
             }
         }
     }
