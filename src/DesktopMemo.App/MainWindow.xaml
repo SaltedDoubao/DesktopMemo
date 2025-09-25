@@ -1,0 +1,77 @@
+﻿<Window x:Class="DesktopMemo.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DesktopMemo.App"
+        mc:Ignorable="d"
+        Title="DesktopMemo" Height="720" Width="1180" Background="Transparent" AllowsTransparency="False">
+    <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.ColumnSpan="3"
+                   Text="DesktopMemo"
+                   FontSize="28"
+                   FontWeight="Bold"
+                   Margin="0,0,0,16" />
+
+        <Border Grid.Row="1"
+                Background="#221F2940"
+                CornerRadius="8"
+                Padding="12">
+            <DockPanel>
+                <StackPanel Width="220">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,12">
+                        <Button Content="新建"
+                                Command="{Binding CreateMemoCommand}" />
+                        <Button Content="保存"
+                                Command="{Binding SaveMemoCommand}" />
+                        <Button Content="删除"
+                                Command="{Binding DeleteMemoCommand}" />
+                    </StackPanel>
+
+                    <ListBox ItemsSource="{Binding Memos}"
+                             SelectedItem="{Binding SelectedMemo, Mode=TwoWay}"
+                             DisplayMemberPath="Title"
+                             Height="400" />
+                </StackPanel>
+
+                <Separator Margin="16,0"
+                           Width="1"
+                           Background="#332F81F7"
+                           DockPanel.Dock="Left" />
+
+                <Grid Margin="16,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBox Grid.Row="0"
+                             Text="{Binding SelectedMemo.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="20"
+                             Padding="8"
+                             Margin="0,0,0,12" />
+
+                    <TextBox Grid.Row="1"
+                             Text="{Binding EditorContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             TextWrapping="NoWrap"
+                             FontSize="14"
+                             Padding="8" />
+                </Grid>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>
