@@ -45,4 +45,5 @@ Desktop.ini
 /publish/
 /artifacts/
 .DS_Store
-
+backups/
+.old/
