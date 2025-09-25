@@ -127,6 +127,9 @@ dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj
 
 <div align="center">
 
-如果这个重构版对你有帮助，欢迎点亮 ⭐️
+**如果这个项目对您有帮助，请考虑给它一个 ⭐！**\
+**您的⭐就是我更新的最大动力！**
+
+[报告Bug](../../issues) • [请求功能](../../issues) • [贡献代码](../../pulls)
 
 </div>
