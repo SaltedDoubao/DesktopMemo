@@ -367,6 +367,7 @@ bld/
 [Oo]bj/
 
 # 此项目的自定义添加
+.cursor/
 *.csproj.user
 publish*/
 cache/
