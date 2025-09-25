@@ -367,10 +367,13 @@ bld/
 [Oo]bj/
 
 # 此项目的自定义添加
+.cursor/
 *.csproj.user
 publish*/
 cache/
 Data/
+code_review_report.md
+construction_plans.md
 suggestions_1.md
 suggestions_2.md
 suggestions_3.md
