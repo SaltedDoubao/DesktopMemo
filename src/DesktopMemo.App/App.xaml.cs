@@ -37,9 +37,9 @@ public partial class App : Application
         base.OnStartup(e);
 
         var viewModel = Services.GetRequiredService<MainViewModel>();
-        viewModel.InitializeAsync().GetAwaiter().GetResult();
-
         var window = new MainWindow(viewModel);
+
+        MainWindow = window;
         window.Show();
     }
 }
