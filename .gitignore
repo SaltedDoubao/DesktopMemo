@@ -1,0 +1,45 @@
+# Build artifacts
+src/DesktopMemo.App/bin/
+src/DesktopMemo.App/obj/
+src/DesktopMemo.Core/bin/
+src/DesktopMemo.Core/obj/
+src/DesktopMemo.Infrastructure/bin/
+src/DesktopMemo.Infrastructure/obj/
+bin/
+obj/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+
+# Rider / JetBrains
+.idea/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.csproj.user
+
+# Logs
+*.log
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Dotnet tooling
+/.vsconfig
+/.dotnet-tools.json
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+
+# Others
+/publish/
+/artifacts/
+.DS_Store
+
