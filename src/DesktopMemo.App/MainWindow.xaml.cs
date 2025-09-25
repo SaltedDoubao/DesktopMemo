@@ -5,6 +5,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using DesktopMemo.App.ViewModels;
 using DesktopMemo.Core.Contracts;
+using WpfApp = System.Windows.Application;
 
 namespace DesktopMemo.App;
 
@@ -37,7 +38,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"窗口初始化错误: {ex.Message}", "DesktopMemo启动失败",
+            System.Windows.MessageBox.Show($"窗口初始化错误: {ex.Message}", "DesktopMemo启动失败",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             throw;
         }
@@ -71,7 +72,7 @@ public partial class MainWindow : Window
                 ToggleSettingsPanel();
             }
         };
-        _trayService.ExitClick += (s, e) => Application.Current.Shutdown();
+        _trayService.ExitClick += (s, e) => WpfApp.Current.Shutdown();
     }
 
     private void InitializeAutoSaveTimer()
@@ -100,10 +101,10 @@ public partial class MainWindow : Window
 
     private void AnimateSettingsPanel(bool show)
     {
-        var transform = SettingsPanel.RenderTransform as TranslateTransform;
+        var transform = SettingsPanel.RenderTransform as System.Windows.Media.TranslateTransform;
         if (transform == null)
         {
-            transform = new TranslateTransform();
+            transform = new System.Windows.Media.TranslateTransform();
             SettingsPanel.RenderTransform = transform;
         }
 
@@ -120,7 +121,7 @@ public partial class MainWindow : Window
             animation.Completed += (s, e) => SettingsPanel.Visibility = Visibility.Collapsed;
         }
 
-        transform.BeginAnimation(TranslateTransform.XProperty, animation);
+        transform.BeginAnimation(System.Windows.Media.TranslateTransform.XProperty, animation);
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -129,7 +130,7 @@ public partial class MainWindow : Window
         await _viewModel.InitializeAsync();
     }
 
-    private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+    private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         _autoSaveTimer?.Stop();
     }
@@ -176,7 +177,7 @@ public partial class MainWindow : Window
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
-        var result = MessageBox.Show(
+        var result = System.Windows.MessageBox.Show(
             "是否最小化到托盘？\n点击'是'最小化到托盘，点击'否'完全退出程序。",
             "退出确认",
             MessageBoxButton.YesNoCancel,
@@ -189,7 +190,7 @@ public partial class MainWindow : Window
                 _trayService.ShowBalloonTip("DesktopMemo", "应用已最小化到托盘，双击图标可恢复窗口");
                 break;
             case MessageBoxResult.No:
-                Application.Current.Shutdown();
+                WpfApp.Current.Shutdown();
                 break;
             default:
                 break;
@@ -203,7 +204,7 @@ public partial class MainWindow : Window
         _autoSaveTimer?.Start();
     }
 
-    private void NoteTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    private void NoteTextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         // 处理快捷键
         if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
@@ -219,7 +220,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+    private void MainWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
         {

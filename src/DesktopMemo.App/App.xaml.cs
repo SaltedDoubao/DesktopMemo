@@ -6,10 +6,11 @@ using DesktopMemo.Core.Contracts;
 using DesktopMemo.Infrastructure.Repositories;
 using DesktopMemo.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
+using WpfApp = System.Windows.Application;
 
 namespace DesktopMemo.App;
 
-public partial class App : Application
+public partial class App : WpfApp
 {
     public IServiceProvider Services { get; }
 

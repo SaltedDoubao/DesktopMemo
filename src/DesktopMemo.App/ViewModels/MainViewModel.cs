@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DesktopMemo.Core.Contracts;
 using DesktopMemo.Core.Models;
+using WpfApp = System.Windows.Application;
 
 namespace DesktopMemo.App.ViewModels;
 
@@ -38,11 +39,11 @@ public partial class MainViewModel : ObservableObject
     {
         var settings = await _settingsService.LoadAsync(cancellationToken).ConfigureAwait(false);
 
-        Application.Current?.Dispatcher.Invoke(() => WindowSettings = settings);
+        WpfApp.Current?.Dispatcher.Invoke(() => WindowSettings = settings);
 
         var memos = await _memoRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
 
-        Application.Current?.Dispatcher.Invoke(() =>
+        WpfApp.Current?.Dispatcher.Invoke(() =>
         {
             Memos = new ObservableCollection<Memo>(memos.OrderByDescending(m => m.UpdatedAt));
             SelectedMemo = Memos.FirstOrDefault();
@@ -56,7 +57,7 @@ public partial class MainViewModel : ObservableObject
         var memo = Memo.CreateNew("新的备忘录", "");
         await _memoRepository.AddAsync(memo).ConfigureAwait(false);
 
-        Application.Current?.Dispatcher.Invoke(() =>
+        WpfApp.Current?.Dispatcher.Invoke(() =>
         {
             Memos.Insert(0, memo);
             SelectedMemo = memo;
@@ -75,7 +76,7 @@ public partial class MainViewModel : ObservableObject
         var updated = SelectedMemo.WithContent(EditorContent, DateTimeOffset.UtcNow);
         await _memoRepository.UpdateAsync(updated).ConfigureAwait(false);
 
-        Application.Current?.Dispatcher.Invoke(() =>
+        WpfApp.Current?.Dispatcher.Invoke(() =>
         {
             var index = Memos.IndexOf(SelectedMemo);
             if (index >= 0)
@@ -97,7 +98,7 @@ public partial class MainViewModel : ObservableObject
         var deleting = SelectedMemo;
         await _memoRepository.DeleteAsync(deleting.Id).ConfigureAwait(false);
 
-        Application.Current?.Dispatcher.Invoke(() =>
+        WpfApp.Current?.Dispatcher.Invoke(() =>
         {
             Memos.Remove(deleting);
             SelectedMemo = Memos.FirstOrDefault();
