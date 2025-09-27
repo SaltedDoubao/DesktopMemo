@@ -448,14 +448,15 @@ public partial class MainWindow : Window
     {
         if (sender is Slider slider && _viewModel != null)
         {
-            // 将滑块的0-100%映射到实际的0-60%效果
-            // 公式：实际透明度 = 滑块值 * 0.6 / 100
-            var actualOpacity = (slider.Value * 0.6) / 100.0;
+            // 将滑块的0-100%映射到实际的0-30%效果（原来一半的范围）
+            // 公式：实际透明度 = 滑块值 * 0.3 / 100
+            var actualOpacity = (slider.Value * 0.3) / 100.0;
 
             // 更新背景透明度（影响主容器背景）
             UpdateBackgroundOpacity(actualOpacity);
 
             // 更新ViewModel中的值
+            _viewModel.BackgroundOpacity = actualOpacity;
             _viewModel.BackgroundOpacityPercent = slider.Value;
 
             // 状态提示

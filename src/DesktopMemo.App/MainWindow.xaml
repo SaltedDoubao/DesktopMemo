@@ -247,7 +247,7 @@
                                 </Ellipse.Fill>
                             </Ellipse>
 
-                            <StackPanel Orientation="Horizontal" Visibility="Visible">
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                                 <TextBlock Text="备忘录" Foreground="#F0FFFFFF" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding MemoCount, StringFormat=' ({0})'}" FontSize="12" Foreground="#B0FFFFFF" Margin="8,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
@@ -333,18 +333,20 @@
                                 </ListBox.ItemContainerStyle>
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <Border CornerRadius="12" Padding="14" BorderBrush="#05FFFFFF" BorderThickness="1" Height="80" Margin="0,5" VerticalAlignment="Center">
+                                        <Border CornerRadius="12" Padding="14" BorderBrush="#05FFFFFF" BorderThickness="1" Height="80" Margin="0,5" VerticalAlignment="Center" Cursor="Hand">
                                             <Border.Style>
                                                 <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="#08FFFFFF"/>
+                                                    <Setter Property="Background" Value="#0DFFFFFF"/>
                                                     <Setter Property="BorderBrush" Value="#05FFFFFF"/>
                                                 </Style>
                                             </Border.Style>
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.EnterEditModeCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}"/>
+                                            </Border.InputBindings>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <StackPanel Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center" Width="150">
                                                     <TextBlock Text="{Binding DisplayTitle}" Foreground="#F0FFFFFF" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis"/>
@@ -358,9 +360,6 @@
                                                            TextTrimming="CharacterEllipsis"
                                                            Margin="0,0,12,0"
                                                            VerticalAlignment="Center"/>
-                                                <Button Grid.Column="2" VerticalAlignment="Center" Command="{Binding DataContext.EnterEditModeCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}" Style="{StaticResource GlassButton}" Width="28" Height="28" ToolTip="编辑">
-                                                    <Path Data="M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25M20.71,7.04C21.1,6.65 21.1,6 20.71,5.62L18.37,3.28C17.98,2.89 17.33,2.89 16.95,3.28L15.12,5.11L18.87,8.86L20.71,7.04Z" Fill="#E0FFFFFF" Width="14" Height="14" Stretch="Uniform"/>
-                                                </Button>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -455,7 +454,7 @@
                                 <TextBlock Text="背景透明度" Foreground="#E0FFFFFF" FontSize="12" />
                                 <TextBlock Text="{Binding BackgroundOpacity, StringFormat='当前：{0:P0}'}" Foreground="#B0FFFFFF" FontSize="12" Margin="0,4,0,8" />
                                 <Slider x:Name="BackgroundOpacitySlider" Minimum="0" Maximum="100" Value="{Binding BackgroundOpacityPercent, Mode=TwoWay}" ValueChanged="BackgroundOpacitySlider_ValueChanged" />
-                                <TextBlock Text="0% = 完全透明，100% = 60%白色背景" Foreground="#80FFFFFF" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                                <TextBlock Text="0% = 完全透明，100% = 30%白色背景" Foreground="#80FFFFFF" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
 
@@ -464,6 +463,13 @@
                                 <TextBlock Text="其他选项" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
                                 <CheckBox Content="穿透模式" IsChecked="{Binding IsClickThroughEnabled, Mode=TwoWay}" Foreground="#E0FFFFFF" Margin="0,6,0,12" />
                                 <CheckBox Content="开机自启动" IsChecked="{Binding IsAutoStartEnabled, Mode=TwoWay}" Foreground="#E0FFFFFF" Margin="0,6,0,12" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="状态信息" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding StatusText}" Foreground="#E0FFFFFF" FontSize="12" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
 

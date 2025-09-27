@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DesktopMemo.Core.Contracts;
@@ -53,10 +54,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private TopmostMode _selectedTopmostMode = TopmostMode.Desktop;
 
     [ObservableProperty]
-    private double _backgroundOpacity = 0.85;
+    private double _backgroundOpacity = 0.0;
 
     [ObservableProperty]
-    private double _backgroundOpacityPercent = 14.2; // 对应0.85的窗口透明度
+    private double _backgroundOpacityPercent = 0.0;
 
     [ObservableProperty]
     private bool _isClickThroughEnabled;
@@ -186,6 +187,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         SelectedTopmostMode = _windowService.GetCurrentTopmostMode();
         BackgroundOpacity = _windowService.GetWindowOpacity();
+        BackgroundOpacityPercent = (BackgroundOpacity / 0.3) * 100; // 映射到0-100范围
         IsClickThroughEnabled = _windowService.IsClickThroughEnabled;
         UpdateCurrentPosition();
     }
@@ -248,6 +250,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        // 添加二次确认框
+        var result = System.Windows.MessageBox.Show(
+            $"确定要删除备忘录\"{SelectedMemo.DisplayTitle}\"吗？\n\n此操作不可撤销。",
+            "删除确认",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning,
+            System.Windows.MessageBoxResult.No);
+
+        if (result != System.Windows.MessageBoxResult.Yes)
+        {
+            SetStatus("已取消删除");
+            return;
+        }
+
         var deleting = SelectedMemo;
         await _memoRepository.DeleteAsync(deleting.Id);
 
@@ -288,6 +304,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         IsWindowPinned = !IsWindowPinned;
+
+        // 实际控制窗口置顶状态
+        if (IsWindowPinned)
+        {
+            _windowService.SetTopmostMode(TopmostMode.Always);
+        }
+        else
+        {
+            _windowService.SetTopmostMode(SelectedTopmostMode);
+        }
+
         await SaveMemoAsync();
         SetStatus(IsWindowPinned ? "已固定" : "已取消固定");
     }
@@ -458,6 +485,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnBackgroundOpacityChanged(double value)
     {
         _windowService.SetWindowOpacity(value);
+
+        // 自动保存透明度设置
+        bool isTopMost = SelectedTopmostMode == TopmostMode.Always;
+        bool isDesktopMode = SelectedTopmostMode == TopmostMode.Desktop;
+
+        WindowSettings = WindowSettings.WithAppearance(value, isTopMost, isDesktopMode, IsClickThroughEnabled);
+        _ = _settingsService.SaveAsync(WindowSettings);
     }
 
     partial void OnIsClickThroughEnabledChanged(bool value)
