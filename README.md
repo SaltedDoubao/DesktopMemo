@@ -64,8 +64,8 @@ DesktopMemo_rebuild/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/YourOrg/DesktopMemo_rebuild.git
-cd DesktopMemo_rebuild
+git clone https://github.com/SaltedDoubao/DesktopMemo.git
+cd DesktopMemo
 
 # 还原依赖
 dotnet restore
