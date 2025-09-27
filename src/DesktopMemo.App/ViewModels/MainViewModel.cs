@@ -51,6 +51,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string _statusText = "就绪";
 
     [ObservableProperty]
+    private string _appInfo = string.Empty;
+
+    [ObservableProperty]
     private TopmostMode _selectedTopmostMode = TopmostMode.Desktop;
 
     [ObservableProperty]
@@ -116,6 +119,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _migrationService = migrationService;
 
         Memos.CollectionChanged += OnMemosCollectionChanged;
+
+        // 初始化应用信息
+        InitializeAppInfo();
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -250,18 +256,30 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        // 添加二次确认框
-        var result = System.Windows.MessageBox.Show(
-            $"确定要删除备忘录\"{SelectedMemo.DisplayTitle}\"吗？\n\n此操作不可撤销。",
-            "删除确认",
-            System.Windows.MessageBoxButton.YesNo,
-            System.Windows.MessageBoxImage.Warning,
-            System.Windows.MessageBoxResult.No);
-
-        if (result != System.Windows.MessageBoxResult.Yes)
+        // 检查是否需要显示确认框
+        if (WindowSettings.ShowDeleteConfirmation)
         {
-            SetStatus("已取消删除");
-            return;
+            var dialog = new Views.ConfirmationDialog
+            {
+                Title = "删除确认",
+                Message = $"确定要删除备忘录\"{SelectedMemo.DisplayTitle}\"吗？\n\n此操作不可撤销。",
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+
+            var result = dialog.ShowDialog();
+
+            if (result != true)
+            {
+                SetStatus("已取消删除");
+                return;
+            }
+
+            // 如果用户选择了"不再显示"，保存设置
+            if (dialog.DontShowAgain)
+            {
+                WindowSettings = WindowSettings with { ShowDeleteConfirmation = false };
+                await _settingsService.SaveAsync(WindowSettings);
+            }
         }
 
         var deleting = SelectedMemo;
@@ -298,11 +316,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task TogglePinAsync()
     {
-        if (SelectedMemo is null)
-        {
-            return;
-        }
-
         IsWindowPinned = !IsWindowPinned;
 
         // 实际控制窗口置顶状态
@@ -315,8 +328,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _windowService.SetTopmostMode(SelectedTopmostMode);
         }
 
-        await SaveMemoAsync();
-        SetStatus(IsWindowPinned ? "已固定" : "已取消固定");
+        // 如果有选中的备忘录，保存其固定状态
+        if (SelectedMemo is not null)
+        {
+            await SaveMemoAsync();
+        }
+
+        SetStatus(IsWindowPinned ? "窗口已固定，无法拖动" : "窗口已解除固定");
     }
 
     [RelayCommand]
@@ -608,6 +626,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(MemoCount));
     }
 
+    private void InitializeAppInfo()
+    {
+        try
+        {
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
+            var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var dataPath = Path.Combine(appDataDir, "DesktopMemo");
+            AppInfo = $"版本：{version} | 数据目录：{dataPath}";
+        }
+        catch
+        {
+            AppInfo = "版本：1.0.0 | 数据目录：%APPDATA%\\DesktopMemo";
+        }
+    }
+
     private void OnMemosCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(MemoCount));
@@ -626,6 +659,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SetStatus("编辑中...");
         }
     }
+
+    public ISettingsService GetSettingsService() => _settingsService;
 
     public void Dispose()
     {

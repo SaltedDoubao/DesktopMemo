@@ -51,6 +51,8 @@ public sealed class TrayService : ITrayService
     public event EventHandler? AboutClick;
     public event EventHandler? RestartTrayClick;
     public event EventHandler<bool>? ClickThroughToggleClick;
+    public event EventHandler? ReenableExitPromptClick;
+    public event EventHandler? ReenableDeletePromptClick;
 
     public bool IsClickThroughEnabled { get; private set; }
 
@@ -315,10 +317,10 @@ public sealed class TrayService : ITrayService
         _aboutItem = new Forms.ToolStripMenuItem("ℹ️ 关于", null, (s, e) => AboutClick?.Invoke(s, e)) { Font = _regularFont };
 
         _showExitPromptItem = new Forms.ToolStripMenuItem("🔄 重新启用退出提示") { Font = _regularFont };
-        _showExitPromptItem.Click += (s, e) => ShowBalloonTip("设置已更新", "已重新启用退出提示");
+        _showExitPromptItem.Click += (s, e) => ReenableExitPromptClick?.Invoke(s, e);
 
         _showDeletePromptItem = new Forms.ToolStripMenuItem("🗑️ 重新启用删除提示") { Font = _regularFont };
-        _showDeletePromptItem.Click += (s, e) => ShowBalloonTip("设置已更新", "已重新启用删除确认提示");
+        _showDeletePromptItem.Click += (s, e) => ReenableDeletePromptClick?.Invoke(s, e);
 
         _restartTrayItem = new Forms.ToolStripMenuItem("🔁 重启托盘图标", null, (s, e) => RestartTrayClick?.Invoke(s, e)) { Font = _regularFont };
 

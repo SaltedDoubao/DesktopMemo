@@ -85,6 +85,18 @@ public partial class MainWindow : Window
         _trayService.AboutClick += (s, e) => _viewModel.ShowAboutCommand.Execute(null);
         _trayService.RestartTrayClick += (s, e) => _viewModel.TrayRestartCommand.Execute(null);
         _trayService.ClickThroughToggleClick += (s, enabled) => _viewModel.IsClickThroughEnabled = enabled;
+        _trayService.ReenableExitPromptClick += async (s, e) =>
+        {
+            _viewModel.WindowSettings = _viewModel.WindowSettings with { ShowExitConfirmation = true };
+            await _viewModel.GetSettingsService().SaveAsync(_viewModel.WindowSettings);
+            _trayService.ShowBalloonTip("设置已更新", "已重新启用退出提示");
+        };
+        _trayService.ReenableDeletePromptClick += async (s, e) =>
+        {
+            _viewModel.WindowSettings = _viewModel.WindowSettings with { ShowDeleteConfirmation = true };
+            await _viewModel.GetSettingsService().SaveAsync(_viewModel.WindowSettings);
+            _trayService.ShowBalloonTip("设置已更新", "已重新启用删除确认提示");
+        };
         _trayService.ExitClick += (s, e) => WpfApp.Current.Shutdown();
     }
 
@@ -166,7 +178,7 @@ public partial class MainWindow : Window
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ButtonState == MouseButtonState.Pressed)
+        if (e.ButtonState == MouseButtonState.Pressed && !(_viewModel?.IsWindowPinned ?? false))
         {
             DragMove();
         }
@@ -190,20 +202,63 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    private async void CloseButton_Click(object sender, RoutedEventArgs e)
     {
-        var result = MessageBox.Show(
-            "是否最小化到托盘？\n点击'是'最小化到托盘，点击'否'完全退出程序。",
-            "退出确认",
-            MessageBoxButton.YesNoCancel,
-            MessageBoxImage.Question);
-
-        switch (result)
+        // 检查是否需要显示退出确认
+        if (_viewModel.WindowSettings.ShowExitConfirmation)
         {
-            case MessageBoxResult.Yes:
+            var dialog = new Views.ExitConfirmationDialog
+            {
+                Owner = this
+            };
+
+            var result = dialog.ShowDialog();
+
+            if (result != true)
+            {
+                return; // 用户点击取消
+            }
+
+            // 如果用户选择了"不再显示"，保存设置和用户的选择
+            if (dialog.DontShowAgain)
+            {
+                bool exitToTray = dialog.Action == Views.ExitAction.MinimizeToTray;
+                _viewModel.WindowSettings = _viewModel.WindowSettings with
+                {
+                    ShowExitConfirmation = false,
+                    DefaultExitToTray = exitToTray
+                };
+                await _viewModel.GetSettingsService().SaveAsync(_viewModel.WindowSettings);
+            }
+
+            // 根据用户选择执行操作
+            switch (dialog.Action)
+            {
+                case Views.ExitAction.MinimizeToTray:
+                    _viewModel.TrayHideWindowCommand.Execute(null);
+                    break;
+                case Views.ExitAction.Exit:
+                    _viewModel.Dispose();
+                    _trayService.Dispose();
+                    if (_windowService is IDisposable disposableWindowService)
+                    {
+                        disposableWindowService.Dispose();
+                    }
+                    _autoSaveTimer?.Stop();
+                    _autoSaveTimer = null;
+                    WpfApp.Current.Shutdown();
+                    break;
+            }
+        }
+        else
+        {
+            // 不显示确认，根据保存的设置执行默认行为
+            if (_viewModel.WindowSettings.DefaultExitToTray)
+            {
                 _viewModel.TrayHideWindowCommand.Execute(null);
-                break;
-            case MessageBoxResult.No:
+            }
+            else
+            {
                 _viewModel.Dispose();
                 _trayService.Dispose();
                 if (_windowService is IDisposable disposableWindowService)
@@ -213,7 +268,7 @@ public partial class MainWindow : Window
                 _autoSaveTimer?.Stop();
                 _autoSaveTimer = null;
                 WpfApp.Current.Shutdown();
-                break;
+            }
         }
     }
 

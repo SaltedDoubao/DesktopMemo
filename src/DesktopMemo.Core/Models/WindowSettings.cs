@@ -13,9 +13,12 @@ public sealed record WindowSettings(
     double Transparency,
     bool IsTopMost,
     bool IsDesktopMode,
-    bool IsClickThrough)
+    bool IsClickThrough,
+    bool ShowDeleteConfirmation = true,
+    bool ShowExitConfirmation = true,
+    bool DefaultExitToTray = true)
 {
-    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, 0.85, true, false, false);
+    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, 0.85, true, false, false, true, true, true);
 
     public WindowSettings WithLocation(double left, double top)
         => this with { Left = left, Top = top };

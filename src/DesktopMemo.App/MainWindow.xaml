@@ -191,6 +191,58 @@
             </Setter>
         </Style>
 
+        <Style x:Key="AccentButton" TargetType="Button">
+            <Setter Property="Background" Value="#FF0078D4"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="12,6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF1A86D8"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FF006AC1"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#30FFFFFF"/>
+            <Setter Property="Foreground" Value="#E0FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="12,6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#40FFFFFF"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#50FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="ModernRadioButton" TargetType="RadioButton">
             <Setter Property="Foreground" Value="#E0FFFFFF" />
             <Setter Property="Margin" Value="0,4" />
@@ -259,8 +311,19 @@
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                                <Button Width="32" Height="32" Margin="0,0,8,0" Command="{Binding TogglePinCommand}" Style="{StaticResource GlassButton}" ToolTip="固定窗口">
-                                    <Path Data="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z" Fill="#E0FFFFFF" Width="16" Height="16" Stretch="Uniform" />
+                                <Button Width="32" Height="32" Margin="0,0,8,0" Command="{Binding TogglePinCommand}" Style="{StaticResource GlassButton}" ToolTip="固定/取消固定窗口">
+                                    <Path Data="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z" Width="16" Height="16" Stretch="Uniform">
+                                        <Path.Style>
+                                            <Style TargetType="Path">
+                                                <Setter Property="Fill" Value="#E0FFFFFF"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsWindowPinned}" Value="True">
+                                                        <Setter Property="Fill" Value="#FFFFA500"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Path.Style>
+                                    </Path>
                                 </Button>
                                 <Button Width="32" Height="32" Margin="0,0,8,0" Command="{Binding CreateMemoCommand}" Style="{StaticResource GlassButton}" ToolTip="新建备忘录">
                                     <Path Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Fill="#E0FFFFFF" Width="16" Height="16" Stretch="Uniform" />
@@ -454,7 +517,7 @@
                                 <TextBlock Text="背景透明度" Foreground="#E0FFFFFF" FontSize="12" />
                                 <TextBlock Text="{Binding BackgroundOpacity, StringFormat='当前：{0:P0}'}" Foreground="#B0FFFFFF" FontSize="12" Margin="0,4,0,8" />
                                 <Slider x:Name="BackgroundOpacitySlider" Minimum="0" Maximum="100" Value="{Binding BackgroundOpacityPercent, Mode=TwoWay}" ValueChanged="BackgroundOpacitySlider_ValueChanged" />
-                                <TextBlock Text="0% = 完全透明，100% = 30%白色背景" Foreground="#80FFFFFF" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                                <TextBlock Text="0% = 完全透明，100% = 全白色背景" Foreground="#80FFFFFF" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
 
@@ -469,7 +532,8 @@
                         <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
                             <StackPanel>
                                 <TextBlock Text="状态信息" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
-                                <TextBlock Text="{Binding StatusText}" Foreground="#E0FFFFFF" FontSize="12" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding StatusText}" Foreground="#E0FFFFFF" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                <TextBlock Text="{Binding AppInfo}" Foreground="#B0FFFFFF" FontSize="10" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
 
