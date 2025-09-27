@@ -10,6 +10,7 @@ public sealed record Memo(
     Guid Id,
     string Title,
     string Content,
+    string Preview,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyList<string> Tags,
@@ -18,11 +19,13 @@ public sealed record Memo(
     public static Memo CreateNew(string title, string content)
     {
         var now = DateTimeOffset.UtcNow;
+        var preview = BuildPreview(content);
 
         return new Memo(
             Guid.NewGuid(),
             title,
             content,
+            preview,
             now,
             now,
             Array.Empty<string>(),
@@ -32,6 +35,7 @@ public sealed record Memo(
     public Memo WithContent(string content, DateTimeOffset timestamp) => this with
     {
         Content = content,
+        Preview = BuildPreview(content),
         UpdatedAt = timestamp
     };
 
@@ -42,5 +46,27 @@ public sealed record Memo(
         IsPinned = isPinned,
         UpdatedAt = timestamp
     };
+
+    private static string BuildPreview(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = content.Replace("\r\n", "\n").Replace('\r', '\n').Trim();
+        if (trimmed.Length <= 120)
+        {
+            return trimmed;
+        }
+
+        var firstLineBreak = trimmed.IndexOf('\n');
+        if (firstLineBreak >= 0 && firstLineBreak < 120)
+        {
+            return trimmed[..firstLineBreak];
+        }
+
+        return trimmed.Substring(0, 120) + "...";
+    }
 }
 

@@ -14,13 +14,6 @@
 
 DesktopMemo 重构版采用 .NET 9.0 + WPF + CommunityToolkit.Mvvm，围绕 MVVM 架构重新实现备忘录管理、窗口设置与数据持久化，提供更清晰的分层与可维护性。
 
-核心特性：
-
-- 模块化解决方案：应用层、核心契约层、基础设施层分离
-- 以 Markdown (YAML Front Matter) 存储备忘录，支持标签、置顶等元数据
-- `settings.json` 保存窗口尺寸、透明度、置顶模式等个性化配置
-- 依赖注入（Microsoft.Extensions.DependencyInjection）管理服务生命周期
-
 ## ✨ 主要功能
 
 - 新建、查看、编辑、删除备忘录
@@ -28,7 +21,7 @@ DesktopMemo 重构版采用 .NET 9.0 + WPF + CommunityToolkit.Mvvm，围绕 MVVM
 - 列表与编辑区分栏布局，快速切换备忘录
 - 窗口设置加载/保存，默认记录尺寸、位置、透明度与置顶状态
 
-## 🗂️ 解决方案结构
+## 🗂️ 项目结构
 
 ```
 DesktopMemo_rebuild/

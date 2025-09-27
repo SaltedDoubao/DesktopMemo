@@ -16,7 +16,10 @@ public sealed class MemoMigrationService
     public MemoMigrationService(string dataDirectory)
     {
         _dataDirectory = dataDirectory;
+        ExportDirectory = Path.Combine(_dataDirectory, "export");
     }
+
+    public string ExportDirectory { get; }
 
     public async Task<IReadOnlyList<Memo>> LoadFromLegacyAsync()
     {
@@ -66,9 +69,32 @@ public sealed class MemoMigrationService
             Guid.NewGuid(),
             title,
             markdown,
+            BuildPreview(markdown),
             new DateTimeOffset(created),
             new DateTimeOffset(updated),
             Array.Empty<string>(),
             false);
+    }
+
+    private static string BuildPreview(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = content.Replace("\r\n", "\n").Replace('\r', '\n').Trim();
+        if (trimmed.Length <= 120)
+        {
+            return trimmed;
+        }
+
+        var firstLineBreak = trimmed.IndexOf('\n');
+        if (firstLineBreak >= 0 && firstLineBreak < 120)
+        {
+            return trimmed[..firstLineBreak];
+        }
+
+        return trimmed.Substring(0, 120) + "...";
     }
 }

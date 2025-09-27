@@ -10,6 +10,15 @@ public interface ITrayService : IDisposable
     event EventHandler? SettingsClick;
     event EventHandler? ExitClick;
 
+    event EventHandler<string>? MoveToPresetClick;
+    event EventHandler? RememberPositionClick;
+    event EventHandler? RestorePositionClick;
+    event EventHandler? ExportNotesClick;
+    event EventHandler? ImportNotesClick;
+    event EventHandler? ClearContentClick;
+    event EventHandler? AboutClick;
+    event EventHandler? RestartTrayClick;
+
     void Initialize();
     void Show();
     void Hide();

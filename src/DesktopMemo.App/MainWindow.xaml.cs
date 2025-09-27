@@ -73,6 +73,14 @@ public partial class MainWindow : Window
                 _viewModel.IsSettingsPanelVisible = true;
             }
         };
+        _trayService.MoveToPresetClick += (s, preset) => _viewModel.MoveToPresetCommand.Execute(preset);
+        _trayService.RememberPositionClick += (s, e) => _viewModel.RememberPositionCommand.Execute(null);
+        _trayService.RestorePositionClick += (s, e) => _viewModel.RestorePositionCommand.Execute(null);
+        _trayService.ExportNotesClick += (s, e) => _viewModel.ExportMarkdownCommand.Execute(null);
+        _trayService.ImportNotesClick += (s, e) => _viewModel.ImportLegacyCommand.Execute(null);
+        _trayService.ClearContentClick += (s, e) => _viewModel.ClearEditorCommand.Execute(null);
+        _trayService.AboutClick += (s, e) => _viewModel.ShowAboutCommand.Execute(null);
+        _trayService.RestartTrayClick += (s, e) => _viewModel.TrayRestartCommand.Execute(null);
         _trayService.ExitClick += (s, e) => WpfApp.Current.Shutdown();
     }
 
@@ -183,9 +191,17 @@ public partial class MainWindow : Window
         switch (result)
         {
             case MessageBoxResult.Yes:
-                _windowService.MinimizeToTray();
+                _viewModel.TrayHideWindowCommand.Execute(null);
                 break;
             case MessageBoxResult.No:
+                _viewModel.Dispose();
+                _trayService.Dispose();
+                if (_windowService is IDisposable disposableWindowService)
+                {
+                    disposableWindowService.Dispose();
+                }
+                _autoSaveTimer?.Stop();
+                _autoSaveTimer = null;
                 WpfApp.Current.Shutdown();
                 break;
         }

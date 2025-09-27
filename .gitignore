@@ -44,3 +44,4 @@ Desktop.ini
 .DS_Store
 backups/
 temp/
+.local/

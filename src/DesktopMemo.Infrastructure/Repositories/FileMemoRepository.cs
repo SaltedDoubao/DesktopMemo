@@ -133,6 +133,7 @@ public sealed class FileMemoRepository : IMemoRepository
             metadata.Id,
             metadata.Title,
             content,
+            BuildPreview(content),
             metadata.CreatedAt,
             metadata.UpdatedAt,
             metadata.Tags,
@@ -157,6 +158,28 @@ public sealed class FileMemoRepository : IMemoRepository
         builder.AppendLine(memo.Content);
 
         await File.WriteAllTextAsync(path, builder.ToString(), Encoding.UTF8, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static string BuildPreview(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = content.Replace("\r\n", "\n").Replace('\r', '\n').Trim();
+        if (trimmed.Length <= 120)
+        {
+            return trimmed;
+        }
+
+        var firstLineBreak = trimmed.IndexOf('\n');
+        if (firstLineBreak >= 0 && firstLineBreak < 120)
+        {
+            return trimmed[..firstLineBreak];
+        }
+
+        return trimmed.Substring(0, 120) + "...";
     }
 
     private static string EscapeYamlString(string value)

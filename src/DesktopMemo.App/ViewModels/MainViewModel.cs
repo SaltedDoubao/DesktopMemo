@@ -9,10 +9,11 @@ using CommunityToolkit.Mvvm.Input;
 using DesktopMemo.Core.Contracts;
 using DesktopMemo.Core.Models;
 using DesktopMemo.Infrastructure.Services;
+using System.IO;
 
 namespace DesktopMemo.App.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly IMemoRepository _memoRepository;
     private readonly ISettingsService _settingsService;
@@ -78,9 +79,13 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isTrayEnabled = true;
 
+    private bool _isDisposing;
+
     public int MemoCount => Memos.Count;
 
     public bool HasSelectedMemo => SelectedMemo is not null;
+
+    private bool _disposed;
 
     public MainViewModel(
         IMemoRepository memoRepository,
@@ -102,20 +107,20 @@ public partial class MainViewModel : ObservableObject
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        var settings = await _settingsService.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var settings = await _settingsService.LoadAsync(cancellationToken);
         ApplyWindowSettings(settings);
 
-        var memos = await _memoRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        var memos = await _memoRepository.GetAllAsync(cancellationToken);
 
         if (memos.Count == 0)
         {
             var migrated = await _migrationService.LoadFromLegacyAsync();
             foreach (var migratedMemo in migrated)
             {
-                await _memoRepository.AddAsync(migratedMemo, cancellationToken).ConfigureAwait(false);
+                await _memoRepository.AddAsync(migratedMemo, cancellationToken);
             }
 
-            memos = await _memoRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
+            memos = await _memoRepository.GetAllAsync(cancellationToken);
         }
 
         Memos = new ObservableCollection<Memo>(memos.OrderByDescending(m => m.UpdatedAt));
@@ -181,7 +186,7 @@ public partial class MainViewModel : ObservableObject
     private async Task CreateMemoAsync()
     {
         var memo = Memo.CreateNew("新的备忘录", string.Empty);
-        await _memoRepository.AddAsync(memo).ConfigureAwait(false);
+        await _memoRepository.AddAsync(memo);
 
         Memos.Insert(0, memo);
         SelectedMemo = memo;
@@ -205,7 +210,7 @@ public partial class MainViewModel : ObservableObject
             .WithContent(EditorContent, DateTimeOffset.UtcNow)
             .WithMetadata(EditorTitle, SelectedMemo.Tags, IsWindowPinned, DateTimeOffset.UtcNow);
 
-        await _memoRepository.UpdateAsync(updated).ConfigureAwait(false);
+        await _memoRepository.UpdateAsync(updated);
 
         var index = Memos.IndexOf(SelectedMemo);
         if (index >= 0)
@@ -215,7 +220,6 @@ public partial class MainViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(MemoCount));
-        IsEditMode = true;
         SetStatus("已保存");
     }
 
@@ -228,7 +232,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         var deleting = SelectedMemo;
-        await _memoRepository.DeleteAsync(deleting.Id).ConfigureAwait(false);
+        await _memoRepository.DeleteAsync(deleting.Id);
 
         Memos.Remove(deleting);
         SelectedMemo = Memos.FirstOrDefault();
@@ -287,7 +291,7 @@ public partial class MainViewModel : ObservableObject
         WindowSettings = WindowSettings.WithLocation(CurrentLeft, CurrentTop)
             .WithAppearance(BackgroundOpacity, isTopMost, isDesktopMode, IsClickThroughEnabled);
 
-        await _settingsService.SaveAsync(WindowSettings).ConfigureAwait(false);
+        await _settingsService.SaveAsync(WindowSettings);
         SetStatus("设置已保存");
         _trayService.UpdateTopmostState(SelectedTopmostMode);
         _trayService.UpdateClickThroughState(IsClickThroughEnabled);
@@ -303,13 +307,15 @@ public partial class MainViewModel : ObservableObject
 
         SelectedMemo = memo;
         IsEditMode = true;
+        EditorTitle = memo.Title;
+        EditorContent = memo.Content;
         SetStatus("编辑中...");
     }
 
     [RelayCommand]
     private async Task SaveAndBackAsync()
     {
-        await SaveMemoAsync().ConfigureAwait(false);
+        await SaveMemoAsync();
         IsEditMode = false;
         SetStatus("已保存并返回");
     }
@@ -332,7 +338,7 @@ public partial class MainViewModel : ObservableObject
         _windowService.MoveToPresetPosition(preset);
         UpdateCurrentPosition();
         WindowSettings = WindowSettings.WithLocation(CurrentLeft, CurrentTop);
-        await _settingsService.SaveAsync(WindowSettings).ConfigureAwait(false);
+        await _settingsService.SaveAsync(WindowSettings);
         SetStatus("窗口已移动");
     }
 
@@ -341,7 +347,7 @@ public partial class MainViewModel : ObservableObject
     {
         UpdateCurrentPosition();
         WindowSettings = WindowSettings.WithLocation(CurrentLeft, CurrentTop);
-        await _settingsService.SaveAsync(WindowSettings).ConfigureAwait(false);
+        await _settingsService.SaveAsync(WindowSettings);
         SetStatus("位置已记录");
     }
 
@@ -389,6 +395,19 @@ public partial class MainViewModel : ObservableObject
         SetStatus("托盘已重载");
     }
 
+    [RelayCommand]
+    private void ClearEditor()
+    {
+        EditorContent = string.Empty;
+        SetStatus("已清空内容");
+    }
+
+    [RelayCommand]
+    private void ShowAbout()
+    {
+        SetStatus("关于 DesktopMemo");
+    }
+
     partial void OnSelectedTopmostModeChanged(TopmostMode value)
     {
         _windowService.SetTopmostMode(value);
@@ -408,6 +427,11 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnIsTrayEnabledChanged(bool value)
     {
+        if (_isDisposing)
+        {
+            return;
+        }
+
         if (value)
         {
             _trayService.Show();
@@ -424,10 +448,12 @@ public partial class MainViewModel : ObservableObject
 
         if (newValue is null)
         {
-            EditorTitle = string.Empty;
-            EditorContent = string.Empty;
-            IsWindowPinned = false;
-            IsEditMode = false;
+            if (!IsEditMode)
+            {
+                EditorTitle = string.Empty;
+                EditorContent = string.Empty;
+                IsWindowPinned = false;
+            }
             return;
         }
 
@@ -469,6 +495,24 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _isDisposing = true;
+
+        if (IsTrayEnabled)
+        {
+            _trayService.Hide();
+        }
+
+        _trayService.Dispose();
+    }
+
     [RelayCommand]
     private void FindNext()
     {
@@ -507,6 +551,47 @@ public partial class MainViewModel : ObservableObject
         {
             SetStatus("无匹配项可替换");
         }
+    }
+
+    [RelayCommand]
+    private async Task ImportLegacyAsync()
+    {
+        var legacyMemos = await _migrationService.LoadFromLegacyAsync();
+        int importCount = 0;
+
+        foreach (var memo in legacyMemos)
+        {
+            await _memoRepository.AddAsync(memo);
+            importCount++;
+        }
+
+        if (importCount > 0)
+        {
+            var memos = await _memoRepository.GetAllAsync();
+            Memos = new ObservableCollection<Memo>(memos.OrderByDescending(m => m.UpdatedAt));
+            SelectedMemo = Memos.FirstOrDefault();
+        }
+
+        SetStatus(importCount > 0 ? $"导入 {importCount} 条备忘录" : "未发现旧数据");
+    }
+
+    [RelayCommand]
+    private async Task ExportMarkdownAsync()
+    {
+        var exportDir = Path.Combine(_migrationService.ExportDirectory, DateTime.Now.ToString("yyyyMMdd_HHmmss"));
+        Directory.CreateDirectory(exportDir);
+
+        var memos = await _memoRepository.GetAllAsync();
+        int count = 0;
+
+        foreach (var memo in memos)
+        {
+            var path = Path.Combine(exportDir, $"{memo.Id:N}.md");
+            await File.WriteAllTextAsync(path, memo.Content);
+            count++;
+        }
+
+        SetStatus(count > 0 ? $"导出 {count} 条备忘录" : "没有可导出的备忘录");
     }
 }
 

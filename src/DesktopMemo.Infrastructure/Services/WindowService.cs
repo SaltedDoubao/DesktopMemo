@@ -7,9 +7,10 @@ using DesktopMemo.Core.Contracts;
 
 namespace DesktopMemo.Infrastructure.Services;
 
-public class WindowService : IWindowService
+public class WindowService : IWindowService, IDisposable
 {
     private Window? _window;
+    private bool _disposed;
     private TopmostMode _currentTopmostMode = TopmostMode.Desktop;
     private bool _isClickThroughEnabled = false;
 
@@ -284,5 +285,16 @@ public class WindowService : IWindowService
         }
         _window.Activate();
         _window.Focus();
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _window = null;
     }
 }
