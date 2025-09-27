@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DesktopMemo.Core.Models;
 
@@ -16,6 +17,28 @@ public sealed record Memo(
     IReadOnlyList<string> Tags,
     bool IsPinned)
 {
+    /// <summary>
+    /// 获取用于显示的标题。如果内容不为空，使用第一行作为标题；否则使用原标题。
+    /// </summary>
+    public string DisplayTitle => GetDisplayTitle();
+
+    private string GetDisplayTitle()
+    {
+        if (string.IsNullOrWhiteSpace(Content))
+        {
+            return Title;
+        }
+
+        var lines = Content.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        var firstLine = lines.FirstOrDefault()?.Trim();
+
+        if (string.IsNullOrWhiteSpace(firstLine))
+        {
+            return Title;
+        }
+
+        return firstLine.Length > 50 ? firstLine.Substring(0, 50) + "..." : firstLine;
+    }
     public static Memo CreateNew(string title, string content)
     {
         var now = DateTimeOffset.UtcNow;

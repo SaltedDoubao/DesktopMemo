@@ -18,6 +18,7 @@ public interface ITrayService : IDisposable
     event EventHandler? ClearContentClick;
     event EventHandler? AboutClick;
     event EventHandler? RestartTrayClick;
+    event EventHandler<bool>? ClickThroughToggleClick;
 
     void Initialize();
     void Show();

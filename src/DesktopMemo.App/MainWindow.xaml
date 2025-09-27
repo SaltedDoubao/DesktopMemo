@@ -174,9 +174,6 @@
                                 BorderBrush="#25FFFFFF"
                                 BorderThickness="1"
                                 Padding="4">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="2" Opacity="0.1" />
-                            </Border.Effect>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -220,9 +217,6 @@
     </Window.Resources>
 
     <Border x:Name="MainContainer" Style="{StaticResource GlassmorphismBorder}" Margin="8">
-        <Border.Effect>
-            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="6" Opacity="0.15" />
-        </Border.Effect>
 
         <Grid ClipToBounds="True">
             <Grid PreviewMouseLeftButtonDown="MainContentArea_PreviewMouseLeftButtonDown">
@@ -297,7 +291,7 @@
 
                 <Border Grid.Row="1" Background="#08FFFFFF" CornerRadius="0,0,16,16" BorderBrush="#10FFFFFF" BorderThickness="0,1,0,0">
                     <Grid>
-                        <Grid Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" Margin="8,0,0,0">
+                        <Grid Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" Margin="4,0,0,0">
                             <ListBox ItemsSource="{Binding Memos}"
                                      SelectedItem="{Binding SelectedMemo}"
                                      Background="Transparent"
@@ -344,17 +338,8 @@
                                                 <Style TargetType="Border">
                                                     <Setter Property="Background" Value="#08FFFFFF"/>
                                                     <Setter Property="BorderBrush" Value="#05FFFFFF"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                                            <Setter Property="Background" Value="#25FFFFFF"/>
-                                                            <Setter Property="BorderBrush" Value="#60FFFFFF"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
-                                            <Border.Effect>
-                                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="4" Opacity="0.1" />
-                                            </Border.Effect>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
@@ -384,7 +369,7 @@
                         </Grid>
 
                         <Grid Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <TextBox Text="{Binding EditorContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="Transparent" Foreground="#F0FFFFFF" BorderThickness="0" Padding="20" SpellCheck.IsEnabled="False" FontSize="14" CaretBrush="#FF64B5F6" SelectionBrush="#4064B5F6" TextChanged="NoteTextBox_TextChanged" PreviewKeyDown="NoteTextBox_PreviewKeyDown" />
+                            <TextBox x:Name="NoteTextBox" Text="{Binding EditorContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Background="Transparent" Foreground="#F0FFFFFF" BorderThickness="0" Padding="20" SpellCheck.IsEnabled="False" FontSize="14" CaretBrush="#FF64B5F6" SelectionBrush="#4064B5F6" TextChanged="NoteTextBox_TextChanged" PreviewKeyDown="NoteTextBox_PreviewKeyDown" />
                         </Grid>
                     </Grid>
                 </Border>
@@ -394,9 +379,6 @@
                 <Border.RenderTransform>
                     <TranslateTransform X="320" />
                 </Border.RenderTransform>
-                <Border.Effect>
-                    <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="-4" Opacity="0.25" />
-                </Border.Effect>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{StaticResource GlassScrollViewer}">
                     <StackPanel Margin="20">
                         <Grid Margin="0,0,0,20">
@@ -472,7 +454,8 @@
                                 <TextBlock Text="外观设置" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
                                 <TextBlock Text="背景透明度" Foreground="#E0FFFFFF" FontSize="12" />
                                 <TextBlock Text="{Binding BackgroundOpacity, StringFormat='当前：{0:P0}'}" Foreground="#B0FFFFFF" FontSize="12" Margin="0,4,0,8" />
-                                <Slider Minimum="0.1" Maximum="1" Value="{Binding BackgroundOpacity, Mode=TwoWay}" />
+                                <Slider x:Name="BackgroundOpacitySlider" Minimum="0" Maximum="100" Value="{Binding BackgroundOpacityPercent, Mode=TwoWay}" ValueChanged="BackgroundOpacitySlider_ValueChanged" />
+                                <TextBlock Text="0% = 完全透明，100% = 60%白色背景" Foreground="#80FFFFFF" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
 
@@ -480,34 +463,7 @@
                             <StackPanel>
                                 <TextBlock Text="其他选项" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
                                 <CheckBox Content="穿透模式" IsChecked="{Binding IsClickThroughEnabled, Mode=TwoWay}" Foreground="#E0FFFFFF" Margin="0,6,0,12" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="托盘选项" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
-                                <CheckBox Content="启用托盘图标" IsChecked="{Binding IsTrayEnabled, Mode=TwoWay}" Foreground="#E0FFFFFF" Margin="0,0,0,12" />
-                                <Button Content="显示窗口" Command="{Binding TrayShowWindowCommand}" Style="{StaticResource GlassButton}" Margin="0,0,0,8" />
-                                <Button Content="隐藏窗口" Command="{Binding TrayHideWindowCommand}" Style="{StaticResource GlassButton}" Margin="0,0,0,8" />
-                                <Button Content="重启托盘图标" Command="{Binding TrayRestartCommand}" Style="{StaticResource GlassButton}" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="#20FFFFFF" CornerRadius="8" Padding="15" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="查找 / 替换" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
-                                <TextBlock Text="查找内容" Foreground="#B0FFFFFF" FontSize="12" />
-                                <TextBox Text="{Binding SearchKeyword, Mode=TwoWay}" Margin="0,0,0,8" />
-                                <TextBlock Text="替换为" Foreground="#B0FFFFFF" FontSize="12" />
-                                <TextBox Text="{Binding ReplaceKeyword, Mode=TwoWay}" Margin="0,0,0,12" />
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <CheckBox Content="区分大小写" IsChecked="{Binding IsCaseSensitive}" Foreground="#E0FFFFFF" Margin="0,0,12,0" />
-                                    <CheckBox Content="使用正则" IsChecked="{Binding UseRegex}" Foreground="#E0FFFFFF" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="查找" Command="{Binding FindNextCommand}" Style="{StaticResource GlassButton}" Margin="0,0,8,0" />
-                                    <Button Content="全部替换" Command="{Binding ReplaceAllCommand}" Style="{StaticResource GlassButton}" />
-                                </StackPanel>
+                                <CheckBox Content="开机自启动" IsChecked="{Binding IsAutoStartEnabled, Mode=TwoWay}" Foreground="#E0FFFFFF" Margin="0,6,0,12" />
                             </StackPanel>
                         </Border>
 

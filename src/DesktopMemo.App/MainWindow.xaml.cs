@@ -1,7 +1,9 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using DesktopMemo.App.ViewModels;
@@ -38,6 +40,7 @@ public partial class MainWindow : Window
 
             Loaded += OnLoaded;
             Closing += OnClosing;
+            LocationChanged += OnLocationChanged; // 监听位置变化
         }
         catch (Exception ex)
         {
@@ -81,6 +84,7 @@ public partial class MainWindow : Window
         _trayService.ClearContentClick += (s, e) => _viewModel.ClearEditorCommand.Execute(null);
         _trayService.AboutClick += (s, e) => _viewModel.ShowAboutCommand.Execute(null);
         _trayService.RestartTrayClick += (s, e) => _viewModel.TrayRestartCommand.Execute(null);
+        _trayService.ClickThroughToggleClick += (s, enabled) => _viewModel.IsClickThroughEnabled = enabled;
         _trayService.ExitClick += (s, e) => WpfApp.Current.Shutdown();
     }
 
@@ -152,6 +156,12 @@ public partial class MainWindow : Window
     {
         _autoSaveTimer?.Stop();
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+    }
+
+    private void OnLocationChanged(object? sender, EventArgs e)
+    {
+        // 实时更新位置显示
+        _viewModel.UpdateCurrentPosition();
     }
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -228,7 +238,183 @@ public partial class MainWindow : Window
                     e.Handled = true;
                     _ = _viewModel.CreateMemoCommand.ExecuteAsync(null);
                     break;
+                case Key.F:
+                    e.Handled = true;
+                    ShowFindDialog();
+                    break;
+                case Key.H:
+                    e.Handled = true;
+                    ShowReplaceDialog();
+                    break;
+                case Key.Tab:
+                    e.Handled = true;
+                    SwitchToNextMemo();
+                    break;
+                case Key.D:
+                    e.Handled = true;
+                    DuplicateCurrentLine();
+                    break;
+                case Key.OemOpenBrackets: // Ctrl + [
+                    e.Handled = true;
+                    DecreaseIndent();
+                    break;
+                case Key.OemCloseBrackets: // Ctrl + ]
+                    e.Handled = true;
+                    IncreaseIndent();
+                    break;
             }
+        }
+        else if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            switch (e.Key)
+            {
+                case Key.Tab:
+                    e.Handled = true;
+                    SwitchToPreviousMemo();
+                    break;
+            }
+        }
+        else if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
+        {
+            switch (e.Key)
+            {
+                case Key.Tab:
+                    e.Handled = true;
+                    DecreaseIndent();
+                    break;
+                case Key.F3:
+                    e.Handled = true;
+                    // 查找上一个功能
+                    _viewModel.SetStatus("查找上一个");
+                    break;
+            }
+        }
+        else if (e.KeyboardDevice.Modifiers == ModifierKeys.None)
+        {
+            switch (e.Key)
+            {
+                case Key.Tab:
+                    e.Handled = true;
+                    InsertIndent();
+                    break;
+                case Key.F3:
+                    e.Handled = true;
+                    _viewModel.FindNextCommand?.Execute(null);
+                    break;
+            }
+        }
+    }
+
+    private void ShowFindDialog()
+    {
+        // 实现查找对话框或内联查找功能
+        _viewModel.SetStatus("查找功能 - 使用 F3 查找下一个");
+    }
+
+    private void ShowReplaceDialog()
+    {
+        // 实现替换对话框或内联替换功能
+        _viewModel.SetStatus("替换功能 - 使用 Ctrl+H 替换");
+    }
+
+    private void SwitchToNextMemo()
+    {
+        var memos = _viewModel.Memos;
+        if (_viewModel.SelectedMemo == null) return;
+
+        var currentIndex = memos.IndexOf(_viewModel.SelectedMemo);
+        if (currentIndex < memos.Count - 1)
+        {
+            _viewModel.SelectedMemo = memos[currentIndex + 1];
+        }
+        else if (memos.Count > 0)
+        {
+            _viewModel.SelectedMemo = memos[0];
+        }
+    }
+
+    private void SwitchToPreviousMemo()
+    {
+        var memos = _viewModel.Memos;
+        if (_viewModel.SelectedMemo == null) return;
+
+        var currentIndex = memos.IndexOf(_viewModel.SelectedMemo);
+        if (currentIndex > 0)
+        {
+            _viewModel.SelectedMemo = memos[currentIndex - 1];
+        }
+        else if (memos.Count > 0)
+        {
+            _viewModel.SelectedMemo = memos[memos.Count - 1];
+        }
+    }
+
+    private void DuplicateCurrentLine()
+    {
+        var textBox = NoteTextBox;
+        if (textBox == null) return;
+
+        var caretIndex = textBox.CaretIndex;
+        var text = textBox.Text;
+
+        // 找到当前行的开始和结束
+        var lineStart = text.LastIndexOf('\n', Math.Max(0, caretIndex - 1)) + 1;
+        var lineEnd = text.IndexOf('\n', caretIndex);
+        if (lineEnd == -1) lineEnd = text.Length;
+
+        var currentLine = text.Substring(lineStart, lineEnd - lineStart);
+        var newText = text.Insert(lineEnd, "\n" + currentLine);
+
+        textBox.Text = newText;
+        textBox.CaretIndex = lineEnd + 1 + currentLine.Length;
+    }
+
+    private void InsertIndent()
+    {
+        var textBox = NoteTextBox;
+        if (textBox == null) return;
+
+        var caretIndex = textBox.CaretIndex;
+        textBox.Text = textBox.Text.Insert(caretIndex, "    ");
+        textBox.CaretIndex = caretIndex + 4;
+    }
+
+    private void IncreaseIndent()
+    {
+        var textBox = NoteTextBox;
+        if (textBox == null) return;
+
+        var caretIndex = textBox.CaretIndex;
+        var text = textBox.Text;
+
+        // 找到当前行开始
+        var lineStart = text.LastIndexOf('\n', Math.Max(0, caretIndex - 1)) + 1;
+        textBox.Text = text.Insert(lineStart, "    ");
+        textBox.CaretIndex = caretIndex + 4;
+    }
+
+    private void DecreaseIndent()
+    {
+        var textBox = NoteTextBox;
+        if (textBox == null) return;
+
+        var caretIndex = textBox.CaretIndex;
+        var text = textBox.Text;
+
+        // 找到当前行开始
+        var lineStart = text.LastIndexOf('\n', Math.Max(0, caretIndex - 1)) + 1;
+
+        // 检查是否有缩进可以删除
+        if (lineStart < text.Length && text.Substring(lineStart, Math.Min(4, text.Length - lineStart)) == "    ")
+        {
+            textBox.Text = text.Remove(lineStart, 4);
+            textBox.CaretIndex = Math.Max(lineStart, caretIndex - 4);
+        }
+        else if (lineStart < text.Length && text[lineStart] == ' ')
+        {
+            // 删除单个空格
+            textBox.Text = text.Remove(lineStart, 1);
+            textBox.CaretIndex = Math.Max(lineStart, caretIndex - 1);
         }
     }
 
@@ -255,6 +441,38 @@ public partial class MainWindow : Window
             {
                 // ignore
             }
+        }
+    }
+
+    private void BackgroundOpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (sender is Slider slider && _viewModel != null)
+        {
+            // 将滑块的0-100%映射到实际的0-60%效果
+            // 公式：实际透明度 = 滑块值 * 0.6 / 100
+            var actualOpacity = (slider.Value * 0.6) / 100.0;
+
+            // 更新背景透明度（影响主容器背景）
+            UpdateBackgroundOpacity(actualOpacity);
+
+            // 更新ViewModel中的值
+            _viewModel.BackgroundOpacityPercent = slider.Value;
+
+            // 状态提示
+            _viewModel.SetStatus($"背景透明度已调整为 {(int)slider.Value}%");
+        }
+    }
+
+    private void UpdateBackgroundOpacity(double opacity)
+    {
+        if (MainContainer != null)
+        {
+            // 创建新的背景画刷
+            var backgroundColor = System.Windows.Media.Color.FromArgb(
+                (byte)(255 * opacity), // Alpha通道
+                255, 255, 255); // RGB白色
+
+            MainContainer.Background = new SolidColorBrush(backgroundColor);
         }
     }
 }

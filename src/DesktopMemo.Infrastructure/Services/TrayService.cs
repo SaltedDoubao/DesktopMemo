@@ -50,6 +50,7 @@ public sealed class TrayService : ITrayService
     public event EventHandler? ClearContentClick;
     public event EventHandler? AboutClick;
     public event EventHandler? RestartTrayClick;
+    public event EventHandler<bool>? ClickThroughToggleClick;
 
     public bool IsClickThroughEnabled { get; private set; }
 
@@ -291,7 +292,7 @@ public sealed class TrayService : ITrayService
             Font = _regularFont,
             CheckOnClick = true
         };
-        _trayClickThroughItem.CheckedChanged += (s, e) => UpdateClickThroughState(_trayClickThroughItem.Checked);
+        _trayClickThroughItem.Click += (s, e) => ClickThroughToggleClick?.Invoke(s, _trayClickThroughItem.Checked);
 
         windowControlGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
         {

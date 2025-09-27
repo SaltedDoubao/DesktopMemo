@@ -56,13 +56,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private double _backgroundOpacity = 0.85;
 
     [ObservableProperty]
+    private double _backgroundOpacityPercent = 14.2; // 对应0.85的窗口透明度
+
+    [ObservableProperty]
     private bool _isClickThroughEnabled;
+
+    [ObservableProperty]
+    private bool _isAutoStartEnabled;
 
     [ObservableProperty]
     private double _currentLeft;
 
     [ObservableProperty]
     private double _currentTop;
+
+    [ObservableProperty]
+    private string _customPositionX = "0";
+
+    [ObservableProperty]
+    private string _customPositionY = "0";
 
     [ObservableProperty]
     private string _searchKeyword = string.Empty;
@@ -151,6 +163,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SetStatus("就绪");
         _trayService.UpdateTopmostState(SelectedTopmostMode);
         _trayService.UpdateClickThroughState(IsClickThroughEnabled);
+
+        // 检查开机自启动状态
+        CheckAutoStartStatus();
     }
 
     private void ApplyWindowSettings(WindowSettings settings)
@@ -175,11 +190,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         UpdateCurrentPosition();
     }
 
-    private void UpdateCurrentPosition()
+    public void UpdateCurrentPosition()
     {
         var (left, top) = _windowService.GetWindowPosition();
         CurrentLeft = left;
         CurrentTop = top;
+        CustomPositionX = left.ToString("F0");
+        CustomPositionY = top.ToString("F0");
     }
 
     [RelayCommand]
@@ -328,6 +345,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private async Task ApplyCustomPositionAsync()
+    {
+        if (double.TryParse(CustomPositionX, out double x) && double.TryParse(CustomPositionY, out double y))
+        {
+            _windowService.SetWindowPosition(x, y);
+            UpdateCurrentPosition();
+            WindowSettings = WindowSettings.WithLocation(CurrentLeft, CurrentTop);
+            await _settingsService.SaveAsync(WindowSettings);
+            SetStatus("已应用自定义位置");
+        }
+        else
+        {
+            SetStatus("位置格式错误");
+        }
+    }
+
+    [RelayCommand]
     private async Task MoveToPresetAsync(string? preset)
     {
         if (string.IsNullOrWhiteSpace(preset))
@@ -412,6 +446,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         _windowService.SetTopmostMode(value);
         _trayService.UpdateTopmostState(value);
+
+        // 自动保存置顶模式设置
+        bool isTopMost = value == TopmostMode.Always;
+        bool isDesktopMode = value == TopmostMode.Desktop;
+
+        WindowSettings = WindowSettings.WithAppearance(BackgroundOpacity, isTopMost, isDesktopMode, IsClickThroughEnabled);
+        _ = _settingsService.SaveAsync(WindowSettings);
     }
 
     partial void OnBackgroundOpacityChanged(double value)
@@ -423,6 +464,63 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         _windowService.SetClickThrough(value);
         _trayService.UpdateClickThroughState(value);
+
+        if (value && IsSettingsPanelVisible)
+        {
+            IsSettingsPanelVisible = false;
+        }
+    }
+
+    partial void OnIsAutoStartEnabledChanged(bool value)
+    {
+        try
+        {
+            ManageAutoStart(value);
+            SetStatus(value ? "已启用开机自启动" : "已禁用开机自启动");
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"设置开机自启动失败: {ex.Message}");
+        }
+    }
+
+    private void ManageAutoStart(bool enable)
+    {
+        const string appName = "DesktopMemo";
+        var keyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+
+        using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(keyPath, true);
+        if (key == null) return;
+
+        if (enable)
+        {
+            var exePath = Environment.ProcessPath;
+            if (!string.IsNullOrEmpty(exePath))
+            {
+                key.SetValue(appName, $"\"{exePath}\"");
+            }
+        }
+        else
+        {
+            key.DeleteValue(appName, false);
+        }
+    }
+
+    private void CheckAutoStartStatus()
+    {
+        try
+        {
+            const string appName = "DesktopMemo";
+            var keyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(keyPath, false);
+            var value = key?.GetValue(appName);
+            IsAutoStartEnabled = value != null;
+        }
+        catch
+        {
+            IsAutoStartEnabled = false;
+        }
     }
 
     partial void OnIsTrayEnabledChanged(bool value)
