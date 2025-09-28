@@ -21,18 +21,18 @@
 
 ## 常用命令
 
-```bash
-# 还原依赖
-dotnet restore
+```powershell
+# 还原依赖（首次或切换输出目录后务必执行）
+dotnet restore DesktopMemo.sln
 
-# 构建解决方案
-dotnet build DesktopMemo.sln
+# 调试构建
+dotnet build DesktopMemo.sln -c Debug
 
-# 调试运行（WPF）
-dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj
+# 运行
+dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration Debug
 ```
 
-> 运行时数据将生成在 `%APPDATA%/DesktopMemo` 下；如需重置，可删除该目录。
+> 运行时数据位于可执行文件所在目录下的 `/.memodata`；如需重置，可删除该目录并重启。
 
 ## Claude Code 协作约定
 

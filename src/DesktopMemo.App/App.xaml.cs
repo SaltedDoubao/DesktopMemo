@@ -21,7 +21,8 @@ public partial class App : WpfApp
 
     private IServiceProvider ConfigureServices()
     {
-        var dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DesktopMemo");
+        var appDirectory = AppContext.BaseDirectory;
+        var dataDirectory = Path.Combine(appDirectory, ".memodata");
 
         var services = new ServiceCollection();
 
