@@ -67,7 +67,6 @@ dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration 
 - `Directory.Build.props` 里的 `ArtifactsVersion` 默认值（决定 `artifacts/vX.Y.Z/...` 路径）。
 - `MainViewModel.InitializeAppInfo()` 中的回退字符串（用于 UI 展示）。
 - 文档和命令示例：搜索仓库中旧版本号（如 `2.0.0`），更新 `README.md`、`docs/development-guide.md` 等说明。
-- 发布脚本或命令中的目标目录（如 `dotnet publish ... -o artifacts\publish\vX.Y.Z`）。
 
 完成修改后，建议执行：
 
