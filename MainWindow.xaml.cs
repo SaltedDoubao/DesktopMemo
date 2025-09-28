@@ -15,9 +15,6 @@ using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
-using DesktopMemo.Core.Interfaces;
-using DesktopMemo.Core.Services;
-using DesktopMemo.Core.Models;
 
 namespace DesktopMemo
 {
@@ -26,13 +23,6 @@ namespace DesktopMemo
     /// </summary>
     public partial class MainWindow : Window
     {
-        // 服务层实例
-        private readonly IMemoService _memoService;
-        private readonly IWindowManagementService _windowManagementService;
-        private ITrayService? _trayService;
-        private readonly ISettingsService _settingsService;
-        private readonly ISearchService _searchService;
-
         private readonly string _appDataDir;
         private readonly string _noteFilePath;
         private readonly string _memosFilePath; // 旧版本兼容
@@ -50,8 +40,8 @@ namespace DesktopMemo
         private static string? _cachedVersion = null;
         private bool _isLoadedFromDisk;
         // 备忘录管理
-        private List<Core.Models.MemoModel> _memos = new List<Core.Models.MemoModel>();
-        private Core.Models.MemoModel? _currentMemo = null;
+        private List<MemoModel> _memos = new List<MemoModel>();
+        private MemoModel? _currentMemo = null;
         private bool _isEditMode = false;
         
         // 窗口位置管理
@@ -62,7 +52,13 @@ namespace DesktopMemo
         private System.Windows.Threading.DispatcherTimer _autoSavePositionTimer;
         private System.Windows.Threading.DispatcherTimer _autoSaveMemoTimer;
         
-        // 使用Core.Interfaces中定义的TopmostMode枚举
+        // 窗口置顶模式枚举
+        public enum TopmostMode
+        {
+            Normal,     // 普通模式，不置顶
+            Desktop,    // 桌面层面置顶
+            Always      // 总是置顶
+        }
         
         private TopmostMode _currentTopmostMode = TopmostMode.Desktop;
         private System.Windows.Threading.DispatcherTimer _desktopModeTimer;
@@ -278,27 +274,9 @@ namespace DesktopMemo
 
         public MainWindow()
         {
-            // 仅用于设计时和测试
-            throw new InvalidOperationException("请使用依赖注入构造函数");
-        }
-
-        public MainWindow(
-            IMemoService memoService,
-            IWindowManagementService? windowManagementService,
-            ISettingsService settingsService,
-            ISearchService searchService)
-        {
             try
             {
                 InitializeComponent();
-
-                // 注入的服务
-                _memoService = memoService ?? throw new ArgumentNullException(nameof(memoService));
-                _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
-                _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
-                
-                // 创建WindowManagementService，因为它需要Window实例
-                _windowManagementService = new WindowManagementService(this);
 
                 // 优化：只在需要时设置窗口图标（避免闪烁）
                 // SetWindowIcon(); // 注释掉运行时图标设置，使用PE头图标
@@ -312,18 +290,7 @@ namespace DesktopMemo
 
                 Directory.CreateDirectory(_appDataDir);
                 Directory.CreateDirectory(_contentDir);
-
-                // 初始化托盘服务（暂时直接实例化，后续可通过依赖注入获取）
-                try
-                {
-                    _trayService = new TrayService(_settingsService, _windowManagementService);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"托盘服务初始化失败: {ex.Message}");
-                    // 托盘服务非关键，初始化失败不影响主功能
-                }
-
+            
                 // 监听窗口激活事件，防止在桌面模式下被提升到前台
                 this.Activated += MainWindow_Activated;
                 this.Deactivated += MainWindow_Deactivated;
@@ -354,11 +321,9 @@ namespace DesktopMemo
                 _autoSaveMemoTimer = new System.Windows.Threading.DispatcherTimer();
                 _autoSaveMemoTimer.Interval = TimeSpan.FromMilliseconds(500); // 停止输入500ms后保存
                 _autoSaveMemoTimer.Tick += AutoSaveMemoTimer_Tick;
-
+            
                 ConfigureWindow();
                 ConfigureTrayIcon();
-
-                // 同步加载数据（从原始项目复制）
                 LoadMemosFromDisk();
                 LoadSettingsFromDisk();
                 
@@ -970,25 +935,6 @@ namespace DesktopMemo
         }
 
         /// <summary>
-        /// 使用服务层加载数据的新方法
-        /// </summary>
-        private async Task LoadDataAsync()
-        {
-            try
-            {
-                var memos = await _memoService.LoadMemosAsync();
-                _memos = memos?.ToList() ?? new List<Core.Models.MemoModel>();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"使用服务层加载备忘录失败: {ex.Message}");
-                // 确保有空列表避免空指针异常
-                if (_memos == null)
-                    _memos = new List<Core.Models.MemoModel>();
-            }
-        }
-
-        /// <summary>
         /// 异步版本的数据加载方法
         /// </summary>
         private async Task LoadMemosFromDiskAsync()
@@ -1129,7 +1075,7 @@ namespace DesktopMemo
         /// </summary>
         private async void LoadMemosFromDisk()
         {
-            await LoadDataAsync();
+            await LoadMemosFromDiskAsync();
         }
 
         /// <summary>
@@ -1627,16 +1573,7 @@ namespace DesktopMemo
                 {
                     string fileName = GenerateContentFileName(memo.Id, memo.Title);
                     await SaveMemoContentAsync(memo.Id, memo.Title, memo.Content);
-                    metadataList.Add(new MemoMetadata
-                    {
-                        Id = memo.Id,
-                        Title = memo.Title,
-                        ContentFileName = fileName,
-                        CreatedTime = memo.CreatedTime,
-                        ModifiedTime = memo.ModifiedTime,
-                        Tags = new List<string>(), // 简化处理
-                        Description = memo.Content.Length > 150 ? memo.Content.Substring(0, 150).Trim() + "..." : memo.Content.Trim()
-                    });
+                    metadataList.Add(memo.ToMetadata(fileName));
                 }
 
                 // 保存元数据
@@ -1951,9 +1888,12 @@ namespace DesktopMemo
         {
             if (_currentMemo != null && NoteTextBox != null)
             {
-                // 更新当前备忘录内容
-                _currentMemo.Content = NoteTextBox.Text;
-                _currentMemo.UpdatedAt = DateTime.Now;
+                // 更新当前备忘录
+                var updatedMemo = _currentMemo with
+                {
+                    Content = NoteTextBox.Text,
+                    ModifiedTime = DateTime.Now
+                };
 
                 // 智能更新标题：使用第一行非空内容作为标题
                 var lines = NoteTextBox.Text.Split('\n');
@@ -1963,18 +1903,26 @@ namespace DesktopMemo
                 if (!string.IsNullOrWhiteSpace(firstNonEmptyLine) &&
                     (firstNonEmptyLine != _currentMemo.Title || _currentMemo.Title == "新建备忘录"))
                 {
-                    _currentMemo.Title = firstNonEmptyLine;
+                    updatedMemo = updatedMemo with { Title = firstNonEmptyLine };
                 }
                 // 如果内容完全为空，保持默认标题
                 else if (string.IsNullOrWhiteSpace(NoteTextBox.Text) && _currentMemo.Title == "新建备忘录")
                 {
-                    _currentMemo.Title = "空白备忘录";
+                    updatedMemo = updatedMemo with { Title = "空白备忘录" };
                 }
 
-                // 使用服务层保存备忘录
+                // 更新内存中的备忘录
+                var index = _memos.FindIndex(m => m.Id == _currentMemo.Id);
+                if (index >= 0)
+                {
+                    _memos[index] = updatedMemo;
+                    _currentMemo = updatedMemo;
+                }
+
+                // 只保存当前修改的备忘录到MD文件（新架构）
                 try
                 {
-                    await _memoService.SaveMemoAsync(_currentMemo);
+                    await SaveSingleMemoToMarkdownAsync(updatedMemo);
                 }
                 catch (Exception ex)
                 {
@@ -2648,6 +2596,67 @@ namespace DesktopMemo
             public DateTime ModifiedTime { get; init; } = DateTime.Now;
             public List<string> Tags { get; init; } = new List<string>(); // 标签支持
             public string Description { get; init; } = string.Empty; // 描述摘要
+        }
+
+        /// <summary>
+        /// 完整备忘录模型（包含内容，用于内存操作）
+        /// </summary>
+        private record MemoModel
+        {
+            public string Id { get; init; } = Guid.NewGuid().ToString();
+            public string Title { get; init; } = string.Empty;
+            public string Content { get; init; } = string.Empty;
+            public DateTime CreatedTime { get; init; } = DateTime.Now;
+            public DateTime ModifiedTime { get; init; } = DateTime.Now;
+            public List<string> Tags { get; init; } = new List<string>();
+            public string Description { get; init; } = string.Empty;
+
+            /// <summary>
+            /// 获取备忘录预览内容（前100个字符）
+            /// </summary>
+            public string Preview => Content.Length > 100 ? Content.Substring(0, 100) + "..." : Content;
+
+            /// <summary>
+            /// 获取显示标题（如果标题为空则使用内容开头作为标题）
+            /// </summary>
+            public string DisplayTitle => !string.IsNullOrWhiteSpace(Title) ? Title :
+                (Content.Length > 30 ? Content.Substring(0, 30) + "..." :
+                (!string.IsNullOrWhiteSpace(Content) ? Content : "未命名备忘录"));
+
+            /// <summary>
+            /// 从元数据模型创建完整模型
+            /// </summary>
+            public static MemoModel FromMetadata(MemoMetadata metadata, string content)
+            {
+                return new MemoModel
+                {
+                    Id = metadata.Id,
+                    Title = metadata.Title,
+                    Content = content,
+                    CreatedTime = metadata.CreatedTime,
+                    ModifiedTime = metadata.ModifiedTime,
+                    Tags = metadata.Tags,
+                    Description = metadata.Description
+                };
+            }
+
+            /// <summary>
+            /// 转换为元数据模型
+            /// </summary>
+            public MemoMetadata ToMetadata(string contentFileName)
+            {
+                return new MemoMetadata
+                {
+                    Id = Id,
+                    Title = Title,
+                    ContentFileName = contentFileName,
+                    CreatedTime = CreatedTime,
+                    ModifiedTime = ModifiedTime,
+                    Tags = Tags,
+                    Description = !string.IsNullOrWhiteSpace(Description) ? Description :
+                        (Content.Length > 150 ? Content.Substring(0, 150).Trim() + "..." : Content.Trim())
+                };
+            }
         }
         
         /// <summary>
@@ -4132,19 +4141,28 @@ namespace DesktopMemo
         /// </summary>
         private async void AddNewMemo()
         {
+            var newMemo = new MemoModel
+            {
+                Title = "新建备忘录",
+                Content = "",
+                CreatedTime = DateTime.Now,
+                ModifiedTime = DateTime.Now
+            };
+
+            _memos.Add(newMemo);
+
+            // 只保存这个新建的备忘录
             try
             {
-                // 使用服务层创建新备忘录
-                var newMemo = await _memoService.CreateMemoAsync("新建备忘录", "");
-
-                _memos.Add(newMemo);
-                RefreshMemoList();
-                EditMemo(newMemo);
+                await SaveSingleMemoToMarkdownAsync(newMemo);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"新建备忘录失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"新建备忘录保存失败: {ex.Message}");
             }
+
+            RefreshMemoList();
+            EditMemo(newMemo);
         }
         
         /// <summary>
@@ -4182,36 +4200,24 @@ namespace DesktopMemo
                 if (!shouldDelete) return;
             }
 
-            try
+            // 删除MD文件
+            DeleteSingleMemoFile(_currentMemo);
+
+            // 从内存中删除
+            _memos.RemoveAll(m => m.Id == _currentMemo.Id);
+
+            // 如果删除后没有备忘录了，创建一个默认的
+            if (!_memos.Any())
             {
-                // 使用服务层删除备忘录
-                await _memoService.DeleteMemoAsync(_currentMemo.Id);
-
-                // 从内存中删除
-                _memos.RemoveAll(m => m.Id == _currentMemo.Id);
-
-                // 如果删除后没有备忘录了，创建一个默认的
-                if (!_memos.Any())
-                {
-                    var defaultMemo = await _memoService.CreateMemoAsync("欢迎使用 DesktopMemo", "这是您的第一条备忘录！\n\n点击此处开始编辑...");
-                    _memos.Add(defaultMemo);
-                }
-
-                RefreshMemoList();
-                ShowMemoList();
-
-                if (StatusText != null)
-                {
-                    StatusText.Text = "备忘录已删除";
-                }
+                await Task.Run(() => CreateDefaultMemo());
             }
-            catch (Exception ex)
+
+            RefreshMemoList();
+            ShowMemoList();
+
+            if (StatusText != null)
             {
-                System.Diagnostics.Debug.WriteLine($"删除备忘录失败: {ex.Message}");
-                if (StatusText != null)
-                {
-                    StatusText.Text = "删除备忘录失败";
-                }
+                StatusText.Text = "备忘录已删除";
             }
         }
 

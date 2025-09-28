@@ -77,7 +77,7 @@ dotnet restore
 dotnet build --configuration Release
 
 # 运行项目
-dotnet run
+dotnet run --configuration Release
 
 # 发布单文件版本
 dotnet publish DesktopMemo.csproj --configuration Release --output ./publish
@@ -97,61 +97,14 @@ dotnet publish DesktopMemo.csproj --configuration Release --output ./publish
 
 ```
 DesktopMemo/
-├── App.xaml                  # 应用程序入口
-├── App.xaml.cs               # 应用程序逻辑
-├── MainWindow.xaml           # 主窗口界面
-├── MainWindow.xaml.cs        # 主窗口逻辑
-├── AssemblyInfo.cs           # 程序集信息
-├── DesktopMemo.csproj        # 项目文件
-├── DesktopMemo.sln           # 解决方案文件
-├── README.md                 # 说明文档
-│
-├── Core/                     # 核心业务逻辑层
-│   ├── Interfaces/           # 服务接口定义
-│   │   ├── IMemoService.cs
-│   │   ├── ISettingsService.cs
-│   │   ├── IWindowManagementService.cs
-│   │   ├── IThemeService.cs
-│   │   ├── ILocalizationService.cs
-│   │   ├── ISearchService.cs
-│   │   └── ITrayService.cs
-│   ├── Models/               # 数据模型
-│   │   └── MemoModel.cs
-│   └── Services/             # 服务实现
-│       ├── MemoService.cs
-│       ├── SettingsService.cs
-│       ├── WindowManagementService.cs
-│       ├── ThemeService.cs
-│       ├── LocalizationService.cs
-│       ├── SearchService.cs
-│       └── TrayService.cs
-│
-├── Infrastructure/           # 基础设施层
-│   ├── Configuration/        # 配置管理
-│   │   └── YamlConfigurationService.cs
-│   ├── Data/                 # 数据访问
-│   ├── Migration/            # 数据迁移
-│   │   └── DataMigrationService.cs
-│   ├── Performance/          # 性能监控
-│   │   └── PerformanceServices.cs
-│   └── ServiceLocator.cs     # 服务定位器
-│
-├── UI/                       # 用户界面层
-│   ├── Controls/             # 自定义控件
-│   ├── Converters/           # 值转换器
-│   │   └── ValueConverters.cs
-│   ├── ViewModels/           # 视图模型(MVVM)
-│   │   ├── MainViewModel.cs
-│   │   ├── OptimizedMainViewModel.cs
-│   │   ├── ViewModelBase.cs
-│   │   └── RelayCommand.cs
-│   └── Views/                # 视图
-│
-├── Utils/                    # 工具类
-│   └── Win32Helper.cs        # Windows API 辅助工具
-│
-└── logo/                     # 应用程序图标
-    └── logo.ico
+├── App.xaml              # 应用程序入口
+├── App.xaml.cs           # 应用程序逻辑
+├── MainWindow.xaml       # 主窗口界面
+├── MainWindow.xaml.cs    # 主窗口逻辑
+├── AssemblyInfo.cs       # 程序集信息
+├── DesktopMemo.csproj    # 项目文件
+├── DesktopMemo.sln       # 解决方案文件
+└── README.md             # 说明文档
 ```
 
 
