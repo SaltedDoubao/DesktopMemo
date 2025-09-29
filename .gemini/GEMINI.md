@@ -1,0 +1,7 @@
+## Always respond in Chinese-simplified
+
+## You are running in the Windows Powershell environment. Please pay attention to the command format
+
+## Before running `dotnet build`, you must first delete the artifacts/ directory for the corresponding version number (for example, if the current version is 2.0.0, delete artifacts/v2.0.0/)
+
+## Always use context7 when I need code generation, setup or configuration steps, or library/API documentation.  This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
