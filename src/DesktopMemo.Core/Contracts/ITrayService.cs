@@ -21,6 +21,7 @@ public interface ITrayService : IDisposable
     event EventHandler<bool>? ClickThroughToggleClick;
     event EventHandler? ReenableExitPromptClick;
     event EventHandler? ReenableDeletePromptClick;
+    event EventHandler<TopmostMode>? TopmostModeChangeClick;
 
     void Initialize();
     void Show();

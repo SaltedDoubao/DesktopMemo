@@ -97,6 +97,7 @@ public partial class MainWindow : Window
             await _viewModel.GetSettingsService().SaveAsync(_viewModel.WindowSettings);
             _trayService.ShowBalloonTip("设置已更新", "已重新启用删除确认提示");
         };
+        _trayService.TopmostModeChangeClick += (s, mode) => _viewModel.SelectedTopmostMode = mode;
         _trayService.ExitClick += (s, e) => WpfApp.Current.Shutdown();
     }
 
@@ -160,8 +161,29 @@ public partial class MainWindow : Window
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
-        await _viewModel.InitializeAsync();
-        ApplySettingsPanelVisibility(_viewModel.IsSettingsPanelVisible);
+        try
+        {
+            await _viewModel.InitializeAsync();
+            ApplySettingsPanelVisibility(_viewModel.IsSettingsPanelVisible);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"应用程序初始化失败: {ex.Message}\n\n详细信息: {ex}", 
+                "DesktopMemo 初始化错误",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            
+            // 尝试使用默认设置继续运行
+            try
+            {
+                ApplySettingsPanelVisibility(false);
+                _viewModel.SetStatus("初始化失败，使用默认设置运行");
+            }
+            catch
+            {
+                // 如果连默认设置都无法应用，则关闭应用程序
+                WpfApp.Current.Shutdown();
+            }
+        }
     }
 
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)

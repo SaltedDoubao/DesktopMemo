@@ -51,8 +51,20 @@ public sealed class FileMemoRepository : IMemoRepository
                 continue;
             }
 
-            var memo = await LoadMemoAsync(path, cancellationToken).ConfigureAwait(false);
-            memos.Add(memo);
+            try
+            {
+                var memo = await LoadMemoAsync(path, cancellationToken).ConfigureAwait(false);
+                if (memo != null)
+                {
+                    memos.Add(memo);
+                }
+            }
+            catch (Exception ex) when (ex is InvalidDataException or FormatException or ArgumentException)
+            {
+                // 跳过格式错误的文件，避免崩溃
+                // 可以在这里添加日志记录：文件格式错误，跳过加载
+                continue;
+            }
         }
 
         return memos;
@@ -66,7 +78,15 @@ public sealed class FileMemoRepository : IMemoRepository
             return null;
         }
 
-        return await LoadMemoAsync(path, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await LoadMemoAsync(path, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is InvalidDataException or FormatException or ArgumentException)
+        {
+            // 文件格式错误，返回null
+            return null;
+        }
     }
 
     public async Task AddAsync(Memo memo, CancellationToken cancellationToken = default)
@@ -197,9 +217,17 @@ public sealed class FileMemoRepository : IMemoRepository
             return new MemoIndex();
         }
 
-        await using var stream = File.OpenRead(path);
-        return await JsonSerializer.DeserializeAsync<MemoIndex>(stream, _jsonOptions, cancellationToken).ConfigureAwait(false)
-            ?? new MemoIndex();
+        try
+        {
+            await using var stream = File.OpenRead(path);
+            return await JsonSerializer.DeserializeAsync<MemoIndex>(stream, _jsonOptions, cancellationToken).ConfigureAwait(false)
+                ?? new MemoIndex();
+        }
+        catch (JsonException)
+        {
+            // 索引文件格式错误，返回空索引
+            return new MemoIndex();
+        }
     }
 
     private async Task SaveIndexAsync(MemoIndex index, CancellationToken cancellationToken)
@@ -224,34 +252,64 @@ public sealed class FileMemoRepository : IMemoRepository
         string? line;
         while ((line = reader.ReadLine()) is not null)
         {
-            if (line.StartsWith("id:", StringComparison.Ordinal))
+            try
             {
-                id = Guid.Parse(line[3..].Trim());
-            }
-            else if (line.StartsWith("title:", StringComparison.Ordinal))
-            {
-                title = line[6..].Trim().Trim('"');
-            }
-            else if (line.StartsWith("createdAt:", StringComparison.Ordinal))
-            {
-                createdAt = DateTimeOffset.Parse(line[10..].Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-            }
-            else if (line.StartsWith("updatedAt:", StringComparison.Ordinal))
-            {
-                updatedAt = DateTimeOffset.Parse(line[10..].Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-            }
-            else if (line.StartsWith("isPinned:", StringComparison.Ordinal))
-            {
-                isPinned = bool.Parse(line[9..].Trim());
-            }
-            else if (line.TrimStart().StartsWith("-", StringComparison.Ordinal))
-            {
-                var dashIndex = line.IndexOf('-');
-                if (dashIndex >= 0)
+                if (line.StartsWith("id:", StringComparison.Ordinal))
                 {
-                    tags.Add(line.Substring(dashIndex + 1).Trim().Trim('"'));
+                    if (Guid.TryParse(line[3..].Trim(), out var parsedId))
+                    {
+                        id = parsedId;
+                    }
+                }
+                else if (line.StartsWith("title:", StringComparison.Ordinal))
+                {
+                    title = line[6..].Trim().Trim('"');
+                }
+                else if (line.StartsWith("createdAt:", StringComparison.Ordinal))
+                {
+                    if (DateTimeOffset.TryParse(line[10..].Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsedCreatedAt))
+                    {
+                        createdAt = parsedCreatedAt;
+                    }
+                }
+                else if (line.StartsWith("updatedAt:", StringComparison.Ordinal))
+                {
+                    if (DateTimeOffset.TryParse(line[10..].Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsedUpdatedAt))
+                    {
+                        updatedAt = parsedUpdatedAt;
+                    }
+                }
+                else if (line.StartsWith("isPinned:", StringComparison.Ordinal))
+                {
+                    if (bool.TryParse(line[9..].Trim(), out var parsedIsPinned))
+                    {
+                        isPinned = parsedIsPinned;
+                    }
+                }
+                else if (line.TrimStart().StartsWith("-", StringComparison.Ordinal))
+                {
+                    var dashIndex = line.IndexOf('-');
+                    if (dashIndex >= 0)
+                    {
+                        var tag = line.Substring(dashIndex + 1).Trim().Trim('"');
+                        if (!string.IsNullOrWhiteSpace(tag))
+                        {
+                            tags.Add(tag);
+                        }
+                    }
                 }
             }
+            catch
+            {
+                // 跳过无法解析的行，继续处理其他行
+                continue;
+            }
+        }
+
+        // 如果id为空，生成一个新的id以避免问题
+        if (id == Guid.Empty)
+        {
+            id = Guid.NewGuid();
         }
 
         return new MemoMetadata(id, title, createdAt, updatedAt, tags, isPinned);

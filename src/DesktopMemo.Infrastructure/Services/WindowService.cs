@@ -123,14 +123,28 @@ public class WindowService : IWindowService, IDisposable
             return;
         }
 
-        var workingArea = SystemParameters.WorkArea;
-        double minX = workingArea.Left - _window.Width + 50;
-        double maxX = workingArea.Right - 50;
-        double minY = workingArea.Top;
-        double maxY = workingArea.Bottom - _window.Height;
+        // 验证输入值是否有效
+        if (double.IsNaN(x) || double.IsInfinity(x) || 
+            double.IsNaN(y) || double.IsInfinity(y))
+        {
+            return;
+        }
 
-        _window.Left = Math.Max(minX, Math.Min(maxX, x));
-        _window.Top = Math.Max(minY, Math.Min(maxY, y));
+        try
+        {
+            var workingArea = SystemParameters.WorkArea;
+            double minX = workingArea.Left - _window.Width + 50;
+            double maxX = workingArea.Right - 50;
+            double minY = workingArea.Top;
+            double maxY = workingArea.Bottom - _window.Height;
+
+            _window.Left = Math.Max(minX, Math.Min(maxX, x));
+            _window.Top = Math.Max(minY, Math.Min(maxY, y));
+        }
+        catch
+        {
+            // 如果设置位置失败，忽略错误
+        }
     }
 
     public (double X, double Y) GetWindowPosition()
@@ -208,7 +222,20 @@ public class WindowService : IWindowService, IDisposable
             return;
         }
 
-        _window.Opacity = Math.Max(0.1, Math.Min(1.0, opacity));
+        // 验证透明度值是否有效
+        if (double.IsNaN(opacity) || double.IsInfinity(opacity))
+        {
+            opacity = 1.0; // 使用默认值
+        }
+
+        try
+        {
+            _window.Opacity = Math.Max(0.1, Math.Min(1.0, opacity));
+        }
+        catch
+        {
+            // 如果设置透明度失败，忽略错误
+        }
     }
 
     public double GetWindowOpacity()

@@ -32,9 +32,22 @@ public sealed class JsonSettingsService : ISettingsService
             return WindowSettings.Default;
         }
 
-        await using var stream = File.OpenRead(_settingsFile);
-        var settings = await JsonSerializer.DeserializeAsync<WindowSettings>(stream, _jsonOptions, cancellationToken).ConfigureAwait(false);
-        return settings ?? WindowSettings.Default;
+        try
+        {
+            await using var stream = File.OpenRead(_settingsFile);
+            var settings = await JsonSerializer.DeserializeAsync<WindowSettings>(stream, _jsonOptions, cancellationToken).ConfigureAwait(false);
+            return settings ?? WindowSettings.Default;
+        }
+        catch (JsonException)
+        {
+            // 设置文件格式错误，返回默认设置
+            return WindowSettings.Default;
+        }
+        catch (Exception)
+        {
+            // 其他文件读取错误，返回默认设置
+            return WindowSettings.Default;
+        }
     }
 
     public async Task SaveAsync(WindowSettings settings, CancellationToken cancellationToken = default)

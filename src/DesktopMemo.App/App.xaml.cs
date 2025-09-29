@@ -46,22 +46,40 @@ public partial class App : WpfApp
     {
         base.OnStartup(e);
 
-        var viewModel = Services.GetRequiredService<MainViewModel>();
-        var windowService = Services.GetRequiredService<IWindowService>();
-        var trayService = Services.GetRequiredService<ITrayService>();
-
-        var window = new MainWindow(viewModel, windowService, trayService);
-
-        if (windowService is WindowService ws)
+        try
         {
-            ws.Initialize(window);
+            var viewModel = Services.GetRequiredService<MainViewModel>();
+            var windowService = Services.GetRequiredService<IWindowService>();
+            var trayService = Services.GetRequiredService<ITrayService>();
+
+            var window = new MainWindow(viewModel, windowService, trayService);
+
+            if (windowService is WindowService ws)
+            {
+                ws.Initialize(window);
+            }
+
+            // 初始化托盘服务，但不要因为失败而停止应用程序
+            try
+            {
+                trayService.Initialize();
+                trayService.Show();
+            }
+            catch
+            {
+                // 托盘服务初始化失败，但应用程序仍然可以运行
+            }
+
+            MainWindow = window;
+            window.Show();
         }
-
-        trayService.Initialize();
-        trayService.Show();
-
-        MainWindow = window;
-        window.Show();
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"应用程序启动失败: {ex.Message}\n\n请尝试删除 .memodata 目录后重新启动应用程序。", 
+                "DesktopMemo 启动错误",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

@@ -53,6 +53,7 @@ public sealed class TrayService : ITrayService
     public event EventHandler<bool>? ClickThroughToggleClick;
     public event EventHandler? ReenableExitPromptClick;
     public event EventHandler? ReenableDeletePromptClick;
+    public event EventHandler<TopmostMode>? TopmostModeChangeClick;
 
     public bool IsClickThroughEnabled { get; private set; }
 
@@ -63,31 +64,67 @@ public sealed class TrayService : ITrayService
             return;
         }
 
-        _notifyIcon = new Forms.NotifyIcon
+        try
         {
-            Text = "DesktopMemo 便签 - 桌面便签工具",
-            Visible = true
-        };
+            _notifyIcon = new Forms.NotifyIcon
+            {
+                Text = "DesktopMemo 便签 - 桌面便签工具",
+                Visible = false // 先设为false，避免在未完全初始化时显示
+            };
 
-        SetTrayIcon();
-        BuildContextMenu();
-        _notifyIcon.ContextMenuStrip = _contextMenu;
-        _notifyIcon.DoubleClick += (s, e) => TrayIconDoubleClick?.Invoke(s, e);
+            SetTrayIcon();
+            BuildContextMenu();
+            _notifyIcon.ContextMenuStrip = _contextMenu;
+            _notifyIcon.DoubleClick += (s, e) => TrayIconDoubleClick?.Invoke(s, e);
+        }
+        catch (Exception)
+        {
+            // 如果托盘图标初始化失败，创建一个最简单的版本
+            try
+            {
+                _notifyIcon = new Forms.NotifyIcon
+                {
+                    Text = "DesktopMemo",
+                    Icon = SystemIcons.Application,
+                    Visible = false
+                };
+                _notifyIcon.DoubleClick += (s, e) => TrayIconDoubleClick?.Invoke(s, e);
+            }
+            catch
+            {
+                // 如果连简单版本都失败，则忽略托盘功能
+                _notifyIcon = null;
+            }
+        }
     }
 
     public void Show()
     {
-        if (_notifyIcon != null)
+        try
         {
-            _notifyIcon.Visible = true;
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.Visible = true;
+            }
+        }
+        catch
+        {
+            // 如果显示托盘图标失败，忽略错误
         }
     }
 
     public void Hide()
     {
-        if (_notifyIcon != null)
+        try
         {
-            _notifyIcon.Visible = false;
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.Visible = false;
+            }
+        }
+        catch
+        {
+            // 如果隐藏托盘图标失败，忽略错误
         }
     }
 
@@ -106,24 +143,43 @@ public sealed class TrayService : ITrayService
 
     public void UpdateTopmostState(TopmostMode mode)
     {
-        if (_topmostNormalItem != null) _topmostNormalItem.Checked = mode == TopmostMode.Normal;
-        if (_topmostDesktopItem != null) _topmostDesktopItem.Checked = mode == TopmostMode.Desktop;
-        if (_topmostAlwaysItem != null) _topmostAlwaysItem.Checked = mode == TopmostMode.Always;
+        try
+        {
+            if (_topmostNormalItem != null) _topmostNormalItem.Checked = mode == TopmostMode.Normal;
+            if (_topmostDesktopItem != null) _topmostDesktopItem.Checked = mode == TopmostMode.Desktop;
+            if (_topmostAlwaysItem != null) _topmostAlwaysItem.Checked = mode == TopmostMode.Always;
+        }
+        catch
+        {
+            // 更新托盘菜单状态失败，忽略错误
+        }
+    }
+
+    private void OnTopmostModeChanged(TopmostMode mode)
+    {
+        try
+        {
+            TopmostModeChangeClick?.Invoke(this, mode);
+        }
+        catch
+        {
+            // 事件处理失败，忽略错误
+        }
     }
 
     public void UpdateClickThroughState(bool enabled)
     {
-        IsClickThroughEnabled = enabled;
-        if (_trayClickThroughItem != null)
+        try
         {
-            if (_trayClickThroughItem.CheckOnClick)
+            IsClickThroughEnabled = enabled;
+            if (_trayClickThroughItem != null)
             {
                 _trayClickThroughItem.Checked = enabled;
             }
-            else
-            {
-                _trayClickThroughItem.Checked = enabled;
-            }
+        }
+        catch
+        {
+            // 更新托盘菜单状态失败，忽略错误
         }
     }
 
@@ -243,9 +299,14 @@ public sealed class TrayService : ITrayService
         var windowControlGroup = new Forms.ToolStripMenuItem("🖼️ 窗口控制") { Font = _regularFont };
 
         var topmostGroup = new Forms.ToolStripMenuItem("📌 置顶模式") { Font = _regularFont };
-        _topmostNormalItem = new Forms.ToolStripMenuItem("普通模式", null, (s, e) => UpdateTopmostState(TopmostMode.Normal)) { Font = _regularFont };
-        _topmostDesktopItem = new Forms.ToolStripMenuItem("桌面置顶", null, (s, e) => UpdateTopmostState(TopmostMode.Desktop)) { Font = _regularFont };
-        _topmostAlwaysItem = new Forms.ToolStripMenuItem("总是置顶", null, (s, e) => UpdateTopmostState(TopmostMode.Always)) { Font = _regularFont };
+        _topmostNormalItem = new Forms.ToolStripMenuItem("普通模式") { Font = _regularFont };
+        _topmostDesktopItem = new Forms.ToolStripMenuItem("桌面置顶") { Font = _regularFont };
+        _topmostAlwaysItem = new Forms.ToolStripMenuItem("总是置顶") { Font = _regularFont };
+        
+        // 添加事件处理，避免在点击时调用UpdateTopmostState（那个是用来更新UI状态的）
+        _topmostNormalItem.Click += (s, e) => OnTopmostModeChanged(TopmostMode.Normal);
+        _topmostDesktopItem.Click += (s, e) => OnTopmostModeChanged(TopmostMode.Desktop);
+        _topmostAlwaysItem.Click += (s, e) => OnTopmostModeChanged(TopmostMode.Always);
         topmostGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
         {
             _topmostNormalItem,
