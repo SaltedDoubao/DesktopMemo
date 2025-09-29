@@ -45,7 +45,7 @@ cd DesktopMemo
 dotnet restore DesktopMemo.sln
 
 # Debug build
-dotnet build DesktopMemo.sln -c Debug
+dotnet build DesktopMemo.sln --configuration Debug
 
 # Run application
 dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration Debug
@@ -82,7 +82,7 @@ On first run, `/.memodata` will be generated in the executable directory:
 ```
 DesktopMemo_rebuild/
 ├── DesktopMemo.sln
-├── build.bat                       # Multi-configuration build script
+├── build_exe.bat                   # Build executable script
 ├── docs/
 │   ├── development-guide.md        # Development/debugging guide
 │   └── architecture/...            # Architecture design documents
@@ -126,7 +126,11 @@ Welcome to collaborate through Issues or PRs:
 4. Push branch: `git push origin your-feature`
 5. Create Pull Request with requirements background, change summary and verification results
 
+If you haven't changed the version number, you **must** clear the `artifacts/vX.X.X (corresponding version number)` directory before building the project using `dotnet build`.
+
 It's recommended to run `dotnet build` / `dotnet run` before submitting to ensure basic validation passes.
+
+For other development considerations, see [应用开发规范.md](docs/应用开发规范.md) (Chinese)
 
 ## 📝 Changelog
 

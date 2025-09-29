@@ -82,7 +82,7 @@ dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration 
 ```
 DesktopMemo_rebuild/
 ├── DesktopMemo.sln
-├── build.bat                       # 多配置构建脚本
+├── build_exe.bat                   # 构建可执行文件脚本
 ├── docs/
 │   ├── development-guide.md        # 开发/调试说明
 │   └── architecture/...            # 架构设计文档
