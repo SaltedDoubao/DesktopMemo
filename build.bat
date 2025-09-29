@@ -35,5 +35,3 @@ cd ..
 
 echo вНжунд╪Ч:
 dir publish\*.exe /b
-
-pause
