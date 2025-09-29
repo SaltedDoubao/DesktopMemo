@@ -24,7 +24,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo Packaging complete! Output directory: publish\
-echo Executable: publish\DesktopMemo.App.exe
+echo Executable: publish\DesktopMemo.exe
 echo.
 
 echo Cleaning unnecessary files...
