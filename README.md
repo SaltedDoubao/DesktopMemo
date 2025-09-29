@@ -45,7 +45,7 @@ cd DesktopMemo
 dotnet restore DesktopMemo.sln
 
 # 调试构建
-dotnet build DesktopMemo.sln -c Debug
+dotnet build DesktopMemo.sln --configuration Debug
 
 # 运行应用
 dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration Debug
@@ -126,7 +126,11 @@ DesktopMemo_rebuild/
 4. 推送分支：`git push origin your-feature`
 5. 创建 Pull Request，并附上需求背景、变更摘要与验证结果
 
+如果未更改版本号，使用`dotnet build`构建项目前**必须**清空 `artifacts/vX.X.X(对应版本号)` 目录
+
 提交前建议执行 `dotnet build` / `dotnet run`，确保基本验证通过。
+
+其他开发注意事项详见 [应用开发规范.md](docs/应用开发规范.md)
 
 ## 📝 更新日志
 
