@@ -317,31 +317,25 @@ public partial class MainWindow : Window
                 return;
             }
 
-            // 如果用户选择了"不再显示"，异步保存设置（在后台线程）
+            // 如果用户选择了"不再显示"，立即更新内存中的设置，然后异步保存
             if (dialog.DontShowAgain)
             {
-                // 使用fire-and-forget模式，与删除确认保持一致
+                // 立即更新内存中的设置，避免被后续的设置保存覆盖
+                bool exitToTray = dialog.Action == Views.ExitAction.MinimizeToTray;
+                var newSettings = _viewModel.WindowSettings with
+                {
+                    ShowExitConfirmation = false,
+                    DefaultExitToTray = exitToTray
+                };
+                _viewModel.WindowSettings = newSettings;
+
+                // 异步保存到磁盘（不等待，避免阻塞退出操作）
                 _ = Task.Run(async () =>
                 {
                     try
                     {
-                        bool exitToTray = dialog.Action == Views.ExitAction.MinimizeToTray;
-                        var newSettings = _viewModel.WindowSettings with
-                        {
-                            ShowExitConfirmation = false,
-                            DefaultExitToTray = exitToTray
-                        };
-
-                        // 在后台线程异步保存
                         await _viewModel.GetSettingsService().SaveAsync(newSettings);
-
-                        // 在UI线程更新设置
-                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                        {
-                            _viewModel.WindowSettings = newSettings;
-                        });
-
-                        System.Diagnostics.Debug.WriteLine("退出设置保存成功");
+                        System.Diagnostics.Debug.WriteLine("退出确认设置已保存");
                     }
                     catch (Exception ex)
                     {

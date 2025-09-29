@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <ArtifactsVersion Condition="'$(ArtifactsVersion)'=='' and '$(Version)'!=''">$(Version)</ArtifactsVersion>
-    <ArtifactsVersion Condition="'$(ArtifactsVersion)'==''">2.0.0</ArtifactsVersion>
+    <ArtifactsVersion Condition="'$(ArtifactsVersion)'==''">2.1.0</ArtifactsVersion>
 
     <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts\v$(ArtifactsVersion)\bin\$(MSBuildProjectName)\</BaseOutputPath>
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)artifacts\v$(ArtifactsVersion)\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>

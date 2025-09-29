@@ -333,22 +333,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            // 如果用户选择了"不再显示"，异步保存设置（在后台线程）
+            // 如果用户选择了"不再显示"，立即更新内存中的设置，然后异步保存
             if (dialog.DontShowAgain)
             {
-                // 不等待设置保存，避免阻塞删除操作
+                // 立即更新内存中的设置，避免被后续的设置保存覆盖
+                var newSettings = WindowSettings with { ShowDeleteConfirmation = false };
+                WindowSettings = newSettings;
+
+                // 异步保存到磁盘（不等待，避免阻塞删除操作）
                 _ = Task.Run(async () =>
                 {
                     try
                     {
-                        var newSettings = WindowSettings with { ShowDeleteConfirmation = false };
                         await _settingsService.SaveAsync(newSettings);
-
-                        // 在UI线程更新设置
-                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                        {
-                            WindowSettings = newSettings;
-                        });
+                        System.Diagnostics.Debug.WriteLine("删除确认设置已保存");
                     }
                     catch (Exception ex)
                     {
@@ -716,14 +714,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "2.0.0";
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "2.1.0";
             var appDir = AppContext.BaseDirectory;
             var dataPath = Path.Combine(appDir, ".memodata");
             AppInfo = $"版本：{version} | 数据目录：{dataPath}";
         }
         catch
         {
-            AppInfo = "版本：2.0.0 | 数据目录：<应用目录>\\.memodata";
+            AppInfo = "版本：2.1.0 | 数据目录：<应用目录>\\.memodata";
         }
     }
 
