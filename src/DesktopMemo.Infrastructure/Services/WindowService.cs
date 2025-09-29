@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Animation;
 using DesktopMemo.Core.Contracts;
+using DesktopMemo.Core.Constants;
+using System.Diagnostics;
 
 namespace DesktopMemo.Infrastructure.Services;
 
@@ -39,6 +41,18 @@ public class WindowService : IWindowService, IDisposable
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool IsWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    private const int SW_HIDE = 0;
+    private const int SW_SHOW = 5;
+
     public void Initialize(Window window)
     {
         _window = window ?? throw new ArgumentNullException(nameof(window));
@@ -63,23 +77,18 @@ public class WindowService : IWindowService, IDisposable
         {
             case TopmostMode.Normal:
                 _window.Topmost = false;
-                SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                SafeSetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE, "Normal模式");
                 break;
 
             case TopmostMode.Desktop:
                 _window.Topmost = false;
-                SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-                SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-                IntPtr progmanHwnd = FindWindow("Progman", "Program Manager");
-                if (progmanHwnd != IntPtr.Zero)
-                {
-                    SetWindowPos(hwnd, progmanHwnd, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-                }
+                // 改进的桌面置顶实现
+                SetDesktopTopmost(hwnd);
                 break;
 
             case TopmostMode.Always:
                 _window.Topmost = true;
-                SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                SafeSetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE, "Always模式");
                 break;
         }
     }
@@ -100,6 +109,12 @@ public class WindowService : IWindowService, IDisposable
         }
 
         int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+        if (exStyle == 0)
+        {
+            var error = Marshal.GetLastWin32Error();
+            Debug.WriteLine($"获取窗口样式失败，错误代码: {error}");
+            return;
+        }
 
         if (enabled)
         {
@@ -110,7 +125,12 @@ public class WindowService : IWindowService, IDisposable
             exStyle &= ~WS_EX_TRANSPARENT;
         }
 
-        SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+        var result = SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+        if (result == 0)
+        {
+            var error = Marshal.GetLastWin32Error();
+            Debug.WriteLine($"设置窗口样式失败，错误代码: {error}");
+        }
         _isClickThroughEnabled = enabled;
     }
 
@@ -215,37 +235,24 @@ public class WindowService : IWindowService, IDisposable
         SetWindowPosition(newX, newY);
     }
 
+    private double _backgroundOpacity = WindowConstants.DEFAULT_TRANSPARENCY; // 存储背景透明度值
+
     public void SetWindowOpacity(double opacity)
     {
-        if (_window == null)
-        {
-            return;
-        }
-
         // 验证透明度值是否有效
         if (double.IsNaN(opacity) || double.IsInfinity(opacity))
         {
-            opacity = 1.0; // 使用默认值
+            opacity = WindowConstants.DEFAULT_TRANSPARENCY; // 使用默认透明度值
+            System.Diagnostics.Debug.WriteLine($"透明度值无效，使用默认值: {opacity}");
         }
 
-        try
-        {
-            _window.Opacity = Math.Max(0.1, Math.Min(1.0, opacity));
-        }
-        catch
-        {
-            // 如果设置透明度失败，忽略错误
-        }
+        _backgroundOpacity = Math.Max(0, Math.Min(WindowConstants.MAX_TRANSPARENCY, opacity)); // 确保在有效范围内
+        System.Diagnostics.Debug.WriteLine($"窗口服务存储背景透明度: {_backgroundOpacity}");
     }
 
     public double GetWindowOpacity()
     {
-        if (_window == null)
-        {
-            return 1.0;
-        }
-
-        return _window.Opacity;
+        return _backgroundOpacity; // 返回存储的背景透明度值
     }
 
     public void PlayFadeInAnimation()
@@ -312,6 +319,91 @@ public class WindowService : IWindowService, IDisposable
         }
         _window.Activate();
         _window.Focus();
+    }
+
+    /// <summary>
+    /// 改进的桌面置顶实现，确保窗口始终在桌面背景上方
+    /// </summary>
+    private void SetDesktopTopmost(IntPtr hwnd)
+    {
+        try
+        {
+            // 首先设置为非置顶
+            SafeSetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE, "桌面模式-设置非置顶");
+            
+            // 找到Program Manager
+            IntPtr progmanHwnd = FindWindow("Progman", "Program Manager");
+            
+            if (progmanHwnd != IntPtr.Zero && IsWindow(progmanHwnd))
+            {
+                // 发送消息以获取WorkerW窗口
+                IntPtr result = IntPtr.Zero;
+                SendMessage(progmanHwnd, 0x052C, IntPtr.Zero, IntPtr.Zero);
+                
+                // 查找WorkerW窗口
+                IntPtr workerw = IntPtr.Zero;
+                IntPtr shellDllDefView = IntPtr.Zero;
+                
+                do
+                {
+                    workerw = FindWindowEx(IntPtr.Zero, workerw, "WorkerW", null!);
+                    if (workerw != IntPtr.Zero)
+                    {
+                        shellDllDefView = FindWindowEx(workerw, IntPtr.Zero, "SHELLDLL_DefView", null!);
+                        if (shellDllDefView != IntPtr.Zero)
+                        {
+                            break;
+                        }
+                    }
+                } while (workerw != IntPtr.Zero);
+                
+                // 将窗口放置在适当的位置
+                if (workerw != IntPtr.Zero)
+                {
+                    // 放置在WorkerW之上
+                    SafeSetWindowPos(hwnd, workerw, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE, "桌面模式-WorkerW上方");
+                }
+                else
+                {
+                    // 如果找不到WorkerW，使用传统方法
+                    SafeSetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE, "桌面模式-底部");
+                    SafeSetWindowPos(hwnd, progmanHwnd, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE, "桌面模式-Progman上方");
+                }
+            }
+            else
+            {
+                // 如果找不到Program Manager，直接放置在底部
+                SafeSetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE, "桌面模式-找不到Progman");
+            }
+        }
+        catch
+        {
+            // 如果任何操作失败，使用最简单的方法
+            SafeSetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE, "桌面模式-异常处理");
+        }
+    }
+    
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    /// <summary>
+    /// 安全的SetWindowPos调用，包含错误检查和日志记录
+    /// </summary>
+    private static void SafeSetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags, string operation)
+    {
+        try
+        {
+            var success = SetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+            if (!success)
+            {
+                var error = Marshal.GetLastWin32Error();
+                Debug.WriteLine($"SetWindowPos失败 - 操作: {operation}, 错误代码: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"SetWindowPos异常 - 操作: {operation}, 异常: {ex.Message}");
+        }
     }
 
     public void Dispose()

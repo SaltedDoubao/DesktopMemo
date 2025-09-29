@@ -19,7 +19,8 @@
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
-                       Text="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=Title}"
+                       x:Name="TitleTextBlock"
+                       Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
                        FontSize="16"
                        FontWeight="SemiBold"
                        Foreground="#F0FFFFFF"

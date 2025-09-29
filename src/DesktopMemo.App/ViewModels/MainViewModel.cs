@@ -9,6 +9,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DesktopMemo.Core.Contracts;
 using DesktopMemo.Core.Models;
+using DesktopMemo.Core.Constants;
+using DesktopMemo.Core.Helpers;
 using DesktopMemo.Infrastructure.Services;
 using System.IO;
 
@@ -184,7 +186,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _windowService.SetWindowPosition(settings.Left, settings.Top);
         }
 
-        _windowService.SetWindowOpacity(settings.Transparency);
+        // 确保透明度值在合理范围内
+        var transparencyValue = TransparencyHelper.NormalizeTransparency(settings.Transparency);
+        System.Diagnostics.Debug.WriteLine($"设置加载: 原始透明度={settings.Transparency}, 规范化后={transparencyValue}");
+
+        _windowService.SetWindowOpacity(transparencyValue);
         _windowService.SetClickThrough(settings.IsClickThrough);
         var mode = settings.IsTopMost
             ? TopmostMode.Always
@@ -192,8 +198,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _windowService.SetTopmostMode(mode);
 
         SelectedTopmostMode = _windowService.GetCurrentTopmostMode();
-        BackgroundOpacity = _windowService.GetWindowOpacity();
-        BackgroundOpacityPercent = (BackgroundOpacity / 0.3) * 100; // 映射到0-100范围
+
+        // 从窗口服务获取实际设置的透明度值
+        var actualOpacity = _windowService.GetWindowOpacity();
+        BackgroundOpacity = actualOpacity;
+
+        // 使用统一的透明度转换逻辑，并确保百分比值有效
+        var calculatedPercent = TransparencyHelper.ToPercent(actualOpacity);
+        BackgroundOpacityPercent = double.IsNaN(calculatedPercent) ? 0.0 : calculatedPercent;
+
+        System.Diagnostics.Debug.WriteLine($"透明度初始化完成: 实际值={actualOpacity}, 百分比={BackgroundOpacityPercent}");
+        
         IsClickThroughEnabled = _windowService.IsClickThroughEnabled;
         UpdateCurrentPosition();
     }
@@ -259,29 +274,92 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // 检查是否需要显示确认框
         if (WindowSettings.ShowDeleteConfirmation)
         {
-            var dialog = new Views.ConfirmationDialog
+            Views.ConfirmationDialog? dialog = null;
+            bool? result = null;
+
+            // 在UI线程上显示对话框
+            try
             {
-                Title = "删除确认",
-                Message = $"确定要删除备忘录\"{SelectedMemo.DisplayTitle}\"吗？\n\n此操作不可撤销。",
-                Owner = System.Windows.Application.Current.MainWindow
-            };
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    dialog = new Views.ConfirmationDialog
+                    {
+                        Title = "删除确认",
+                        Message = $"确定要删除备忘录\"{SelectedMemo.DisplayTitle}\"吗？\n\n此操作不可撤销。"
+                    };
 
-            var result = dialog.ShowDialog();
+                    // 安全地设置Owner
+                    if (System.Windows.Application.Current.MainWindow != null &&
+                        System.Windows.Application.Current.MainWindow.IsLoaded)
+                    {
+                        dialog.Owner = System.Windows.Application.Current.MainWindow;
+                    }
 
-            if (result != true)
+                    result = dialog.ShowDialog();
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // 对话框无法显示（可能是Owner问题或窗口状态异常）
+                SetStatus($"无法显示删除确认对话框: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"删除确认对话框InvalidOperationException: {ex}");
+                return;
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                // Win32相关错误
+                SetStatus($"系统错误，无法显示对话框: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"删除确认对话框Win32Exception: {ex}");
+                return;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                // 权限问题
+                SetStatus($"权限不足，无法显示对话框: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"删除确认对话框UnauthorizedAccessException: {ex}");
+                return;
+            }
+            catch (Exception ex)
+            {
+                // 其他未预期异常
+                SetStatus($"对话框错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"删除确认对话框未知异常: {ex}");
+                return;
+            }
+
+            if (result != true || dialog == null)
             {
                 SetStatus("已取消删除");
                 return;
             }
 
-            // 如果用户选择了"不再显示"，保存设置
+            // 如果用户选择了"不再显示"，异步保存设置（在后台线程）
             if (dialog.DontShowAgain)
             {
-                WindowSettings = WindowSettings with { ShowDeleteConfirmation = false };
-                await _settingsService.SaveAsync(WindowSettings);
+                // 不等待设置保存，避免阻塞删除操作
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var newSettings = WindowSettings with { ShowDeleteConfirmation = false };
+                        await _settingsService.SaveAsync(newSettings);
+
+                        // 在UI线程更新设置
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            WindowSettings = newSettings;
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录错误但不影响删除操作
+                        System.Diagnostics.Debug.WriteLine($"保存删除设置失败: {ex}");
+                    }
+                });
             }
         }
 
+        // 执行删除操作
         var deleting = SelectedMemo;
         await _memoRepository.DeleteAsync(deleting.Id);
 
@@ -502,13 +580,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnBackgroundOpacityChanged(double value)
     {
-        _windowService.SetWindowOpacity(value);
+        // 使用辅助类规范化透明度值
+        var normalizedValue = TransparencyHelper.NormalizeTransparency(value);
+        if (Math.Abs(value - normalizedValue) > 0.001) // 如果值被调整了
+        {
+            BackgroundOpacity = normalizedValue; // 更新为调整后的值
+            return; // 避免递归调用
+        }
+
+        _windowService.SetWindowOpacity(normalizedValue);
 
         // 自动保存透明度设置
         bool isTopMost = SelectedTopmostMode == TopmostMode.Always;
         bool isDesktopMode = SelectedTopmostMode == TopmostMode.Desktop;
 
-        WindowSettings = WindowSettings.WithAppearance(value, isTopMost, isDesktopMode, IsClickThroughEnabled);
+        WindowSettings = WindowSettings.WithAppearance(normalizedValue, isTopMost, isDesktopMode, IsClickThroughEnabled);
         _ = _settingsService.SaveAsync(WindowSettings);
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 
 namespace DesktopMemo.App.Views
@@ -24,18 +25,62 @@ namespace DesktopMemo.App.Views
 
         private void YesButton_Click(object sender, RoutedEventArgs e)
         {
-            DontShowAgain = DontShowAgainCheckBox.IsChecked ?? false;
-            DialogResultValue = true;
-            DialogResult = true;
-            Close();
+            try
+            {
+                DontShowAgain = DontShowAgainCheckBox?.IsChecked ?? false;
+                DialogResultValue = true;
+                
+                // 安全地关闭对话框
+                SafeCloseDialog(true);
+            }
+            catch (Exception ex)
+            {
+                // 记录异常但确保对话框能关闭
+                System.Diagnostics.Debug.WriteLine($"ConfirmationDialog YesButton error: {ex.Message}");
+                
+                // 确保对话框关闭
+                SafeCloseDialog(true);
+            }
         }
 
         private void NoButton_Click(object sender, RoutedEventArgs e)
         {
             DontShowAgain = false;
             DialogResultValue = false;
-            DialogResult = false;
-            Close();
+            SafeCloseDialog(false);
+        }
+
+        private void SafeCloseDialog(bool result)
+        {
+            try
+            {
+                DialogResult = result;
+                Close();
+            }
+            catch (InvalidOperationException)
+            {
+                // DialogResult设置或关闭失败，尝试隐藏
+                try
+                {
+                    Hide();
+                }
+                catch
+                {
+                    // 如果隐藏也失败，什么都不做
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ConfirmationDialog SafeCloseDialog error: {ex.Message}");
+                try
+                {
+                    Hide();
+                }
+                catch
+                {
+                    // 最后的安全措施
+                }
+            }
         }
     }
 }

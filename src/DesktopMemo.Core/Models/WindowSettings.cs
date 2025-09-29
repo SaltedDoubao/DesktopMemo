@@ -1,4 +1,5 @@
 using System;
+using DesktopMemo.Core.Constants;
 
 namespace DesktopMemo.Core.Models;
 
@@ -18,7 +19,7 @@ public sealed record WindowSettings(
     bool ShowExitConfirmation = true,
     bool DefaultExitToTray = true)
 {
-    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, 0.85, true, false, false, true, true, true);
+    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, WindowConstants.DEFAULT_TRANSPARENCY, false, true, false, true, true, true);
 
     public WindowSettings WithLocation(double left, double top)
         => this with { Left = left, Top = top };

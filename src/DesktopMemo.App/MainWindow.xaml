@@ -515,7 +515,7 @@
                             <StackPanel>
                                 <TextBlock Text="外观设置" FontSize="14" FontWeight="Medium" Foreground="#F0FFFFFF" Margin="0,0,0,12" />
                                 <TextBlock Text="背景透明度" Foreground="#E0FFFFFF" FontSize="12" />
-                                <TextBlock Text="{Binding BackgroundOpacity, StringFormat='当前：{0:P0}'}" Foreground="#B0FFFFFF" FontSize="12" Margin="0,4,0,8" />
+                                <TextBlock Text="{Binding BackgroundOpacityPercent, StringFormat='当前：{0:F0}%'}" Foreground="#B0FFFFFF" FontSize="12" Margin="0,4,0,8" />
                                 <Slider x:Name="BackgroundOpacitySlider" Minimum="0" Maximum="100" Value="{Binding BackgroundOpacityPercent, Mode=TwoWay}" ValueChanged="BackgroundOpacitySlider_ValueChanged" />
                                 <TextBlock Text="0% = 完全透明，100% = 全白色背景" Foreground="#80FFFFFF" FontSize="10" HorizontalAlignment="Center" Margin="0,4,0,0" />
                             </StackPanel>

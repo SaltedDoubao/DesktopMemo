@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,6 +9,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using DesktopMemo.App.ViewModels;
 using DesktopMemo.Core.Contracts;
+using DesktopMemo.Core.Helpers;
 using WpfApp = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -224,42 +226,164 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void CloseButton_Click(object sender, RoutedEventArgs e)
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        // 避免async void死锁，使用fire-and-forget方式
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await HandleCloseButtonClickAsync();
+            }
+            catch (Exception ex)
+            {
+                // 在后台线程中捕获异常，记录到调试输出
+                System.Diagnostics.Debug.WriteLine($"处理关闭按钮异常: {ex}");
+
+                // 如果异步处理失败，回退到UI线程执行默认关闭行为
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    try
+                    {
+                        if (_viewModel.WindowSettings.DefaultExitToTray)
+                        {
+                            _viewModel.TrayHideWindowCommand.Execute(null);
+                        }
+                        else
+                        {
+                            WpfApp.Current.Shutdown();
+                        }
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"回退关闭失败: {fallbackEx}");
+                        // 最后的安全措施
+                        Environment.Exit(0);
+                    }
+                });
+            }
+        });
+    }
+
+    private async Task HandleCloseButtonClickAsync()
     {
         // 检查是否需要显示退出确认
         if (_viewModel.WindowSettings.ShowExitConfirmation)
         {
-            var dialog = new Views.ExitConfirmationDialog
-            {
-                Owner = this
-            };
+            Views.ExitConfirmationDialog? dialog = null;
+            bool? result = null;
 
-            var result = dialog.ShowDialog();
-
-            if (result != true)
+            // 在UI线程上创建和显示对话框
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                return; // 用户点击取消
+                try
+                {
+                    dialog = new Views.ExitConfirmationDialog
+                    {
+                        Owner = this
+                    };
+                    result = dialog.ShowDialog();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    _viewModel.SetStatus($"无法显示退出确认对话框: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"退出确认对话框InvalidOperationException: {ex}");
+                }
+                catch (Exception ex)
+                {
+                    _viewModel.SetStatus($"退出对话框错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"退出确认对话框异常: {ex}");
+                }
+            });
+
+            if (result != true || dialog == null)
+            {
+                // 用户取消或对话框创建失败
+                if (result == null)
+                {
+                    // 对话框创建失败，使用默认行为
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        if (_viewModel.WindowSettings.DefaultExitToTray)
+                        {
+                            _viewModel.TrayHideWindowCommand.Execute(null);
+                        }
+                        else
+                        {
+                            WpfApp.Current.Shutdown();
+                        }
+                    });
+                }
+                return;
             }
 
-            // 如果用户选择了"不再显示"，保存设置和用户的选择
+            // 如果用户选择了"不再显示"，异步保存设置（在后台线程）
             if (dialog.DontShowAgain)
             {
-                bool exitToTray = dialog.Action == Views.ExitAction.MinimizeToTray;
-                _viewModel.WindowSettings = _viewModel.WindowSettings with
+                // 使用fire-and-forget模式，与删除确认保持一致
+                _ = Task.Run(async () =>
                 {
-                    ShowExitConfirmation = false,
-                    DefaultExitToTray = exitToTray
-                };
-                await _viewModel.GetSettingsService().SaveAsync(_viewModel.WindowSettings);
+                    try
+                    {
+                        bool exitToTray = dialog.Action == Views.ExitAction.MinimizeToTray;
+                        var newSettings = _viewModel.WindowSettings with
+                        {
+                            ShowExitConfirmation = false,
+                            DefaultExitToTray = exitToTray
+                        };
+
+                        // 在后台线程异步保存
+                        await _viewModel.GetSettingsService().SaveAsync(newSettings);
+
+                        // 在UI线程更新设置
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            _viewModel.WindowSettings = newSettings;
+                        });
+
+                        System.Diagnostics.Debug.WriteLine("退出设置保存成功");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"保存退出设置失败: {ex}");
+                        // 设置保存失败不影响退出操作
+                    }
+                });
             }
 
-            // 根据用户选择执行操作
-            switch (dialog.Action)
+            // 在UI线程执行退出操作
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                case Views.ExitAction.MinimizeToTray:
+                switch (dialog.Action)
+                {
+                    case Views.ExitAction.MinimizeToTray:
+                        _viewModel.TrayHideWindowCommand.Execute(null);
+                        break;
+                    case Views.ExitAction.Exit:
+                        _viewModel.Dispose();
+                        _trayService.Dispose();
+                        if (_windowService is IDisposable disposableWindowService)
+                        {
+                            disposableWindowService.Dispose();
+                        }
+                        _autoSaveTimer?.Stop();
+                        _autoSaveTimer = null;
+                        WpfApp.Current.Shutdown();
+                        break;
+                }
+            });
+        }
+        else
+        {
+            // 不显示确认，根据保存的设置执行默认行为
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                if (_viewModel.WindowSettings.DefaultExitToTray)
+                {
                     _viewModel.TrayHideWindowCommand.Execute(null);
-                    break;
-                case Views.ExitAction.Exit:
+                }
+                else
+                {
                     _viewModel.Dispose();
                     _trayService.Dispose();
                     if (_windowService is IDisposable disposableWindowService)
@@ -269,28 +393,8 @@ public partial class MainWindow : Window
                     _autoSaveTimer?.Stop();
                     _autoSaveTimer = null;
                     WpfApp.Current.Shutdown();
-                    break;
-            }
-        }
-        else
-        {
-            // 不显示确认，根据保存的设置执行默认行为
-            if (_viewModel.WindowSettings.DefaultExitToTray)
-            {
-                _viewModel.TrayHideWindowCommand.Execute(null);
-            }
-            else
-            {
-                _viewModel.Dispose();
-                _trayService.Dispose();
-                if (_windowService is IDisposable disposableWindowService)
-                {
-                    disposableWindowService.Dispose();
                 }
-                _autoSaveTimer?.Stop();
-                _autoSaveTimer = null;
-                WpfApp.Current.Shutdown();
-            }
+            });
         }
     }
 
@@ -525,9 +629,8 @@ public partial class MainWindow : Window
     {
         if (sender is Slider slider && _viewModel != null)
         {
-            // 将滑块的0-100%映射到实际的0-30%效果（原来一半的范围）
-            // 公式：实际透明度 = 滑块值 * 0.3 / 100
-            var actualOpacity = (slider.Value * 0.3) / 100.0;
+            // 使用统一的透明度转换逻辑
+            var actualOpacity = TransparencyHelper.FromPercent(slider.Value);
 
             // 更新背景透明度（影响主容器背景）
             UpdateBackgroundOpacity(actualOpacity);
@@ -537,7 +640,7 @@ public partial class MainWindow : Window
             _viewModel.BackgroundOpacityPercent = slider.Value;
 
             // 状态提示
-            _viewModel.SetStatus($"背景透明度已调整为 {(int)slider.Value}%");
+            _viewModel.SetStatus($"透明度已调整为 {(int)slider.Value}%");
         }
     }
 
