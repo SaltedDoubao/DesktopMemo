@@ -1,6 +1,6 @@
-<h1 align="center">SaltedDoubao 的桌面便签 · 重构版进展</h1>
+<h1 align="center">SaltedDoubao 的桌面便签</h1>
 
-> <p align="center">面向 MVVM 架构与 Markdown 存储的全新 DesktopMemo</p>
+> <p align="center">面向 MVVM 架构与 Markdown 存储的全新桌面备忘录程序</p>
 
 <div align="center">
 
@@ -8,28 +8,25 @@
 <img src="https://img.shields.io/badge/Platform-Windows-blue" />
 <img src="https://img.shields.io/badge/License-MIT-green" />
 
-中文 README
+中文 README | [English README](README_en.md)
 
 </div>
 
 ## 📋 项目简介
 
-DesktopMemo 重构版基于 .NET 9.0 + WPF + CommunityToolkit.Mvvm，目标是在经典桌面便签的体验基础上，提供清晰的 MVVM 分层、Markdown 文件存储与可配置的窗口行为，方便长期维护与扩展。
+DesktopMemo v2 基于 .NET 9.0 + WPF + CommunityToolkit.Mvvm，目标是在经典桌面便签的体验基础上，提供清晰的 MVVM 分层、Markdown 文件存储与可配置的窗口行为，方便长期维护与扩展。
 
-## ✨ 主要功能（迭代中）
+## ✨ 主要功能
 
-- 备忘录列表与编辑区并列布局，支持 Markdown 文本（暂未渲染）
-- YAML Front Matter + Markdown 文件存储，便于导入导出
-- 可配置窗口：尺寸、位置、置顶模式、透明度、穿透等
-- 托盘入口：显示/隐藏、新建备忘录等操作
-- 计划加入：多选管理、主题切换、窗口预设等高级功能
+- 快速创建备忘录，以便您记录重要事项
+- 三种置顶方式，选择最适合您的方式让窗口留在桌面
 
 ## 🖥️ 系统要求
 
 - **操作系统**：Windows 10 版本 1903 及以上（WPF 依赖）
-- **架构**：x64
+- **架构**：x86_64
 - **.NET SDK**：9.0（开发/调试）
-- **运行时**：发布包内置，无需额外安装
+- **.NET runtime**：发布包内置，无需额外安装
 
 ## 🚀 快速开始
 
@@ -39,9 +36,6 @@ DesktopMemo 重构版基于 .NET 9.0 + WPF + CommunityToolkit.Mvvm，目标是�
 # 克隆仓库
 git clone https://github.com/SaltedDoubao/DesktopMemo.git
 cd DesktopMemo
-
-# 切换到重构分支
-git checkout rebuild
 ```
 
 ### 构建与运行
@@ -53,11 +47,11 @@ dotnet restore DesktopMemo.sln
 # 调试构建
 dotnet build DesktopMemo.sln -c Debug
 
-# 运行重构版应用
+# 运行应用
 dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration Debug
 ```
 
-> 若需要一次性构建/发布 Debug & Release 版本，可使用仓库根目录下的 `build.bat`。构建产物默认输出到 `artifacts/v<版本号>/bin`，可通过设置环境变量 `ArtifactsVersion` 自定义版本号。
+> 若需要构建exe可执行文件，可使用仓库根目录下的 `build_exe.bat`。构建产物默认输出到 `artifacts/v<版本号>/bin`，可通过设置环境变量 `ArtifactsVersion` 自定义版本号。
 
 首次运行会在可执行文件目录生成 `/.memodata`：
 
@@ -68,6 +62,20 @@ dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration 
 │   └── {memoId}.md          # YAML Front Matter + 正文
 └── settings.json            # 窗口与全局设置
 ```
+
+### 快捷键
+
+> 全局
+- Ctrl+N - 快速新建备忘录
+> 仅在编辑页面可用
+- Tab - 插入缩进（4个空格）
+- Shift+Tab - 减少缩进
+- Ctrl + S - 保存当前备忘录（似乎没有必要）
+- Ctrl + Tab / Ctrl + Shift + Tab - 切换备忘录
+- Ctrl + F / Ctrl+H - 查找/替换
+- F3 / Shift + F3 - 查找下一个/上一个
+- Ctrl + ] / Ctrl + [ - 增加/减少缩进
+- Ctrl + D - 向下复制当前行
 
 ## 🧭 项目结构
 
@@ -108,32 +116,31 @@ DesktopMemo_rebuild/
 - **持久化**：Markdown + YAML Front Matter；窗口设置使用 JSON
 - **工具链**：PowerShell 构建脚本、GitHub Actions（规划中）
 
-## 🔍 架构要点
-
-- `MainViewModel`：聚合备忘录集合、窗口设置与命令绑定
-- `FileMemoRepository`：维护 `index.json` 与 Markdown 正文的一致性
-- `JsonSettingsService`：负责读写窗口设置 `settings.json`
-- `App`：集中注册依赖并挂载到 `MainWindow`
-- 计划引入事件聚合、后台服务抽象以支持托盘、热键等高级能力
-
-## ✅ 手动测试建议
-
-- 启动应用后验证备忘录列表与编辑区的状态同步
-- 调整窗口尺寸、透明度、置顶模式，确认设置可以保存/恢复
-- 检查托盘菜单操作（显示/隐藏、新建便签）是否生效
-- 删除 `/.memodata` 后重新运行，确认初始数据正确生成
-
 ## 🤝 贡献指南
 
 欢迎通过 Issue 或 PR 协作：
 
 1. Fork 本仓库
 2. 创建功能分支：`git checkout -b your-feature`
-3. 提交更改：`git commit -m "feat: 描述"`
+3. 提交更改：`git commit -m "commit message"`
 4. 推送分支：`git push origin your-feature`
 5. 创建 Pull Request，并附上需求背景、变更摘要与验证结果
 
 提交前建议执行 `dotnet build` / `dotnet run`，确保基本验证通过。
+
+## 📝 更新日志
+
+详见 [Releases](../../releases)
+
+## 🚧 施工规划
+
+### 近期可能实现的更新
+- [ ] 适配多语言
+- [ ] 添加预设窗口大小方案
+- [ ] 添加主题更换功能
+
+### 未来更新趋势
+- [ ] Todo-list功能
 
 ## 📄 许可证
 
@@ -144,7 +151,7 @@ DesktopMemo_rebuild/
 <div align="center">
 
 **如果这个项目对您有帮助，请考虑给它一个 ⭐！**\
-**你的 ⭐ 是我们持续迭代的动力！**
+**您的⭐就是我更新的最大动力！**
 
 [报告 Bug](../../issues) • [请求功能](../../issues) • [贡献代码](../../pulls)
 
