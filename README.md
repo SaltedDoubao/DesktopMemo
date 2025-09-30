@@ -77,6 +77,21 @@ dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration 
 - Ctrl + ] / Ctrl + [ - 增加/减少缩进
 - Ctrl + D - 向下复制当前行
 
+### 导入旧数据
+
+v2.0.0之前的数据与新版本不兼容，可通过以下方式导入：
+
+**自动导入**（推荐）：
+1. 确保旧版应用数据目录(`Data/content/`)在应用程序目录下
+2. 在应用设置中点击"导入旧数据"
+3. 应用会自动查找并导入所有旧备忘录文件
+4. 完成！
+
+**手动导入**：
+1. 将旧版备忘录文件（`Data/content/*.md`）复制到新的应用数据目录(`.memodata/content/`)
+2. 在应用设置中点击"导入旧数据"
+3. 完成！ 
+
 ## 🧭 项目结构
 
 ```
