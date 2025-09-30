@@ -69,8 +69,8 @@ Data from versions before v2.0.0 is not compatible with the new version and can 
 
 **Automatic Import** (Recommended):
 1. Ensure the old application data directory (`Data/content/`) is in the application directory
-2. Click "Import Old Data" in the application settings
-3. The app will automatically find and import all old memo files
+2. The program will automatically import old data on first run
+3. Manually delete the Data directory after import is complete
 4. Done!
 
 **Manual Import**:
