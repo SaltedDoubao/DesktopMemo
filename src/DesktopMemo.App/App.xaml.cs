@@ -30,7 +30,7 @@ public partial class App : WpfApp
         services.AddSingleton<IMemoRepository>(_ => new FileMemoRepository(dataDirectory));
         services.AddSingleton<ISettingsService>(_ => new JsonSettingsService(dataDirectory));
         services.AddSingleton<IMemoSearchService, MemoSearchService>();
-        services.AddSingleton(_ => new MemoMigrationService(dataDirectory));
+        services.AddSingleton(_ => new MemoMigrationService(dataDirectory, appDirectory));
 
         // 窗口和托盘服务
         services.AddSingleton<IWindowService, WindowService>();

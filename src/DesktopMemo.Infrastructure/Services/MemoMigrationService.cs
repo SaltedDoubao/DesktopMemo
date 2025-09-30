@@ -12,10 +12,12 @@ namespace DesktopMemo.Infrastructure.Services;
 public sealed class MemoMigrationService
 {
     private readonly string _dataDirectory;
+    private readonly string _appDirectory;
 
-    public MemoMigrationService(string dataDirectory)
+    public MemoMigrationService(string dataDirectory, string appDirectory)
     {
         _dataDirectory = dataDirectory;
+        _appDirectory = appDirectory;
         ExportDirectory = Path.Combine(_dataDirectory, "export");
     }
 
@@ -24,11 +26,13 @@ public sealed class MemoMigrationService
     public async Task<IReadOnlyList<Memo>> LoadFromLegacyAsync()
     {
         var results = new List<Memo>();
-        var contentDir = Path.Combine(_dataDirectory, "content");
+        
+        // 在应用程序目录下查找旧应用数据目录 Data/content
+        var legacyContentDir = Path.Combine(_appDirectory, "Data", "content");
 
-        if (Directory.Exists(contentDir))
+        if (Directory.Exists(legacyContentDir))
         {
-            foreach (var file in Directory.GetFiles(contentDir, "*.md"))
+            foreach (var file in Directory.GetFiles(legacyContentDir, "*.md"))
             {
                 var text = await File.ReadAllTextAsync(file, Encoding.UTF8);
                 var memo = ParseMarkdown(Path.GetFileNameWithoutExtension(file), text, File.GetCreationTimeUtc(file), File.GetLastWriteTimeUtc(file));
