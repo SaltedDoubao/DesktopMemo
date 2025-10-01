@@ -42,7 +42,7 @@ public partial class App : WpfApp
         return services.BuildServiceProvider();
     }
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
@@ -63,12 +63,14 @@ public partial class App : WpfApp
             try
             {
                 trayService.Initialize();
-                trayService.Show();
             }
             catch
             {
                 // 托盘服务初始化失败，但应用程序仍然可以运行
             }
+
+            // 在显示窗口之前先加载配置（配置中会根据设置决定是否显示托盘）
+            await viewModel.InitializeAsync();
 
             MainWindow = window;
             window.Show();

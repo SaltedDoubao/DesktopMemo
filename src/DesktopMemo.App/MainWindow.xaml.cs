@@ -160,12 +160,12 @@ public partial class MainWindow : Window
         transform.BeginAnimation(System.Windows.Media.TranslateTransform.XProperty, animation);
     }
 
-    private async void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
         try
         {
-            await _viewModel.InitializeAsync();
+            // 配置已在 App.OnStartup 中加载，这里只需要应用UI状态
             ApplySettingsPanelVisibility(_viewModel.IsSettingsPanelVisible);
         }
         catch (Exception ex)
