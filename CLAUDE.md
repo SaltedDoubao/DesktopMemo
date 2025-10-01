@@ -2,84 +2,84 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 环境设置
+## Environment Setup
 
-- **语言**: 始终使用简体中文回复
-- **环境**: Windows PowerShell环境，注意命令格式
-- **构建前清理**: 运行 `dotnet build` 前必须删除对应版本号的 artifacts/ 目录（例如当前版本2.0.0，需删除 artifacts/v2.0.0/）
-- **上下文工具**: 需要代码生成、设置配置或库/API文档时，自动使用 context7 MCP 工具
+- **Language**: Always respond in Chinese-simplified
+- **Environment**: Windows PowerShell environment, pay attention to command format
+- **Pre-build Cleanup**: Must delete the artifacts/ directory for the corresponding version number before running `dotnet build` (for example, if the current version is 2.0.0, delete artifacts/v2.0.0/)
+- **Context Tools**: Always use context7 when I need code generation, setup or configuration steps, or library/API documentation.  This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
 
-## 常用开发命令
+## Common Development Commands
 
 ```powershell
-# 还原依赖（首次或更换输出目录后务必执行）
+# Restore dependencies (must be executed on first run or after changing output directory)
 dotnet restore DesktopMemo.sln
 
-# 调试构建
+# Debug build
 dotnet build DesktopMemo.sln --configuration Debug
 
-# 运行应用
+# Run application
 dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration Debug
 
-# 发布单文件可执行程序
+# Publish single-file executable
 .\build_exe.bat
 
-# 清理构建产物
+# Clean build artifacts
 dotnet clean DesktopMemo.sln
 ```
 
-## 核心架构
+## Core Architecture
 
-这是一个基于 .NET 9.0 + WPF + MVVM 的桌面便签应用，采用三层架构：
+This is a desktop memo application based on .NET 9.0 + WPF + MVVM, using a three-layer architecture:
 
-### 项目结构
-- **DesktopMemo.App**: WPF前端层，包含UI、视图模型和命令
-- **DesktopMemo.Core**: 领域模型和契约接口（纯.NET库）
-- **DesktopMemo.Infrastructure**: 基础设施实现层（文件存储、系统服务）
+### Project Structure
+- **DesktopMemo.App**: WPF presentation layer, containing UI, view models, and commands
+- **DesktopMemo.Core**: Domain models and contract interfaces (pure .NET library)
+- **DesktopMemo.Infrastructure**: Infrastructure implementation layer (file storage, system services)
 
-### 关键文件
-- `src/DesktopMemo.App/ViewModels/MainViewModel.cs`: 应用核心逻辑，处理备忘录列表、编辑状态与设置
-- `src/DesktopMemo.Infrastructure/Repositories/FileMemoRepository.cs`: Markdown文件存储实现
-- `src/DesktopMemo.App/App.xaml.cs`: 依赖注入配置和应用启动逻辑
+### Key Files
+- `src/DesktopMemo.App/ViewModels/MainViewModel.cs`: Application core logic, handling memo lists, edit state, and settings
+- `src/DesktopMemo.Infrastructure/Repositories/FileMemoRepository.cs`: Markdown file storage implementation
+- `src/DesktopMemo.App/App.xaml.cs`: Dependency injection configuration and application startup logic
 
-### 数据存储
-- 数据存储在可执行文件目录的 `/.memodata` 文件夹
-- 备忘录使用 Markdown + YAML Front Matter 格式
-- 设置使用 JSON 格式存储
+### Data Storage
+- Data is stored in the `/.memodata` folder in the executable directory
+- Memos use Markdown + YAML Front Matter format
+- Settings are stored in JSON format
 
-### 构建配置
-- 使用 `Directory.Build.props` 统一输出路径到 `artifacts/v<版本>/`
-- 版本号管理涉及多个文件同步更新（详见开发规范文档）
+### Build Configuration
+- Uses `Directory.Build.props` to unify output path to `artifacts/v<version>/`
+- Version number management involves synchronizing updates across multiple files (see development specification document)
 
-## 异步编程规范
+## Asynchronous Programming Guidelines
 
-**关键原则**: 避免 `async void`，使用 fire-and-forget 模式防止死锁：
+**Key Principle**: Avoid `async void`, use fire-and-forget pattern to prevent deadlocks:
 
 ```csharp
-// ❌ 错误 - 可能导致死锁
+// Wrong - can cause deadlock
 private async void Button_Click(object sender, RoutedEventArgs e)
 {
     await SomeAsyncOperation();
 }
 
-// ✅ 正确 - fire-and-forget 模式
+// Correct - fire-and-forget pattern
 private void Button_Click(object sender, RoutedEventArgs e)
 {
     _ = Task.Run(async () => await HandleButtonClickAsync());
 }
 ```
 
-UI操作必须在UI线程，IO操作应在后台线程。设置保存使用非阻塞模式。
+UI operations must be on the UI thread, IO operations should be on background threads. Settings save using non-blocking mode.
 
-## 代码约定
+## Code Conventions
 
-- 使用统一的常量类（`DesktopMemo.Core.Constants`）避免硬编码
-- Win32 API 调用必须包含错误检查
-- 异常处理分级：特定异常提供用户友好提示，通用异常记录详细日志
-- 设置保存采用原子性模式：先保存文件，成功后再更新内存状态
+- Use unified constant classes (`DesktopMemo.Core.Constants`) to avoid hardcoding
+- Win32 API calls must include error checking
+- Tiered exception handling: specific exceptions provide user-friendly prompts, generic exceptions log detailed information
+- Settings save using atomic mode: save file first, update in-memory state only after success
 
-## 调试技巧
+## Debugging Tips
 
-- 在 Debug 模式下应用输出详细调试信息到 Visual Studio 输出窗口
-- 检查 `/.memodata/settings.json` 文件完整性
-- 使用 Visual Studio 诊断工具监控线程切换和性能
+- In Debug mode, the application outputs detailed debug information to the Visual Studio output window
+- Check the integrity of the `/.memodata/settings.json` file
+- Use Visual Studio diagnostic tools to monitor thread switching and performance
