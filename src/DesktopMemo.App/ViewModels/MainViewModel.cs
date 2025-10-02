@@ -24,6 +24,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly ITrayService _trayService;
     private readonly IMemoSearchService _searchService;
     private readonly MemoMigrationService _migrationService;
+    private readonly TodoListViewModel _todoListViewModel;
 
     [ObservableProperty]
     private ObservableCollection<Memo> _memos = new();
@@ -48,6 +49,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _isEditMode;
+
+    [ObservableProperty]
+    private bool _isInTodoListMode;
 
     [ObservableProperty]
     private string _statusText = "就绪";
@@ -103,6 +107,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public bool HasSelectedMemo => SelectedMemo is not null;
 
+    public TodoListViewModel TodoListViewModel => _todoListViewModel;
+
     private bool _disposed;
 
     public MainViewModel(
@@ -111,7 +117,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IWindowService windowService,
         ITrayService trayService,
         IMemoSearchService searchService,
-        MemoMigrationService migrationService)
+        MemoMigrationService migrationService,
+        TodoListViewModel todoListViewModel)
     {
         _memoRepository = memoRepository;
         _settingsService = settingsService;
@@ -119,6 +126,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _trayService = trayService;
         _searchService = searchService;
         _migrationService = migrationService;
+        _todoListViewModel = todoListViewModel;
 
         Memos.CollectionChanged += OnMemosCollectionChanged;
 
@@ -168,6 +176,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             _trayService.Hide();
         }
+
+        // 初始化 TodoListViewModel
+        await _todoListViewModel.InitializeAsync(cancellationToken);
 
         SetStatus("就绪");
         _trayService.UpdateTopmostState(SelectedTopmostMode);
@@ -463,6 +474,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         IsEditMode = false;
         SetStatus("返回列表");
+    }
+
+    [RelayCommand]
+    private void ToggleTodoList()
+    {
+        if (IsEditMode)
+        {
+            // 如果在编辑模式，先返回列表
+            IsEditMode = false;
+        }
+
+        IsInTodoListMode = !IsInTodoListMode;
+        SetStatus(IsInTodoListMode ? "切换到待办事项" : "切换到备忘录");
     }
 
     [RelayCommand]

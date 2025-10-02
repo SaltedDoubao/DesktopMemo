@@ -28,6 +28,7 @@ public partial class App : WpfApp
 
         // 核心服务
         services.AddSingleton<IMemoRepository>(_ => new FileMemoRepository(dataDirectory));
+        services.AddSingleton<ITodoRepository>(_ => new JsonTodoRepository(dataDirectory));
         services.AddSingleton<ISettingsService>(_ => new JsonSettingsService(dataDirectory));
         services.AddSingleton<IMemoSearchService, MemoSearchService>();
         services.AddSingleton(_ => new MemoMigrationService(dataDirectory, appDirectory));
@@ -37,6 +38,7 @@ public partial class App : WpfApp
         services.AddSingleton<ITrayService, TrayService>();
 
         // ViewModel
+        services.AddSingleton<TodoListViewModel>();
         services.AddSingleton<MainViewModel>();
 
         return services.BuildServiceProvider();
