@@ -254,7 +254,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task CreateMemoAsync()
     {
-        var memo = Memo.CreateNew("新的备忘录", string.Empty);
+        var memo = Memo.CreateNew(_localizationService["Memo_NewTitle"], string.Empty);
         await _memoRepository.AddAsync(memo);
 
         Memos.Insert(0, memo);
