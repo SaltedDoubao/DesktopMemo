@@ -1,4 +1,4 @@
-<h1 align="center">SaltedDoubao's DesktopMemo</h1>
+<h1 align="center">SaltedDoubao's Desktop Memo</h1>
 
 > <p align="center">A brand new desktop memo application with MVVM architecture and Markdown storage</p>
 
@@ -14,7 +14,7 @@
 
 ## 📋 Project Overview
 
-DesktopMemo v2 is built on .NET 9.0 + WPF + CommunityToolkit.Mvvm, aiming to provide clear MVVM layering, Markdown file storage, and configurable window behavior based on the classic desktop memo experience, making it easy to maintain and extend in the long term.
+DesktopMemo is an application based on .NET 9.0 + WPF + CommunityToolkit.Mvvm, providing rich window management features and memo management capabilities. Whether it's daily notes, work memos, or inspiration records, it provides you with a convenient solution.
 
 ## ✨ Key Features
 
@@ -73,9 +73,22 @@ On first run, `/.memodata` will be generated in the executable directory:
 ├── content/
 │   ├── index.json           # Memo index
 │   └── {memoId}.md          # YAML Front Matter + content
-├── todos.json               # Todo list data
 └── settings.json            # Window and global settings
 ```
+
+### Shortcuts
+
+> Global
+- Ctrl+N - Quickly create new memo
+> Only available on edit page
+- Tab - Insert indentation (4 spaces)
+- Shift+Tab - Decrease indentation
+- Ctrl + S - Save current memo (seems unnecessary)
+- Ctrl + Tab / Ctrl + Shift + Tab - Switch memos
+- Ctrl + F / Ctrl+H - Find/Replace
+- F3 / Shift + F3 - Find next/previous
+- Ctrl + ] / Ctrl + [ - Increase/decrease indentation
+- Ctrl + D - Duplicate current line downward
 
 ### Importing Old Data
 
@@ -92,61 +105,14 @@ Data from versions before v2.0.0 is not compatible with the new version and can 
 2. Click "Import Old Data" in the application settings
 3. Done!
 
-### Shortcuts
-
-> Global
-- Ctrl+N - Quickly create new memo
-> Only available on edit page
-- Tab - Insert indentation (4 spaces)
-- Shift+Tab - Decrease indentation
-- Ctrl + S - Save current memo (seems unnecessary)
-- Ctrl + Tab / Ctrl + Shift + Tab - Switch memos
-- Ctrl + F / Ctrl+H - Find/Replace
-- F3 / Shift + F3 - Find next/previous
-- Ctrl + ] / Ctrl + [ - Increase/decrease indentation
-- Ctrl + D - Duplicate current line downward
-
 ## 🧭 Project Structure
 
 ```
 DesktopMemo_rebuild/
 ├── DesktopMemo.sln
 ├── build_exe.bat                   # Build executable script
-├── docs/
-│   ├── development-guide.md        # Development/debugging guide
-│   └── architecture/...            # Architecture design documents
-├── src/
-│   ├── DesktopMemo.App/            # WPF frontend
-│   │   ├── App.xaml(.cs)           # Startup and DI registration
-│   │   ├── MainWindow.xaml(.cs)    # Main window
-│   │   ├── ViewModels/             # MVVM view models
-│   │   │   ├── MainViewModel.cs    # Main view model
-│   │   │   ├── MemoListViewModel.cs
-│   │   │   └── TodoListViewModel.cs # Todo list view model
-│   │   ├── Converters/             # Value converters
-│   │   │   ├── EnumToBooleanConverter.cs
-│   │   │   ├── InverseBooleanToVisibilityConverter.cs
-│   │   │   └── CountToVisibilityConverter.cs # Count to visibility converter
-│   │   └── Resources/              # Styles and resources
-│   ├── DesktopMemo.Core/           # Domain models and contracts
-│   │   ├── Contracts/
-│   │   │   ├── IMemoRepository.cs
-│   │   │   ├── ITodoRepository.cs  # Todo repository interface
-│   │   │   ├── ISettingsService.cs
-│   │   │   └── IWindowService.cs etc
-│   │   └── Models/
-│   │       ├── Memo.cs
-│   │       ├── TodoItem.cs         # Todo item model
-│   │       └── WindowSettings.cs
-│   └── DesktopMemo.Infrastructure/# Implementation layer (file storage, system services)
-│       ├── Repositories/
-│       │   ├── FileMemoRepository.cs
-│       │   └── JsonTodoRepository.cs # JSON todo storage
-│       └── Services/
-│           ├── JsonSettingsService.cs
-│           ├── MemoSearchService.cs
-│           ├── WindowService.cs
-│           └── TrayService.cs etc
+├── docs/                           # Project documentation
+├── src/                            # Project main directory
 ├── artifacts/                      # Build output directory
 └── publish/                        # Release artifacts
 ```
@@ -173,11 +139,11 @@ If you haven't changed the version number, you **must** clear the `artifacts/vX.
 
 It's recommended to run `dotnet build` / `dotnet run` before submitting to ensure basic validation passes.
 
-For other development considerations, see [应用开发规范.md](docs/应用开发规范.md) (Chinese)
+For other development considerations, see [应用开发规范.md](docs/应用开发规范.md)
 
 ## 📝 Changelog
 
-### v2.1.0 (In Development)
+### v2.1.0 (Latest)
 - ✨ Added Todo List functionality
   - Quick add, check, and delete todo items
   - Click title bar to switch between Memo/Todo modes

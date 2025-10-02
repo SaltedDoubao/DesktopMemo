@@ -14,7 +14,7 @@
 
 ## 📋 项目简介
 
-DesktopMemo v2 基于 .NET 9.0 + WPF + CommunityToolkit.Mvvm，目标是在经典桌面便签的体验基础上，提供清晰的 MVVM 分层、Markdown 文件存储与可配置的窗口行为，方便长期维护与扩展。
+DesktopMemo 是一个基于 .NET 9.0 + WPF + CommunityToolkit.Mvvm 的桌面便签应用，提供了丰富的窗口管理功能和便签管理能力。无论是日常记事、工作备忘还是灵感记录，都能为您提供便捷的解决方案。
 
 ## ✨ 主要功能
 
@@ -143,7 +143,7 @@ DesktopMemo_rebuild/
 
 ## 📝 更新日志
 
-### v2.1.0 (开发中)
+### v2.1.0 (Latest)
 - ✨ 新增待办事项（Todo-List）功能
   - 快速添加、勾选、删除待办项
   - 点击标题栏切换备忘录/待办事项模式
