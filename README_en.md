@@ -180,7 +180,6 @@ For other development considerations, see [应用开发规范.md](docs/应用开
 ### v2.1.0 (In Development)
 - ✨ Added Todo List functionality
   - Quick add, check, and delete todo items
-  - Completed items auto-grouped with strikethrough
   - Click title bar to switch between Memo/Todo modes
   - JSON format persistent storage
 
