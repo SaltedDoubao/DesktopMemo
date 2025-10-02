@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using DesktopMemo.Core.Contracts;
 
 namespace DesktopMemo.App.Views
 {
@@ -14,10 +15,13 @@ namespace DesktopMemo.App.Views
     {
         public bool DontShowAgain { get; private set; }
         public ExitAction Action { get; private set; } = ExitAction.None;
+        public ILocalizationService LocalizationService { get; }
 
-        public ExitConfirmationDialog()
+        public ExitConfirmationDialog(ILocalizationService localizationService)
         {
+            LocalizationService = localizationService;
             InitializeComponent();
+            DataContext = this;
         }
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)

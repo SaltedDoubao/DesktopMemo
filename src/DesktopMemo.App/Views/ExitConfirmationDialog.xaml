@@ -1,6 +1,7 @@
 <Window x:Class="DesktopMemo.App.Views.ExitConfirmationDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:DesktopMemo.App.Localization"
         Title="退出确认"
         Height="220"
         Width="400"
@@ -19,14 +20,14 @@
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
-                       Text="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=Title}"
+                       Text="{Binding LocalizationService[Dialog_Exit_Title]}"
                        FontSize="16"
                        FontWeight="SemiBold"
                        Foreground="#F0FFFFFF"
                        Margin="0,0,0,15"/>
 
             <TextBlock Grid.Row="1"
-                       Text="是否最小化到托盘？"
+                       Text="{Binding LocalizationService[Dialog_Exit_Message]}"
                        FontSize="13"
                        Foreground="#E0FFFFFF"
                        TextWrapping="Wrap"
@@ -34,7 +35,7 @@
 
             <CheckBox Grid.Row="2"
                       x:Name="DontShowAgainCheckBox"
-                      Content="不再显示此确认"
+                      Content="{Binding LocalizationService[Dialog_Exit_DontShowAgain]}"
                       Foreground="#B0FFFFFF"
                       Margin="0,15,0,15"
                       VerticalAlignment="Center"/>
@@ -42,19 +43,19 @@
             <StackPanel Grid.Row="3"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
-                <Button Content="最小化到托盘"
+                <Button Content="{Binding LocalizationService[Dialog_Exit_Minimize]}"
                         Width="110"
                         Height="32"
                         Margin="0,0,10,0"
                         Click="MinimizeButton_Click"
                         Style="{StaticResource AccentButton}"/>
-                <Button Content="完全退出"
+                <Button Content="{Binding LocalizationService[Dialog_Exit_Exit]}"
                         Width="80"
                         Height="32"
                         Margin="0,0,10,0"
                         Click="ExitButton_Click"
                         Style="{StaticResource SecondaryButton}"/>
-                <Button Content="取消"
+                <Button Content="{Binding LocalizationService[Dialog_Exit_Cancel]}"
                         Width="60"
                         Height="32"
                         Click="CancelButton_Click"
