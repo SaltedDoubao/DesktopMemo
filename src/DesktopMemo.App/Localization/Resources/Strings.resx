@@ -338,17 +338,25 @@
   </data>
   
   <!-- 系统托盘 -->
-  <data name="Tray_Show" xml:space="preserve">
-    <value>显示窗口</value>
-    <comment>托盘菜单 - 显示窗口</comment>
+  <data name="Tray_ShowHide" xml:space="preserve">
+    <value>显示/隐藏窗口</value>
+    <comment>托盘菜单 - 显示/隐藏窗口</comment>
   </data>
-  <data name="Tray_Hide" xml:space="preserve">
-    <value>隐藏窗口</value>
-    <comment>托盘菜单 - 隐藏窗口</comment>
+  <data name="Tray_NewMemo" xml:space="preserve">
+    <value>新建便签</value>
+    <comment>托盘菜单 - 新建便签</comment>
   </data>
-  <data name="Tray_Exit" xml:space="preserve">
-    <value>退出</value>
-    <comment>托盘菜单 - 退出</comment>
+  <data name="Tray_Settings" xml:space="preserve">
+    <value>设置</value>
+    <comment>托盘菜单 - 设置</comment>
+  </data>
+  <data name="Tray_WindowControl" xml:space="preserve">
+    <value>窗口控制</value>
+    <comment>托盘菜单 - 窗口控制组</comment>
+  </data>
+  <data name="Tray_TopmostMode" xml:space="preserve">
+    <value>置顶模式</value>
+    <comment>托盘菜单 - 置顶模式组</comment>
   </data>
   <data name="Tray_TopmostNormal" xml:space="preserve">
     <value>普通模式</value>
@@ -362,13 +370,85 @@
     <value>总是置顶</value>
     <comment>托盘菜单 - 总是置顶模式</comment>
   </data>
-  <data name="Tray_ClickThroughOn" xml:space="preserve">
-    <value>启用穿透</value>
-    <comment>托盘菜单 - 启用穿透模式</comment>
+  <data name="Tray_Position" xml:space="preserve">
+    <value>窗口位置</value>
+    <comment>托盘菜单 - 窗口位置组</comment>
   </data>
-  <data name="Tray_ClickThroughOff" xml:space="preserve">
-    <value>禁用穿透</value>
-    <comment>托盘菜单 - 禁用穿透模式</comment>
+  <data name="Tray_QuickPosition" xml:space="preserve">
+    <value>快速定位</value>
+    <comment>托盘菜单 - 快速定位组</comment>
+  </data>
+  <data name="Tray_Position_TopLeft" xml:space="preserve">
+    <value>左上角</value>
+    <comment>托盘菜单 - 左上角位置</comment>
+  </data>
+  <data name="Tray_Position_TopCenter" xml:space="preserve">
+    <value>顶部中央</value>
+    <comment>托盘菜单 - 顶部中央位置</comment>
+  </data>
+  <data name="Tray_Position_TopRight" xml:space="preserve">
+    <value>右上角</value>
+    <comment>托盘菜单 - 右上角位置</comment>
+  </data>
+  <data name="Tray_Position_Center" xml:space="preserve">
+    <value>屏幕中央</value>
+    <comment>托盘菜单 - 屏幕中央位置</comment>
+  </data>
+  <data name="Tray_Position_BottomLeft" xml:space="preserve">
+    <value>左下角</value>
+    <comment>托盘菜单 - 左下角位置</comment>
+  </data>
+  <data name="Tray_Position_BottomRight" xml:space="preserve">
+    <value>右下角</value>
+    <comment>托盘菜单 - 右下角位置</comment>
+  </data>
+  <data name="Tray_RememberPosition" xml:space="preserve">
+    <value>记住当前位置</value>
+    <comment>托盘菜单 - 记住位置</comment>
+  </data>
+  <data name="Tray_RestorePosition" xml:space="preserve">
+    <value>恢复保存位置</value>
+    <comment>托盘菜单 - 恢复位置</comment>
+  </data>
+  <data name="Tray_ClickThrough" xml:space="preserve">
+    <value>穿透模式</value>
+    <comment>托盘菜单 - 穿透模式</comment>
+  </data>
+  <data name="Tray_Tools" xml:space="preserve">
+    <value>工具</value>
+    <comment>托盘菜单 - 工具组</comment>
+  </data>
+  <data name="Tray_Export" xml:space="preserve">
+    <value>导出便签</value>
+    <comment>托盘菜单 - 导出便签</comment>
+  </data>
+  <data name="Tray_Import" xml:space="preserve">
+    <value>导入便签</value>
+    <comment>托盘菜单 - 导入便签</comment>
+  </data>
+  <data name="Tray_Clear" xml:space="preserve">
+    <value>清空内容</value>
+    <comment>托盘菜单 - 清空内容</comment>
+  </data>
+  <data name="Tray_About" xml:space="preserve">
+    <value>关于</value>
+    <comment>托盘菜单 - 关于</comment>
+  </data>
+  <data name="Tray_Restart" xml:space="preserve">
+    <value>重启托盘图标</value>
+    <comment>托盘菜单 - 重启托盘</comment>
+  </data>
+  <data name="Tray_ReenableExit" xml:space="preserve">
+    <value>重新启用退出提示</value>
+    <comment>托盘菜单 - 重新启用退出提示</comment>
+  </data>
+  <data name="Tray_ReenableDelete" xml:space="preserve">
+    <value>重新启用删除提示</value>
+    <comment>托盘菜单 - 重新启用删除提示</comment>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>退出</value>
+    <comment>托盘菜单 - 退出</comment>
   </data>
   
 </root>

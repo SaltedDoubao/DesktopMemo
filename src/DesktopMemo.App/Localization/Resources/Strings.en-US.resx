@@ -148,10 +148,10 @@
     <value>Y:</value>
   </data>
   <data name="Settings_Position_Remember" xml:space="preserve">
-    <value>Remember Position</value>
+    <value>Remember</value>
   </data>
   <data name="Settings_Position_Restore" xml:space="preserve">
-    <value>Restore Position</value>
+    <value>Restore</value>
   </data>
   
   <data name="Settings_Appearance_Title" xml:space="preserve">
@@ -212,7 +212,7 @@
     <value>Don't show this again</value>
   </data>
   <data name="Dialog_Exit_Minimize" xml:space="preserve">
-    <value>Minimize to Tray</value>
+    <value>To Tray</value>
   </data>
   <data name="Dialog_Exit_Exit" xml:space="preserve">
     <value>Exit</value>
@@ -275,14 +275,20 @@ This operation cannot be undone.</value>
   </data>
   
   <!-- System Tray -->
-  <data name="Tray_Show" xml:space="preserve">
-    <value>Show Window</value>
+  <data name="Tray_ShowHide" xml:space="preserve">
+    <value>Show/Hide Window</value>
   </data>
-  <data name="Tray_Hide" xml:space="preserve">
-    <value>Hide Window</value>
+  <data name="Tray_NewMemo" xml:space="preserve">
+    <value>New Memo</value>
   </data>
-  <data name="Tray_Exit" xml:space="preserve">
-    <value>Exit</value>
+  <data name="Tray_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Tray_WindowControl" xml:space="preserve">
+    <value>Window Control</value>
+  </data>
+  <data name="Tray_TopmostMode" xml:space="preserve">
+    <value>Topmost Mode</value>
   </data>
   <data name="Tray_TopmostNormal" xml:space="preserve">
     <value>Normal Mode</value>
@@ -293,11 +299,65 @@ This operation cannot be undone.</value>
   <data name="Tray_TopmostAlways" xml:space="preserve">
     <value>Always on Top</value>
   </data>
-  <data name="Tray_ClickThroughOn" xml:space="preserve">
-    <value>Enable Click Through</value>
+  <data name="Tray_Position" xml:space="preserve">
+    <value>Window Position</value>
   </data>
-  <data name="Tray_ClickThroughOff" xml:space="preserve">
-    <value>Disable Click Through</value>
+  <data name="Tray_QuickPosition" xml:space="preserve">
+    <value>Quick Position</value>
+  </data>
+  <data name="Tray_Position_TopLeft" xml:space="preserve">
+    <value>Top Left</value>
+  </data>
+  <data name="Tray_Position_TopCenter" xml:space="preserve">
+    <value>Top Center</value>
+  </data>
+  <data name="Tray_Position_TopRight" xml:space="preserve">
+    <value>Top Right</value>
+  </data>
+  <data name="Tray_Position_Center" xml:space="preserve">
+    <value>Screen Center</value>
+  </data>
+  <data name="Tray_Position_BottomLeft" xml:space="preserve">
+    <value>Bottom Left</value>
+  </data>
+  <data name="Tray_Position_BottomRight" xml:space="preserve">
+    <value>Bottom Right</value>
+  </data>
+  <data name="Tray_RememberPosition" xml:space="preserve">
+    <value>Remember Position</value>
+  </data>
+  <data name="Tray_RestorePosition" xml:space="preserve">
+    <value>Restore Position</value>
+  </data>
+  <data name="Tray_ClickThrough" xml:space="preserve">
+    <value>Click Through Mode</value>
+  </data>
+  <data name="Tray_Tools" xml:space="preserve">
+    <value>Tools</value>
+  </data>
+  <data name="Tray_Export" xml:space="preserve">
+    <value>Export Memos</value>
+  </data>
+  <data name="Tray_Import" xml:space="preserve">
+    <value>Import Memos</value>
+  </data>
+  <data name="Tray_Clear" xml:space="preserve">
+    <value>Clear Content</value>
+  </data>
+  <data name="Tray_About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Tray_Restart" xml:space="preserve">
+    <value>Restart Tray Icon</value>
+  </data>
+  <data name="Tray_ReenableExit" xml:space="preserve">
+    <value>Re-enable Exit Prompt</value>
+  </data>
+  <data name="Tray_ReenableDelete" xml:space="preserve">
+    <value>Re-enable Delete Prompt</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Exit</value>
   </data>
   
 </root>
