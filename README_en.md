@@ -143,20 +143,21 @@ For other development considerations, see [应用开发规范.md](docs/应用开
 
 ## 📝 Changelog
 
-### v2.1.0 (Latest)
-- ✨ Added Todo List functionality
-  - Quick add, check, and delete todo items
-  - Click title bar to switch between Memo/Todo modes
-  - JSON format persistent storage
+### v2.2.0 (Latest)
+- ✨ Added multi-language support
+  - Currently supported languages: 
+    - Simplified Chinese
+    - Traditional Chinese
+    - English
 
 For more history, see [Releases](../../releases)
 
 ## 🚧 Roadmap
 
 ### Updates that may be implemented soon
-- [ ] Multi-language support
 - [ ] Add preset window size schemes
 - [ ] Add theme switching functionality
+- [x] ~~Multi-language support~~ ✅ Implemented (v2.2.0)
 - [x] ~~Todo-list functionality~~ ✅ Implemented (v2.1.0)
 
 ### Future update trends
