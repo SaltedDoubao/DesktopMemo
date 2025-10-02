@@ -30,4 +30,5 @@ public interface ITrayService : IDisposable
     void UpdateText(string text);
     void UpdateTopmostState(TopmostMode mode);
     void UpdateClickThroughState(bool enabled);
+    void UpdateMenuTexts(Func<string, string> getLocalizedString);
 }

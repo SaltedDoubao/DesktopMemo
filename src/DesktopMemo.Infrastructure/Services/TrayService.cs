@@ -34,6 +34,14 @@ public sealed class TrayService : ITrayService
     private Forms.ToolStripMenuItem? _trayPresetBottomLeft;
     private Forms.ToolStripMenuItem? _trayPresetBottomRight;
     private Forms.ToolStripMenuItem? _toggleSettingsItem;
+    private Forms.ToolStripMenuItem? _showHideItem;
+    private Forms.ToolStripMenuItem? _newMemoItem;
+    private Forms.ToolStripMenuItem? _windowControlGroup;
+    private Forms.ToolStripMenuItem? _topmostGroup;
+    private Forms.ToolStripMenuItem? _positionGroup;
+    private Forms.ToolStripMenuItem? _quickPosGroup;
+    private Forms.ToolStripMenuItem? _toolsGroup;
+    private Forms.ToolStripMenuItem? _exitItem;
     private Forms.ContextMenuStrip? _contextMenu;
     private static Icon? _cachedTrayIcon;
 
@@ -287,18 +295,18 @@ public sealed class TrayService : ITrayService
         _boldFont?.Dispose();
         _boldFont = CreateFont("Microsoft YaHei", 9F, FontStyle.Bold);
 
-        var showHideItem = new Forms.ToolStripMenuItem("🏠 显示/隐藏窗口") { Font = _boldFont };
-        showHideItem.Click += (s, e) => ShowHideWindowClick?.Invoke(s, e);
+        _showHideItem = new Forms.ToolStripMenuItem("🏠 显示/隐藏窗口") { Font = _boldFont };
+        _showHideItem.Click += (s, e) => ShowHideWindowClick?.Invoke(s, e);
 
-        var newMemoItem = new Forms.ToolStripMenuItem("📝 新建便签") { Font = _regularFont };
-        newMemoItem.Click += (s, e) => NewMemoClick?.Invoke(s, e);
+        _newMemoItem = new Forms.ToolStripMenuItem("📝 新建便签") { Font = _regularFont };
+        _newMemoItem.Click += (s, e) => NewMemoClick?.Invoke(s, e);
 
         _toggleSettingsItem = new Forms.ToolStripMenuItem("⚙️ 设置") { Font = _regularFont };
         _toggleSettingsItem.Click += (s, e) => SettingsClick?.Invoke(s, e);
 
-        var windowControlGroup = new Forms.ToolStripMenuItem("🖼️ 窗口控制") { Font = _regularFont };
+        _windowControlGroup = new Forms.ToolStripMenuItem("🖼️ 窗口控制") { Font = _regularFont };
 
-        var topmostGroup = new Forms.ToolStripMenuItem("📌 置顶模式") { Font = _regularFont };
+        _topmostGroup = new Forms.ToolStripMenuItem("📌 置顶模式") { Font = _regularFont };
         _topmostNormalItem = new Forms.ToolStripMenuItem("普通模式") { Font = _regularFont };
         _topmostDesktopItem = new Forms.ToolStripMenuItem("桌面置顶") { Font = _regularFont };
         _topmostAlwaysItem = new Forms.ToolStripMenuItem("总是置顶") { Font = _regularFont };
@@ -307,15 +315,15 @@ public sealed class TrayService : ITrayService
         _topmostNormalItem.Click += (s, e) => OnTopmostModeChanged(TopmostMode.Normal);
         _topmostDesktopItem.Click += (s, e) => OnTopmostModeChanged(TopmostMode.Desktop);
         _topmostAlwaysItem.Click += (s, e) => OnTopmostModeChanged(TopmostMode.Always);
-        topmostGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
+        _topmostGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
         {
             _topmostNormalItem,
             _topmostDesktopItem,
             _topmostAlwaysItem
         });
 
-        var positionGroup = new Forms.ToolStripMenuItem("📍 窗口位置") { Font = _regularFont };
-        var quickPosGroup = new Forms.ToolStripMenuItem("快速定位") { Font = _regularFont };
+        _positionGroup = new Forms.ToolStripMenuItem("📍 窗口位置") { Font = _regularFont };
+        _quickPosGroup = new Forms.ToolStripMenuItem("快速定位") { Font = _regularFont };
 
         _trayPresetTopLeft = new Forms.ToolStripMenuItem("左上角", null, (s, e) => MoveToPresetClick?.Invoke(s, "TopLeft")) { Font = _regularFont };
         _trayPresetTopCenter = new Forms.ToolStripMenuItem("顶部中央", null, (s, e) => MoveToPresetClick?.Invoke(s, "TopCenter")) { Font = _regularFont };
@@ -324,7 +332,7 @@ public sealed class TrayService : ITrayService
         _trayPresetBottomLeft = new Forms.ToolStripMenuItem("左下角", null, (s, e) => MoveToPresetClick?.Invoke(s, "BottomLeft")) { Font = _regularFont };
         _trayPresetBottomRight = new Forms.ToolStripMenuItem("右下角", null, (s, e) => MoveToPresetClick?.Invoke(s, "BottomRight")) { Font = _regularFont };
 
-        quickPosGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
+        _quickPosGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
         {
             _trayPresetTopLeft,
             _trayPresetTopCenter,
@@ -342,9 +350,9 @@ public sealed class TrayService : ITrayService
         _restorePositionItem = new Forms.ToolStripMenuItem("恢复保存位置") { Font = _regularFont };
         _restorePositionItem.Click += (s, e) => RestorePositionClick?.Invoke(s, e);
 
-        positionGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
+        _positionGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
         {
-            quickPosGroup,
+            _quickPosGroup,
             new Forms.ToolStripSeparator(),
             _rememberPositionItem,
             _restorePositionItem
@@ -357,18 +365,18 @@ public sealed class TrayService : ITrayService
         };
         _trayClickThroughItem.Click += (s, e) => ClickThroughToggleClick?.Invoke(s, _trayClickThroughItem.Checked);
 
-        windowControlGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
+        _windowControlGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
         {
-            topmostGroup,
-            positionGroup,
+            _topmostGroup,
+            _positionGroup,
             _trayClickThroughItem
         });
 
-        var toolsGroup = new Forms.ToolStripMenuItem("🛠️ 工具") { Font = _regularFont };
+        _toolsGroup = new Forms.ToolStripMenuItem("🛠️ 工具") { Font = _regularFont };
         _exportNotesItem = new Forms.ToolStripMenuItem("📤 导出便签", null, (s, e) => ExportNotesClick?.Invoke(s, e)) { Font = _regularFont };
         _importNotesItem = new Forms.ToolStripMenuItem("📥 导入便签", null, (s, e) => ImportNotesClick?.Invoke(s, e)) { Font = _regularFont };
         _clearContentItem = new Forms.ToolStripMenuItem("🗑️ 清空内容", null, (s, e) => ClearContentClick?.Invoke(s, e)) { Font = _regularFont };
-        toolsGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
+        _toolsGroup.DropDownItems.AddRange(new Forms.ToolStripItem[]
         {
             _exportNotesItem,
             _importNotesItem,
@@ -385,25 +393,64 @@ public sealed class TrayService : ITrayService
 
         _restartTrayItem = new Forms.ToolStripMenuItem("🔁 重启托盘图标", null, (s, e) => RestartTrayClick?.Invoke(s, e)) { Font = _regularFont };
 
-        var exitItem = new Forms.ToolStripMenuItem("❌ 退出") { Font = _boldFont };
-        exitItem.Click += (s, e) => ExitClick?.Invoke(s, e);
+        _exitItem = new Forms.ToolStripMenuItem("❌ 退出") { Font = _boldFont };
+        _exitItem.Click += (s, e) => ExitClick?.Invoke(s, e);
 
         _contextMenu.Items.AddRange(new Forms.ToolStripItem[]
         {
-            showHideItem,
-            newMemoItem,
+            _showHideItem,
+            _newMemoItem,
             _toggleSettingsItem,
             new Forms.ToolStripSeparator(),
-            windowControlGroup,
+            _windowControlGroup,
             new Forms.ToolStripSeparator(),
-            toolsGroup,
+            _toolsGroup,
             new Forms.ToolStripSeparator(),
             _aboutItem,
             _restartTrayItem,
             _showExitPromptItem,
             _showDeletePromptItem,
-            exitItem
+            _exitItem
         });
+    }
+
+    public void UpdateMenuTexts(Func<string, string> getLocalizedString)
+    {
+        try
+        {
+            if (_showHideItem != null) _showHideItem.Text = "🏠 " + getLocalizedString("Tray_ShowHide");
+            if (_newMemoItem != null) _newMemoItem.Text = "📝 " + getLocalizedString("Tray_NewMemo");
+            if (_toggleSettingsItem != null) _toggleSettingsItem.Text = "⚙️ " + getLocalizedString("Tray_Settings");
+            if (_windowControlGroup != null) _windowControlGroup.Text = "🖼️ " + getLocalizedString("Tray_WindowControl");
+            if (_topmostGroup != null) _topmostGroup.Text = "📌 " + getLocalizedString("Tray_TopmostMode");
+            if (_topmostNormalItem != null) _topmostNormalItem.Text = getLocalizedString("Tray_TopmostNormal");
+            if (_topmostDesktopItem != null) _topmostDesktopItem.Text = getLocalizedString("Tray_TopmostDesktop");
+            if (_topmostAlwaysItem != null) _topmostAlwaysItem.Text = getLocalizedString("Tray_TopmostAlways");
+            if (_positionGroup != null) _positionGroup.Text = "📍 " + getLocalizedString("Tray_Position");
+            if (_quickPosGroup != null) _quickPosGroup.Text = getLocalizedString("Tray_QuickPosition");
+            if (_trayPresetTopLeft != null) _trayPresetTopLeft.Text = getLocalizedString("Tray_Position_TopLeft");
+            if (_trayPresetTopCenter != null) _trayPresetTopCenter.Text = getLocalizedString("Tray_Position_TopCenter");
+            if (_trayPresetTopRight != null) _trayPresetTopRight.Text = getLocalizedString("Tray_Position_TopRight");
+            if (_trayPresetCenter != null) _trayPresetCenter.Text = getLocalizedString("Tray_Position_Center");
+            if (_trayPresetBottomLeft != null) _trayPresetBottomLeft.Text = getLocalizedString("Tray_Position_BottomLeft");
+            if (_trayPresetBottomRight != null) _trayPresetBottomRight.Text = getLocalizedString("Tray_Position_BottomRight");
+            if (_rememberPositionItem != null) _rememberPositionItem.Text = getLocalizedString("Tray_RememberPosition");
+            if (_restorePositionItem != null) _restorePositionItem.Text = getLocalizedString("Tray_RestorePosition");
+            if (_trayClickThroughItem != null) _trayClickThroughItem.Text = "👻 " + getLocalizedString("Tray_ClickThrough");
+            if (_toolsGroup != null) _toolsGroup.Text = "🛠️ " + getLocalizedString("Tray_Tools");
+            if (_exportNotesItem != null) _exportNotesItem.Text = "📤 " + getLocalizedString("Tray_Export");
+            if (_importNotesItem != null) _importNotesItem.Text = "📥 " + getLocalizedString("Tray_Import");
+            if (_clearContentItem != null) _clearContentItem.Text = "🗑️ " + getLocalizedString("Tray_Clear");
+            if (_aboutItem != null) _aboutItem.Text = "ℹ️ " + getLocalizedString("Tray_About");
+            if (_restartTrayItem != null) _restartTrayItem.Text = "🔁 " + getLocalizedString("Tray_Restart");
+            if (_showExitPromptItem != null) _showExitPromptItem.Text = "🔄 " + getLocalizedString("Tray_ReenableExit");
+            if (_showDeletePromptItem != null) _showDeletePromptItem.Text = "🗑️ " + getLocalizedString("Tray_ReenableDelete");
+            if (_exitItem != null) _exitItem.Text = "❌ " + getLocalizedString("Tray_Exit");
+        }
+        catch
+        {
+            // 更新菜单文本失败，忽略错误
+        }
     }
 
     private sealed class DarkTrayMenuRenderer : Forms.ToolStripProfessionalRenderer
