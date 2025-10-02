@@ -114,6 +114,9 @@
   <data name="Memo_UpdateTime" xml:space="preserve">
     <value>Updated: {0:MM/dd HH:mm}</value>
   </data>
+  <data name="Memo_NewTitle" xml:space="preserve">
+    <value>New Memo</value>
+  </data>
   
   <!-- Settings Panel -->
   <data name="Settings_Title" xml:space="preserve">

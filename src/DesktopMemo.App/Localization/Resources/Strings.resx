@@ -130,6 +130,10 @@
     <value>更新：{0:MM/dd HH:mm}</value>
     <comment>备忘录更新时间格式</comment>
   </data>
+  <data name="Memo_NewTitle" xml:space="preserve">
+    <value>新的备忘录</value>
+    <comment>新建备忘录的默认标题</comment>
+  </data>
   
   <!-- 设置面板 -->
   <data name="Settings_Title" xml:space="preserve">
