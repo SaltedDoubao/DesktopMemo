@@ -278,7 +278,7 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    dialog = new Views.ExitConfirmationDialog
+                    dialog = new Views.ExitConfirmationDialog(_viewModel.LocalizationService)
                     {
                         Owner = this
                     };

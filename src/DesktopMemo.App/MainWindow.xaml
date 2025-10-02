@@ -302,7 +302,7 @@
                             </Ellipse>
 
                             <StackPanel Orientation="Horizontal" Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                                <Button Background="Transparent" BorderThickness="0" Padding="0" Command="{Binding ToggleTodoListCommand}" Cursor="Hand" ToolTip="点击切换到待办事项/备忘录">
+                                <Button Background="Transparent" BorderThickness="0" Padding="0" Command="{Binding ToggleTodoListCommand}" Cursor="Hand" ToolTip="{Binding LocalizationService[Tooltip_ToggleMode]}">
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <ContentPresenter />
