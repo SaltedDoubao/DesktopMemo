@@ -18,8 +18,21 @@ DesktopMemo v2 is built on .NET 9.0 + WPF + CommunityToolkit.Mvvm, aiming to pro
 
 ## ✨ Key Features
 
-- Quickly create memos to help you record important things
-- Three stay-on-top modes, choose the most suitable way to keep the window on your desktop
+### 📝 Memo Management
+- Quickly create and edit Markdown-formatted memos
+- Auto-save, never lose your notes
+- List view for quick preview
+
+### ✅ Todo List
+- Lightweight todo list management
+- Quick add, check, and delete todo items
+- Completed items shown with strikethrough, can undo or clear
+- Click "Memo/Todo List" text in the title bar to switch modes
+
+### 🪟 Window Management
+- Three stay-on-top modes (Normal, Desktop, Always on Top)
+- Adjustable transparency and click-through mode
+- Flexible window position presets
 
 ## 🖥️ System Requirements
 
@@ -60,6 +73,7 @@ On first run, `/.memodata` will be generated in the executable directory:
 ├── content/
 │   ├── index.json           # Memo index
 │   └── {memoId}.md          # YAML Front Matter + content
+├── todos.json               # Todo list data
 └── settings.json            # Window and global settings
 ```
 
@@ -106,19 +120,33 @@ DesktopMemo_rebuild/
 │   │   ├── App.xaml(.cs)           # Startup and DI registration
 │   │   ├── MainWindow.xaml(.cs)    # Main window
 │   │   ├── ViewModels/             # MVVM view models
+│   │   │   ├── MainViewModel.cs    # Main view model
+│   │   │   ├── MemoListViewModel.cs
+│   │   │   └── TodoListViewModel.cs # Todo list view model
+│   │   ├── Converters/             # Value converters
+│   │   │   ├── EnumToBooleanConverter.cs
+│   │   │   ├── InverseBooleanToVisibilityConverter.cs
+│   │   │   └── CountToVisibilityConverter.cs # Count to visibility converter
 │   │   └── Resources/              # Styles and resources
 │   ├── DesktopMemo.Core/           # Domain models and contracts
 │   │   ├── Contracts/
-│   │   │   └── IMemoRepository.cs etc interfaces
+│   │   │   ├── IMemoRepository.cs
+│   │   │   ├── ITodoRepository.cs  # Todo repository interface
+│   │   │   ├── ISettingsService.cs
+│   │   │   └── IWindowService.cs etc
 │   │   └── Models/
 │   │       ├── Memo.cs
+│   │       ├── TodoItem.cs         # Todo item model
 │   │       └── WindowSettings.cs
 │   └── DesktopMemo.Infrastructure/# Implementation layer (file storage, system services)
 │       ├── Repositories/
-│       │   └── FileMemoRepository.cs
+│       │   ├── FileMemoRepository.cs
+│       │   └── JsonTodoRepository.cs # JSON todo storage
 │       └── Services/
 │           ├── JsonSettingsService.cs
-│           └── WindowService.cs etc
+│           ├── MemoSearchService.cs
+│           ├── WindowService.cs
+│           └── TrayService.cs etc
 ├── artifacts/                      # Build output directory
 └── publish/                        # Release artifacts
 ```
@@ -149,7 +177,14 @@ For other development considerations, see [应用开发规范.md](docs/应用开
 
 ## 📝 Changelog
 
-See [Releases](../../releases)
+### v2.1.0 (In Development)
+- ✨ Added Todo List functionality
+  - Quick add, check, and delete todo items
+  - Completed items auto-grouped with strikethrough
+  - Click title bar to switch between Memo/Todo modes
+  - JSON format persistent storage
+
+For more history, see [Releases](../../releases)
 
 ## 🚧 Roadmap
 
@@ -157,9 +192,10 @@ See [Releases](../../releases)
 - [ ] Multi-language support
 - [ ] Add preset window size schemes
 - [ ] Add theme switching functionality
+- [x] ~~Todo-list functionality~~ ✅ Implemented (v2.1.0)
 
 ### Future update trends
-- [ ] Todo-list functionality
+- To be added...
 
 ## 📄 License
 

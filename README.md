@@ -18,8 +18,21 @@ DesktopMemo v2 基于 .NET 9.0 + WPF + CommunityToolkit.Mvvm，目标是在经�
 
 ## ✨ 主要功能
 
-- 快速创建备忘录，以便您记录重要事项
-- 三种置顶方式，选择最适合您的方式让窗口留在桌面
+### 📝 备忘录管理
+- 快速创建和编辑 Markdown 格式的备忘录
+- 自动保存，永不丢失
+- 列表视图快速预览
+
+### ✅ 待办事项
+- 轻量级待办事项列表
+- 快速添加、勾选、删除待办项
+- 已完成项目带删除线显示，可撤销或清除
+- 点击标题栏"备忘录/待办事项"文字即可切换
+
+### 🪟 窗口管理
+- 三种置顶方式（普通、桌面置顶、总是置顶）
+- 可调节透明度和穿透模式
+- 灵活的窗口位置预设
 
 ## 🖥️ 系统要求
 
@@ -98,27 +111,8 @@ v2.0.0之前的数据与新版本不兼容，可通过以下方式导入：
 DesktopMemo_rebuild/
 ├── DesktopMemo.sln
 ├── build_exe.bat                   # 构建可执行文件脚本
-├── docs/
-│   ├── development-guide.md        # 开发/调试说明
-│   └── architecture/...            # 架构设计文档
-├── src/
-│   ├── DesktopMemo.App/            # WPF 前端
-│   │   ├── App.xaml(.cs)           # 启动与 DI 注册
-│   │   ├── MainWindow.xaml(.cs)    # 主窗口
-│   │   ├── ViewModels/             # MVVM 视图模型
-│   │   └── Resources/              # 样式与资源
-│   ├── DesktopMemo.Core/           # 领域模型与契约
-│   │   ├── Contracts/
-│   │   │   └── IMemoRepository.cs 等接口
-│   │   └── Models/
-│   │       ├── Memo.cs
-│   │       └── WindowSettings.cs
-│   └── DesktopMemo.Infrastructure/# 实现层（文件存储、系统服务）
-│       ├── Repositories/
-│       │   └── FileMemoRepository.cs
-│       └── Services/
-│           ├── JsonSettingsService.cs
-│           └── WindowService.cs 等
+├── docs/                           # 项目文档
+├── src/                            # 项目主目录
 ├── artifacts/                      # 构建输出目录
 └── publish/                        # 发布产物
 ```
@@ -149,7 +143,14 @@ DesktopMemo_rebuild/
 
 ## 📝 更新日志
 
-详见 [Releases](../../releases)
+### v2.1.0 (开发中)
+- ✨ 新增待办事项（Todo-List）功能
+  - 快速添加、勾选、删除待办项
+  - 已完成项目自动分组显示（带删除线）
+  - 点击标题栏切换备忘录/待办事项模式
+  - JSON 格式持久化存储
+
+更多历史版本详见 [Releases](../../releases)
 
 ## 🚧 施工规划
 
@@ -157,9 +158,10 @@ DesktopMemo_rebuild/
 - [ ] 适配多语言
 - [ ] 添加预设窗口大小方案
 - [ ] 添加主题更换功能
+- [x] ~~Todo-list功能~~ ✅ 已实现（v2.1.0）
 
 ### 未来更新趋势
-- [ ] Todo-list功能
+- 待补充...
 
 ## 📄 许可证
 
