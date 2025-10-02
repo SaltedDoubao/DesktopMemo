@@ -738,14 +738,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "2.0.0";
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "2.1.0";
             var appDir = AppContext.BaseDirectory;
             var dataPath = Path.Combine(appDir, ".memodata");
             AppInfo = $"版本：{version} | 数据目录：{dataPath}";
         }
         catch
         {
-            AppInfo = "版本：2.0.0 | 数据目录：<应用目录>\\.memodata";
+            AppInfo = "版本：2.1.0 | 数据目录：<应用目录>\\.memodata";
         }
     }
 
