@@ -17,9 +17,10 @@ public sealed record WindowSettings(
     bool IsClickThrough,
     bool ShowDeleteConfirmation = true,
     bool ShowExitConfirmation = true,
-    bool DefaultExitToTray = true)
+    bool DefaultExitToTray = true,
+    string PreferredLanguage = "zh-CN")
 {
-    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, WindowConstants.DEFAULT_TRANSPARENCY, false, true, false, true, true, true);
+    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, WindowConstants.DEFAULT_TRANSPARENCY, false, true, false, true, true, true, "zh-CN");
 
     public WindowSettings WithLocation(double left, double top)
         => this with { Left = left, Top = top };

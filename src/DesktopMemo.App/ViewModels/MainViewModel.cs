@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +27,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IMemoSearchService _searchService;
     private readonly MemoMigrationService _migrationService;
     private readonly TodoListViewModel _todoListViewModel;
+    private readonly ILocalizationService _localizationService;
 
     [ObservableProperty]
     private ObservableCollection<Memo> _memos = new();
@@ -109,6 +112,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public TodoListViewModel TodoListViewModel => _todoListViewModel;
 
+    public ILocalizationService LocalizationService => _localizationService;
+
+    public IEnumerable<CultureInfo> AvailableLanguages => _localizationService.GetSupportedLanguages();
+
+    [ObservableProperty]
+    private CultureInfo? _selectedLanguage;
+
     private bool _disposed;
 
     public MainViewModel(
@@ -118,7 +128,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ITrayService trayService,
         IMemoSearchService searchService,
         MemoMigrationService migrationService,
-        TodoListViewModel todoListViewModel)
+        TodoListViewModel todoListViewModel,
+        ILocalizationService localizationService)
     {
         _memoRepository = memoRepository;
         _settingsService = settingsService;
@@ -127,8 +138,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _searchService = searchService;
         _migrationService = migrationService;
         _todoListViewModel = todoListViewModel;
+        _localizationService = localizationService;
 
         Memos.CollectionChanged += OnMemosCollectionChanged;
+
+        // 订阅语言切换事件
+        _localizationService.LanguageChanged += OnLanguageChanged;
 
         // 初始化应用信息
         InitializeAppInfo();
@@ -179,6 +194,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         // 初始化 TodoListViewModel
         await _todoListViewModel.InitializeAsync(cancellationToken);
+
+        // 初始化选择的语言
+        SelectedLanguage = _localizationService.CurrentCulture;
 
         SetStatus("就绪");
         _trayService.UpdateTopmostState(SelectedTopmostMode);
@@ -295,8 +313,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 {
                     dialog = new Views.ConfirmationDialog
                     {
-                        Title = "删除确认",
-                        Message = $"确定要删除备忘录\"{SelectedMemo.DisplayTitle}\"吗？\n\n此操作不可撤销。"
+                        Title = _localizationService["Dialog_DeleteConfirm_Title"],
+                        Message = string.Format(_localizationService["Dialog_DeleteConfirm_Message"], SelectedMemo.DisplayTitle)
                     };
 
                     // 安全地设置Owner
@@ -769,6 +787,38 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     public ISettingsService GetSettingsService() => _settingsService;
+
+    private void OnLanguageChanged(object? sender, LanguageChangedEventArgs e)
+    {
+        // 通知 UI 刷新所有本地化文本
+        OnPropertyChanged(nameof(LocalizationService));
+    }
+
+    partial void OnSelectedLanguageChanged(CultureInfo? value)
+    {
+        if (value != null && value.Name != _localizationService.CurrentCulture.Name)
+        {
+            // 切换语言
+            _localizationService.ChangeLanguage(value.Name);
+            
+            // 保存到设置（异步）
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var settings = await _settingsService.LoadAsync();
+                    var newSettings = settings with { PreferredLanguage = value.Name };
+                    await _settingsService.SaveAsync(newSettings);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"保存语言设置失败: {ex}");
+                }
+            });
+            
+            SetStatus($"语言已切换到 {value.NativeName}");
+        }
+    }
 
     public void Dispose()
     {

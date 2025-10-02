@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" msdata:Ordinal="5" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- Main Window -->
+  <data name="MainWindow_Title_Memo" xml:space="preserve">
+    <value>Memos</value>
+  </data>
+  <data name="MainWindow_Title_Todo" xml:space="preserve">
+    <value>Todo List</value>
+  </data>
+  <data name="MainWindow_Title_Edit" xml:space="preserve">
+    <value>Edit Memo</value>
+  </data>
+  
+  <!-- Buttons -->
+  <data name="Button_New" xml:space="preserve">
+    <value>New Memo</value>
+  </data>
+  <data name="Button_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Button_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Button_Back" xml:space="preserve">
+    <value>Back to List</value>
+  </data>
+  <data name="Button_Save" xml:space="preserve">
+    <value>Save &amp; Back</value>
+  </data>
+  <data name="Button_Delete" xml:space="preserve">
+    <value>Delete Memo</value>
+  </data>
+  <data name="Button_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Button_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Button_Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  
+  <!-- Todo -->
+  <data name="Todo_Placeholder" xml:space="preserve">
+    <value>Add new todo item...</value>
+  </data>
+  <data name="Todo_Section_Incomplete" xml:space="preserve">
+    <value>Todo</value>
+  </data>
+  <data name="Todo_Section_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  
+  <!-- Memo List -->
+  <data name="Memo_UpdateTime" xml:space="preserve">
+    <value>Updated: {0:MM/dd HH:mm}</value>
+  </data>
+  
+  <!-- Settings Panel -->
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings_Topmost_Title" xml:space="preserve">
+    <value>Window Topmost Mode</value>
+  </data>
+  <data name="Settings_Topmost_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Settings_Topmost_Desktop" xml:space="preserve">
+    <value>Desktop Topmost</value>
+  </data>
+  <data name="Settings_Topmost_Always" xml:space="preserve">
+    <value>Always on Top</value>
+  </data>
+  
+  <data name="Settings_Position_Title" xml:space="preserve">
+    <value>Window Position</value>
+  </data>
+  <data name="Settings_Position_Current" xml:space="preserve">
+    <value>Current Position:</value>
+  </data>
+  <data name="Settings_Position_X" xml:space="preserve">
+    <value>X:</value>
+  </data>
+  <data name="Settings_Position_Y" xml:space="preserve">
+    <value>Y:</value>
+  </data>
+  <data name="Settings_Position_Remember" xml:space="preserve">
+    <value>Remember Position</value>
+  </data>
+  <data name="Settings_Position_Restore" xml:space="preserve">
+    <value>Restore Position</value>
+  </data>
+  
+  <data name="Settings_Appearance_Title" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings_Opacity_Label" xml:space="preserve">
+    <value>Background Opacity</value>
+  </data>
+  <data name="Settings_Opacity_Current" xml:space="preserve">
+    <value>Current: {0:F0}%</value>
+  </data>
+  <data name="Settings_Opacity_Tip" xml:space="preserve">
+    <value>0% = Fully Transparent, 100% = White Background</value>
+  </data>
+  
+  <data name="Settings_Language_Title" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings_Language_Label" xml:space="preserve">
+    <value>Interface Language</value>
+  </data>
+  
+  <data name="Settings_Other_Title" xml:space="preserve">
+    <value>Other Options</value>
+  </data>
+  <data name="Settings_ClickThrough" xml:space="preserve">
+    <value>Click Through Mode</value>
+  </data>
+  <data name="Settings_AutoStart" xml:space="preserve">
+    <value>Auto Start on Boot</value>
+  </data>
+  
+  <data name="Settings_Status_Title" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  
+  <data name="Settings_ImportExport_Title" xml:space="preserve">
+    <value>Import / Export</value>
+  </data>
+  <data name="Settings_ImportLegacy" xml:space="preserve">
+    <value>Import Legacy Data</value>
+  </data>
+  <data name="Settings_ExportMarkdown" xml:space="preserve">
+    <value>Export Markdown</value>
+  </data>
+  <data name="Settings_SaveSettings" xml:space="preserve">
+    <value>Save Settings</value>
+  </data>
+  
+  <!-- Dialogs -->
+  <data name="Dialog_Exit_Title" xml:space="preserve">
+    <value>Exit Confirmation</value>
+  </data>
+  <data name="Dialog_Exit_Message" xml:space="preserve">
+    <value>Minimize to tray?</value>
+  </data>
+  <data name="Dialog_Exit_DontShowAgain" xml:space="preserve">
+    <value>Don't show this again</value>
+  </data>
+  <data name="Dialog_Exit_Minimize" xml:space="preserve">
+    <value>Minimize to Tray</value>
+  </data>
+  <data name="Dialog_Exit_Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Dialog_Exit_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  
+  <!-- Tooltips -->
+  <data name="Tooltip_ToggleMode" xml:space="preserve">
+    <value>Click to switch between Todo/Memo mode</value>
+  </data>
+  <data name="Tooltip_Pin" xml:space="preserve">
+    <value>Pin/Unpin window</value>
+  </data>
+  <data name="Tooltip_BackToList" xml:space="preserve">
+    <value>Back to List</value>
+  </data>
+  <data name="Tooltip_SaveAndBack" xml:space="preserve">
+    <value>Save &amp; Back</value>
+  </data>
+  <data name="Tooltip_Delete" xml:space="preserve">
+    <value>Delete Memo</value>
+  </data>
+  <data name="Tooltip_AddTodo" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Tooltip_DeleteTodo" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Tooltip_Return" xml:space="preserve">
+    <value>Return</value>
+  </data>
+  
+  <!-- Language Names -->
+  <data name="Language_zhCN" xml:space="preserve">
+    <value>Simplified Chinese</value>
+  </data>
+  <data name="Language_enUS" xml:space="preserve">
+    <value>English (US)</value>
+  </data>
+  <data name="Language_zhTW" xml:space="preserve">
+    <value>Traditional Chinese</value>
+  </data>
+  
+  <!-- Dialogs - Delete Confirmation -->
+  <data name="Dialog_DeleteConfirm_Title" xml:space="preserve">
+    <value>Delete Confirmation</value>
+  </data>
+  <data name="Dialog_DeleteConfirm_Message" xml:space="preserve">
+    <value>Are you sure you want to delete memo "{0}"?
+
+This operation cannot be undone.</value>
+  </data>
+  <data name="Dialog_DeleteConfirm_DontShowAgain" xml:space="preserve">
+    <value>Don't show this again</value>
+  </data>
+  <data name="Dialog_Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  
+  <!-- System Tray -->
+  <data name="Tray_Show" xml:space="preserve">
+    <value>Show Window</value>
+  </data>
+  <data name="Tray_Hide" xml:space="preserve">
+    <value>Hide Window</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Tray_TopmostNormal" xml:space="preserve">
+    <value>Normal Mode</value>
+  </data>
+  <data name="Tray_TopmostDesktop" xml:space="preserve">
+    <value>Desktop Topmost</value>
+  </data>
+  <data name="Tray_TopmostAlways" xml:space="preserve">
+    <value>Always on Top</value>
+  </data>
+  <data name="Tray_ClickThroughOn" xml:space="preserve">
+    <value>Enable Click Through</value>
+  </data>
+  <data name="Tray_ClickThroughOff" xml:space="preserve">
+    <value>Disable Click Through</value>
+  </data>
+  
+</root>
+

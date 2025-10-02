@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using DesktopMemo.App.Localization;
 using DesktopMemo.App.ViewModels;
 using DesktopMemo.Core.Contracts;
 using DesktopMemo.Infrastructure.Repositories;
@@ -37,6 +38,9 @@ public partial class App : WpfApp
         services.AddSingleton<IWindowService, WindowService>();
         services.AddSingleton<ITrayService, TrayService>();
 
+        // 本地化服务
+        services.AddSingleton<ILocalizationService, LocalizationService>();
+
         // ViewModel
         services.AddSingleton<TodoListViewModel>();
         services.AddSingleton<MainViewModel>();
@@ -50,6 +54,16 @@ public partial class App : WpfApp
 
         try
         {
+            // 加载语言设置
+            var settingsService = Services.GetRequiredService<ISettingsService>();
+            var localizationService = Services.GetRequiredService<ILocalizationService>();
+            
+            var settings = await settingsService.LoadAsync();
+            if (!string.IsNullOrEmpty(settings.PreferredLanguage))
+            {
+                localizationService.ChangeLanguage(settings.PreferredLanguage);
+            }
+
             var viewModel = Services.GetRequiredService<MainViewModel>();
             var windowService = Services.GetRequiredService<IWindowService>();
             var trayService = Services.GetRequiredService<ITrayService>();
