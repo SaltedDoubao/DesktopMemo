@@ -197,6 +197,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         // 初始化选择的语言
         SelectedLanguage = _localizationService.CurrentCulture;
+        
+        // 初始化托盘菜单文本
+        _trayService.UpdateMenuTexts(key => _localizationService[key]);
 
         SetStatus("就绪");
         _trayService.UpdateTopmostState(SelectedTopmostMode);
@@ -311,11 +314,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    dialog = new Views.ConfirmationDialog
-                    {
-                        Title = _localizationService["Dialog_DeleteConfirm_Title"],
-                        Message = string.Format(_localizationService["Dialog_DeleteConfirm_Message"], SelectedMemo.DisplayTitle)
-                    };
+                    dialog = new Views.ConfirmationDialog(
+                        _localizationService,
+                        _localizationService["Dialog_DeleteConfirm_Title"],
+                        string.Format(_localizationService["Dialog_DeleteConfirm_Message"], SelectedMemo.DisplayTitle));
 
                     // 安全地设置Owner
                     if (System.Windows.Application.Current.MainWindow != null &&
@@ -792,6 +794,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         // 通知 UI 刷新所有本地化文本
         OnPropertyChanged(nameof(LocalizationService));
+        
+        // 更新托盘菜单文本
+        _trayService.UpdateMenuTexts(key => _localizationService[key]);
     }
 
     partial void OnSelectedLanguageChanged(CultureInfo? value)
@@ -801,14 +806,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
             // 切换语言
             _localizationService.ChangeLanguage(value.Name);
             
+            // 更新内存中的设置
+            WindowSettings = WindowSettings with { PreferredLanguage = value.Name };
+            
             // 保存到设置（异步）
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    var settings = await _settingsService.LoadAsync();
-                    var newSettings = settings with { PreferredLanguage = value.Name };
-                    await _settingsService.SaveAsync(newSettings);
+                    await _settingsService.SaveAsync(WindowSettings);
+                    System.Diagnostics.Debug.WriteLine($"语言设置已保存: {value.Name}");
                 }
                 catch (Exception ex)
                 {

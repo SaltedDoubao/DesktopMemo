@@ -784,11 +784,29 @@
                                           SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
                                           DisplayMemberPath="NativeName"
                                           Background="#30FFFFFF"
-                                          Foreground="#FFFFFFFF"
+                                          Foreground="#F0FFFFFF"
                                           BorderBrush="#50FFFFFF"
                                           BorderThickness="1"
                                           Padding="8,4"
-                                          Height="32" />
+                                          Height="32">
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Foreground" Value="#F0FFFFFF"/>
+                                            <Setter Property="Background" Value="#30FFFFFF"/>
+                                            <Setter Property="Padding" Value="8,6"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsHighlighted" Value="True">
+                                                    <Setter Property="Background" Value="#50FFFFFF"/>
+                                                    <Setter Property="Foreground" Value="#FFFFFFFF"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="#FF2196F3"/>
+                                                    <Setter Property="Foreground" Value="#FFFFFFFF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                </ComboBox>
                             </StackPanel>
                         </Border>
 
