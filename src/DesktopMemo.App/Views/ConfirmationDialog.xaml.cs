@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using DesktopMemo.Core.Contracts;
 
 namespace DesktopMemo.App.Views
 {
@@ -7,6 +8,7 @@ namespace DesktopMemo.App.Views
     {
         public bool DontShowAgain { get; private set; }
         public bool? DialogResultValue { get; private set; }
+        public ILocalizationService LocalizationService { get; }
 
         public string Message
         {
@@ -17,10 +19,13 @@ namespace DesktopMemo.App.Views
         public static readonly DependencyProperty MessageProperty =
             DependencyProperty.Register(nameof(Message), typeof(string), typeof(ConfirmationDialog), new PropertyMetadata(string.Empty));
 
-        public ConfirmationDialog()
+        public ConfirmationDialog(ILocalizationService localizationService, string title, string message)
         {
+            LocalizationService = localizationService;
             InitializeComponent();
             DataContext = this;
+            Title = title;
+            Message = message;
         }
 
         private void YesButton_Click(object sender, RoutedEventArgs e)
