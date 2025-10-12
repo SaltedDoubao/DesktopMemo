@@ -41,7 +41,7 @@ public sealed record Memo(
     }
     public static Memo CreateNew(string title, string content)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.Now;
         var preview = BuildPreview(content);
 
         return new Memo(

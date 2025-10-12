@@ -18,7 +18,7 @@ public sealed record TodoItem(
     /// </summary>
     public static TodoItem CreateNew(string content, int sortOrder = 0)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.Now;
         return new TodoItem(
             Guid.NewGuid(),
             content,
@@ -36,7 +36,7 @@ public sealed record TodoItem(
         return this with
         {
             IsCompleted = !IsCompleted,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.Now
         };
     }
 
@@ -48,7 +48,7 @@ public sealed record TodoItem(
         return this with
         {
             Content = content,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.Now
         };
     }
 
@@ -60,7 +60,7 @@ public sealed record TodoItem(
         return this with
         {
             SortOrder = sortOrder,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.Now
         };
     }
 }

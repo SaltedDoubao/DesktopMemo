@@ -105,6 +105,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _isTrayEnabled = true;
 
     private bool _isDisposing;
+    private bool _isInitializing;
 
     public int MemoCount => Memos.Count;
 
@@ -151,6 +152,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
+        _isInitializing = true;
+        
         var settings = await _settingsService.LoadAsync(cancellationToken);
         ApplyWindowSettings(settings);
 
@@ -201,12 +204,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // 初始化托盘菜单文本
         _trayService.UpdateMenuTexts(key => _localizationService[key]);
 
+        // 恢复上次的页面状态
+        if (settings.CurrentPage == "todo")
+        {
+            IsInTodoListMode = true;
+        }
+
         SetStatus("就绪");
         _trayService.UpdateTopmostState(SelectedTopmostMode);
         _trayService.UpdateClickThroughState(IsClickThroughEnabled);
 
         // 检查开机自启动状态
         CheckAutoStartStatus();
+        
+        _isInitializing = false;
     }
 
     private void ApplyWindowSettings(WindowSettings settings)
@@ -279,8 +290,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         var updated = SelectedMemo
-            .WithContent(EditorContent, DateTimeOffset.UtcNow)
-            .WithMetadata(EditorTitle, SelectedMemo.Tags, IsWindowPinned, DateTimeOffset.UtcNow);
+            .WithContent(EditorContent, DateTimeOffset.Now)
+            .WithMetadata(EditorTitle, SelectedMemo.Tags, IsWindowPinned, DateTimeOffset.Now);
 
         await _memoRepository.UpdateAsync(updated);
 
@@ -825,6 +836,33 @@ public partial class MainViewModel : ObservableObject, IDisposable
             
             SetStatus($"语言已切换到 {value.NativeName}");
         }
+    }
+
+    partial void OnIsInTodoListModeChanged(bool value)
+    {
+        // 初始化期间不保存设置，避免覆盖刚加载的设置
+        if (_isInitializing)
+        {
+            return;
+        }
+        
+        // 保存当前页面状态
+        var currentPage = value ? "todo" : "memo";
+        WindowSettings = WindowSettings with { CurrentPage = currentPage };
+        
+        // 异步保存到设置
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _settingsService.SaveAsync(WindowSettings);
+                System.Diagnostics.Debug.WriteLine($"当前页面已保存: {currentPage}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存当前页面失败: {ex}");
+            }
+        });
     }
 
     public void Dispose()

@@ -18,9 +18,10 @@ public sealed record WindowSettings(
     bool ShowDeleteConfirmation = true,
     bool ShowExitConfirmation = true,
     bool DefaultExitToTray = true,
-    string PreferredLanguage = "zh-CN")
+    string PreferredLanguage = "zh-CN",
+    string CurrentPage = "memo")
 {
-    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, WindowConstants.DEFAULT_TRANSPARENCY, false, true, false, true, true, true, "zh-CN");
+    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, WindowConstants.DEFAULT_TRANSPARENCY, false, true, false, true, true, true, "zh-CN", "memo");
 
     public WindowSettings WithLocation(double left, double top)
         => this with { Left = left, Top = top };
