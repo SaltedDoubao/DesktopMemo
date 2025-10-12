@@ -1,7 +1,7 @@
 <p align="center">
   <img src="src/images/logo.ico" />
 </p>
-<h1 align="center">SaltedDoubao's Desktop Memo</h1>
+<h1 align="center">SaltedDoubao's DesktopMemo</h1>
 
 <div align="center">
 
