@@ -1,6 +1,7 @@
-<h1 align="center">SaltedDoubao 的桌面便签</h1>
-
-> <p align="center">面向 MVVM 架构与 Markdown 存储的全新桌面备忘录程序</p>
+<p align="center">
+  <img src="src/images/logo.ico" />
+</p>
+<h1 align="center">SaltedDoubao's Desktop Memo</h1>
 
 <div align="center">
 
@@ -8,172 +9,177 @@
 <img src="https://img.shields.io/badge/Platform-Windows-blue" />
 <img src="https://img.shields.io/badge/License-MIT-green" />
 
-中文 README | [English README](README_en.md)
+[中文 README](README_zh.md) | English README
 
 </div>
 
-## 📋 项目简介
+## 📋 Project Overview
 
-DesktopMemo 是一个基于 .NET 9.0 + WPF + CommunityToolkit.Mvvm 的桌面便签应用，提供了丰富的窗口管理功能和便签管理能力。无论是日常记事、工作备忘还是灵感记录，都能为您提供便捷的解决方案。
+DesktopMemo is a desktop memo application based on .NET 9.0 + WPF + CommunityToolkit.Mvvm, providing rich window management features and memo management capabilities. Whether it's daily notes, work memos, or inspiration records, it provides you with a convenient solution.
 
-## ✨ 主要功能
+## ✨ Key Features
 
-### 📝 备忘录管理
-- 快速创建和编辑 Markdown 格式的备忘录
-- 自动保存，永不丢失
-- 列表视图快速预览
+### 📝 Memo Management
+- Quickly create and edit Markdown-formatted memos
+- Auto-save, never lose your notes
+- List view for quick preview
 
-### ✅ 待办事项
-- 轻量级待办事项列表
-- 快速添加、勾选、删除待办项
-- 已完成项目带删除线显示，可撤销或清除
-- 点击标题栏"备忘录/待办事项"文字即可切换
+### ✅ Todo List
+- Lightweight todo list management
+- Quick add, check, and delete todo items
+- Completed items shown with strikethrough, can undo or clear
+- Click "Memo/Todo List" text in the title bar to switch modes
 
-### 🪟 窗口管理
-- 三种置顶方式（普通、桌面置顶、总是置顶）
-- 可调节透明度和穿透模式
-- 灵活的窗口位置预设
+### 🪟 Window Management
+- Three stay-on-top modes (Normal, Desktop, Always on Top)
+- Adjustable transparency and click-through mode
+- Flexible window position presets
 
-## 🖥️ 系统要求
+## 🖥️ System Requirements
 
-- **操作系统**：Windows 10 版本 1903 及以上（WPF 依赖）
-- **架构**：x86_64
-- **.NET SDK**：9.0（开发/调试）
-- **.NET runtime**：发布包内置，无需额外安装
+- **Operating System**: Windows 10 version 1903 and above (WPF dependency)
+- **Architecture**: x86_64
+- **.NET SDK**: 9.0 (for development/debugging)
+- **.NET runtime**: Built into the release package, no additional installation required
 
-## 🚀 快速开始
+## 🛠️ Tech Stack
 
-### 获取源码
+- **Framework**: .NET 9.0, WPF
+- **Pattern**: MVVM (based on CommunityToolkit.Mvvm)
+- **Dependency Injection**: Microsoft.Extensions.DependencyInjection
+- **Persistence**: Markdown + YAML Front Matter; Window settings use JSON
+- **Toolchain**: PowerShell build scripts, GitHub Actions (planned)
+
+## 🚀 Quick Start
+
+If you are a regular user, you can go to [Releases](../../releases) to get the application and run it directly
+
+### Shortcuts
+
+> Global
+- `Ctrl+N` - Quickly create new memo
+> Only available on edit page
+- `Tab` - Insert indentation (4 spaces)
+- `Shift + Tab` - Decrease indentation
+- `Ctrl + S` - Save current memo (seems unnecessary)
+- `Ctrl + Tab` / `Ctrl + Shift + Tab` - Switch memos
+- `Ctrl + F` / `Ctrl + H` - Find/Replace
+- `F3` / `Shift + F3` - Find next/previous
+- `Ctrl + ]` / `Ctrl + [` - Increase/decrease indentation
+- `Ctrl + D` - Duplicate current line downward
+
+### Manual Build
+If you need to debug the project or participate in development, you can follow the steps below
+
+#### Get Source Code
 
 ```bash
-# 克隆仓库
+# Clone repository
 git clone https://github.com/SaltedDoubao/DesktopMemo.git
 cd DesktopMemo
 ```
 
-### 构建与运行
+#### Build and Run
 
 ```powershell
-# 还原依赖
+# Restore dependencies
 dotnet restore DesktopMemo.sln
 
-# 调试构建
+# Debug build
 dotnet build DesktopMemo.sln --configuration Debug
 
-# 运行应用
+# Run application
 dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration Debug
 ```
 
-> 若需要构建exe可执行文件，可使用仓库根目录下的 `build_exe.bat`。构建产物默认输出到 `artifacts/v<版本号>/bin`，可通过设置环境变量 `ArtifactsVersion` 自定义版本号。
+> To build an executable file, you can use `build_exe.bat` in the repository root. Build artifacts are output to `artifacts/v<version>/bin` by default. You can customize the version number by setting the environment variable `ArtifactsVersion`.
 
-首次运行会在可执行文件目录生成 `/.memodata`：
+On first run, `/.memodata` will be generated in the executable directory:
 
 ```
 .memodata
 ├── content/
-│   ├── index.json           # 备忘录索引
-│   └── {memoId}.md          # YAML Front Matter + 正文
-└── settings.json            # 窗口与全局设置
+│   ├── index.json           # Memo index
+│   └── {memoId}.md          # YAML Front Matter + content
+└── settings.json            # Window and global settings
 ```
 
-### 快捷键
+### Importing Old Data (for users before v2.0.0)
 
-> 全局
-- Ctrl+N - 快速新建备忘录
-> 仅在编辑页面可用
-- Tab - 插入缩进（4个空格）
-- Shift+Tab - 减少缩进
-- Ctrl + S - 保存当前备忘录（似乎没有必要）
-- Ctrl + Tab / Ctrl + Shift + Tab - 切换备忘录
-- Ctrl + F / Ctrl+H - 查找/替换
-- F3 / Shift + F3 - 查找下一个/上一个
-- Ctrl + ] / Ctrl + [ - 增加/减少缩进
-- Ctrl + D - 向下复制当前行
+Data from versions before v2.0.0 is not compatible with the new version and can be imported as follows:
 
-### 导入旧数据
+**Automatic Import** (Recommended):
+1. Ensure the old application data directory (`Data/content/`) is in the application directory
+2. The program will automatically import old data on first run
+3. Manually delete the Data directory after import is complete
+4. Done!
 
-v2.0.0之前的数据与新版本不兼容，可通过以下方式导入：
+**Manual Import**
+* You can also choose to manually copy the previous text and paste it into the new version memo
 
-**自动导入**（推荐）：
-1. 确保旧版应用数据目录(`Data/content/`)在应用程序目录下
-2. 初次运行程序会自动导入旧数据
-3. 导入完成后手动删除Data目录
-4. 完成！
-
-**手动导入**：
-1. 将旧版备忘录文件（`Data/content/*.md`）复制到新的应用数据目录(`.memodata/content/`)
-2. 在应用设置中点击"导入旧数据"
-3. 完成！ 
-
-## 🧭 项目结构
+## 🧭 Project Structure
 
 ```
 DesktopMemo_rebuild/
 ├── DesktopMemo.sln
-├── build_exe.bat                   # 构建可执行文件脚本
-├── docs/                           # 项目文档
-├── src/                            # 项目主目录
-├── artifacts/                      # 构建输出目录
-└── publish/                        # 发布产物
+├── build_exe.bat                   # Build executable script
+├── docs/                           # Project documentation
+├── src/                            # Project main directory
+├── artifacts/                      # Build output directory
+└── publish/                        # Release artifacts
 ```
 
-## 🛠️ 技术栈
+## 🤝 Contributing
 
-- **框架**：.NET 9.0、WPF
-- **模式**：MVVM（基于 CommunityToolkit.Mvvm）
-- **依赖注入**：Microsoft.Extensions.DependencyInjection
-- **持久化**：Markdown + YAML Front Matter；窗口设置使用 JSON
-- **工具链**：PowerShell 构建脚本、GitHub Actions（规划中）
+Welcome to collaborate through Issues or PRs:
 
-## 🤝 贡献指南
+1. Fork this repository
+2. Create feature branch: `git checkout -b your-feature`
+3. Commit changes: `git commit -m "commit message"`
+4. Push branch: `git push origin your-feature`
+5. Create Pull Request with requirements background, change summary and verification results
 
-欢迎通过 Issue 或 PR 协作：
+If you haven't changed the version number, you **must** clear the `artifacts/vX.X.X (corresponding version number)` directory before building the project using `dotnet build`.
 
-1. Fork 本仓库
-2. 创建功能分支：`git checkout -b your-feature`
-3. 提交更改：`git commit -m "commit message"`
-4. 推送分支：`git push origin your-feature`
-5. 创建 Pull Request，并附上需求背景、变更摘要与验证结果
+It's recommended to run `dotnet build` / `dotnet run` before submitting to ensure basic validation passes.
 
-如果未更改版本号，使用`dotnet build`构建项目前**必须**清空 `artifacts/vX.X.X(对应版本号)` 目录
+For other development considerations, see [应用开发规范.md](docs/应用开发规范.md)
 
-提交前建议执行 `dotnet build` / `dotnet run`，确保基本验证通过。
-
-其他开发注意事项详见 [应用开发规范.md](docs/应用开发规范.md)
-
-## 📝 更新日志
+## 📝 Changelog
 
 ### v2.2.0 (Latest)
-- ✨ 新增多语言支持
-  - 目前已经支持的语言: 
-    - 简体中文
-    - 繁体中文
-    - 英语
+- Added multi-language support
+  - Currently supported languages: 
+    - Simplified Chinese
+    - Traditional Chinese
+    - English
+- Fixed timestamp display error
+- Optimized some UI logic to enhance user experience
 
-更多历史版本详见 [Releases](../../releases)
+For more history, see [Releases](../../releases)
 
-## 🚧 施工规划
+## 🚧 Roadmap
 
-### 近期可能实现的更新
-- [ ] 添加预设窗口大小方案
-- [ ] 添加主题更换功能
-- [x] ~~适配多语言~~ ✅ 已实现（v2.2.0）
-- [x] ~~Todo-list功能~~ ✅ 已实现（v2.1.0）
+### Updates that may be implemented soon
+- [ ] Add preset window size schemes
+- [ ] Add theme switching functionality
+- [x] ~~Multi-language support~~ ✅ Implemented (v2.2.0)
+- [x] ~~Todo-list functionality~~ ✅ Implemented (v2.1.0)
 
-### 未来更新趋势
-- 待补充...
+### Future update trends
+- To be added...
 
-## 📄 许可证
+## 📄 License
 
-本项目使用 [MIT License](LICENSE)。
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
 <div align="center">
 
-**如果这个项目对您有帮助，请考虑给它一个 ⭐！**\
-**您的⭐就是我更新的最大动力！**
+**If this project is helpful to you, please consider giving it a ⭐!**\
+**Your ⭐ is the greatest motivation for my updates!**
 
-[报告 Bug](../../issues) • [请求功能](../../issues) • [贡献代码](../../pulls)
+[Report Bug](../../issues) • [Request Feature](../../issues) • [Contribute Code](../../pulls)
 
 </div>
