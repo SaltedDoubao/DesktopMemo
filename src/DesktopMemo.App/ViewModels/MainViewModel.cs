@@ -28,6 +28,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly MemoMigrationService _migrationService;
     private readonly TodoListViewModel _todoListViewModel;
     private readonly ILocalizationService _localizationService;
+    private readonly DebounceHelper _settingsSaveDebouncer;
 
     [ObservableProperty]
     private ObservableCollection<Memo> _memos = new();
@@ -140,6 +141,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _migrationService = migrationService;
         _todoListViewModel = todoListViewModel;
         _localizationService = localizationService;
+        _settingsSaveDebouncer = new DebounceHelper(500); // 500毫秒防抖延迟
 
         Memos.CollectionChanged += OnMemosCollectionChanged;
 
@@ -623,12 +625,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _windowService.SetTopmostMode(value);
         _trayService.UpdateTopmostState(value);
 
-        // 自动保存置顶模式设置
+        // 使用防抖机制自动保存置顶模式设置
         bool isTopMost = value == TopmostMode.Always;
         bool isDesktopMode = value == TopmostMode.Desktop;
 
         WindowSettings = WindowSettings.WithAppearance(BackgroundOpacity, isTopMost, isDesktopMode, IsClickThroughEnabled);
-        _ = _settingsService.SaveAsync(WindowSettings);
+        
+        _settingsSaveDebouncer.Debounce(async () =>
+        {
+            await _settingsService.SaveAsync(WindowSettings);
+            System.Diagnostics.Debug.WriteLine("置顶模式设置已保存");
+        });
     }
 
     partial void OnBackgroundOpacityChanged(double value)
@@ -643,12 +650,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         _windowService.SetWindowOpacity(normalizedValue);
 
-        // 自动保存透明度设置
+        // 使用防抖机制自动保存透明度设置
         bool isTopMost = SelectedTopmostMode == TopmostMode.Always;
         bool isDesktopMode = SelectedTopmostMode == TopmostMode.Desktop;
 
         WindowSettings = WindowSettings.WithAppearance(normalizedValue, isTopMost, isDesktopMode, IsClickThroughEnabled);
-        _ = _settingsService.SaveAsync(WindowSettings);
+        
+        _settingsSaveDebouncer.Debounce(async () =>
+        {
+            await _settingsService.SaveAsync(WindowSettings);
+            System.Diagnostics.Debug.WriteLine($"透明度设置已保存: {normalizedValue}");
+        });
     }
 
     partial void OnIsClickThroughEnabledChanged(bool value)
@@ -881,6 +893,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         _trayService.Dispose();
+        _settingsSaveDebouncer.Dispose();
     }
 
     [RelayCommand]
