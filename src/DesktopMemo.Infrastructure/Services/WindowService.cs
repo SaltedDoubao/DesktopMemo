@@ -15,6 +15,7 @@ public class WindowService : IWindowService, IDisposable
     private bool _disposed;
     private TopmostMode _currentTopmostMode = TopmostMode.Desktop;
     private bool _isClickThroughEnabled = false;
+    private bool _isWindowActivatedHandlerAttached = false;
 
     // Win32 API 常量
     private const int GWL_EXSTYLE = -20;
@@ -56,6 +57,13 @@ public class WindowService : IWindowService, IDisposable
     public void Initialize(Window window)
     {
         _window = window ?? throw new ArgumentNullException(nameof(window));
+        
+        // 订阅窗口激活事件，用于桌面置顶模式
+        if (!_isWindowActivatedHandlerAttached)
+        {
+            _window.Activated += OnWindowActivated;
+            _isWindowActivatedHandlerAttached = true;
+        }
     }
 
     public void SetTopmostMode(TopmostMode mode)
@@ -387,6 +395,25 @@ public class WindowService : IWindowService, IDisposable
     private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
     /// <summary>
+    /// 窗口激活事件处理器 - 用于桌面置顶模式
+    /// </summary>
+    private void OnWindowActivated(object? sender, EventArgs e)
+    {
+        // 仅在桌面置顶模式下处理
+        if (_currentTopmostMode == TopmostMode.Desktop && _window != null)
+        {
+            var hwnd = new WindowInteropHelper(_window).Handle;
+            if (hwnd != IntPtr.Zero)
+            {
+                // 延迟执行，确保窗口激活完成后再调整层级
+                System.Windows.Threading.Dispatcher.CurrentDispatcher.BeginInvoke(
+                    new Action(() => SetDesktopTopmost(hwnd)),
+                    System.Windows.Threading.DispatcherPriority.Background);
+            }
+        }
+    }
+
+    /// <summary>
     /// 安全的SetWindowPos调用，包含错误检查和日志记录
     /// </summary>
     private static void SafeSetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags, string operation)
@@ -414,6 +441,14 @@ public class WindowService : IWindowService, IDisposable
         }
 
         _disposed = true;
+        
+        // 取消订阅窗口激活事件
+        if (_window != null && _isWindowActivatedHandlerAttached)
+        {
+            _window.Activated -= OnWindowActivated;
+            _isWindowActivatedHandlerAttached = false;
+        }
+        
         _window = null;
     }
 }

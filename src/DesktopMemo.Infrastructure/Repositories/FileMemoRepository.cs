@@ -175,7 +175,7 @@ public sealed class FileMemoRepository : IMemoRepository
             builder.AppendLine($"  - {EscapeYamlString(tag)}");
         }
         builder.AppendLine("---");
-        builder.AppendLine(memo.Content);
+        builder.Append(memo.Content);
 
         await File.WriteAllTextAsync(path, builder.ToString(), Encoding.UTF8, cancellationToken).ConfigureAwait(false);
     }
