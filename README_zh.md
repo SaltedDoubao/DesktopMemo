@@ -175,6 +175,16 @@ DesktopMemo_rebuild/
 
 ---
 
+## 🤝 贡献者
+
+<a href="https://github.com/SaltedDoubao/DesktopMemo/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=SaltedDoubao/DesktopMemo" />
+</a>
+
+## 🌟 星标历史
+
+[![Star History Chart](https://api.star-history.com/svg?repos=SaltedDoubao/DesktopMemo&type=Date)](https://star-history.com/#SaltedDoubao/DesktopMemo&Date)
+
 <div align="center">
 
 **如果这个项目对您有帮助，请考虑给它一个 ⭐！**\

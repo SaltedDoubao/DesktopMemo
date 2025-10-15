@@ -175,6 +175,16 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
+## 🤝 Contributors
+
+<a href="https://github.com/SaltedDoubao/DesktopMemo/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=SaltedDoubao/DesktopMemo" />
+</a>
+
+## 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=SaltedDoubao/DesktopMemo&type=Date)](https://star-history.com/#SaltedDoubao/DesktopMemo&Date)
+
 <div align="center">
 
 **If this project is helpful to you, please consider giving it a ⭐!**\
