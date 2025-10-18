@@ -150,8 +150,8 @@ DesktopMemo_rebuild/
 ### v2.2.1 (Latest)
 - 新增多语言支持
   - 目前支持的语言: 
-    - 简体中文 (Simplified Chinese)
-    - 繁体中文 (Traditional Chinese)
+    - 简体中文
+    - 繁体中文
     - 英语 (English)
     - 日语 (Japanese / 日本語)
     - 韩语 (Korean / 한국어)
