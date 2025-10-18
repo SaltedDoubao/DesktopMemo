@@ -314,7 +314,7 @@
         </Style>
     </Window.Resources>
 
-    <Border x:Name="MainContainer" Style="{StaticResource GlassmorphismBorder}" Margin="8">
+    <Border x:Name="MainContainer" Style="{StaticResource GlassmorphismBorder}" Margin="0">
 
         <Grid ClipToBounds="True">
             <Grid PreviewMouseLeftButtonDown="MainContentArea_PreviewMouseLeftButtonDown">
@@ -402,8 +402,59 @@
                                         </Path.Style>
                                     </Path>
                                 </Button>
-                                <Button Width="32" Height="32" Margin="0,0,8,0" Command="{Binding CreateMemoCommand}" Style="{StaticResource GlassButton}" ToolTip="{Binding LocalizationService[Button_New]}">
-                                    <Path Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Fill="#E0FFFFFF" Width="16" Height="16" Stretch="Uniform" />
+                                <Button Width="32" Height="32" Margin="0,0,8,0">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource GlassButton}">
+                                            <Setter Property="Command" Value="{Binding CreateMemoCommand}" />
+                                            <Setter Property="ToolTip" Value="{Binding LocalizationService[Button_New]}" />
+                                            <Style.Triggers>
+                                                <!-- Todo模式 + 输入区域可见: 显示"隐藏"提示 -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsInTodoListMode}" Value="True" />
+                                                        <Condition Binding="{Binding TodoListViewModel.IsInputVisible}" Value="True" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Command" Value="{Binding TodoListViewModel.ToggleInputCommand}" />
+                                                    <Setter Property="ToolTip" Value="{Binding LocalizationService[Tooltip_HideTodoInput]}" />
+                                                </MultiDataTrigger>
+                                                <!-- Todo模式 + 输入区域隐藏: 显示"显示"提示 -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsInTodoListMode}" Value="True" />
+                                                        <Condition Binding="{Binding TodoListViewModel.IsInputVisible}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Command" Value="{Binding TodoListViewModel.ToggleInputCommand}" />
+                                                    <Setter Property="ToolTip" Value="{Binding LocalizationService[Tooltip_ShowTodoInput]}" />
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <Path Width="16" Height="16" Stretch="Uniform" Fill="#E0FFFFFF">
+                                        <Path.Style>
+                                            <Style TargetType="Path">
+                                                <!-- 默认: 新建图标 (加号) -->
+                                                <Setter Property="Data" Value="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+                                                <Style.Triggers>
+                                                    <!-- Todo模式 + 输入区域可见: 显示向上箭头 (折叠) -->
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding IsInTodoListMode}" Value="True" />
+                                                            <Condition Binding="{Binding TodoListViewModel.IsInputVisible}" Value="True" />
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="Data" Value="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z" />
+                                                    </MultiDataTrigger>
+                                                    <!-- Todo模式 + 输入区域隐藏: 显示向下箭头 (展开) -->
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding IsInTodoListMode}" Value="True" />
+                                                            <Condition Binding="{Binding TodoListViewModel.IsInputVisible}" Value="False" />
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="Data" Value="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
+                                                    </MultiDataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Path.Style>
+                                    </Path>
                                 </Button>
                                 <Button Width="32" Height="32" Margin="0,0,8,0" Command="{Binding ToggleSettingsCommand}" Style="{StaticResource GlassButton}" ToolTip="{Binding LocalizationService[Button_Settings]}">
                                     <Path Data="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M10,22C9.75,22 9.54,21.82 9.5,21.58L9.13,18.93C8.5,18.68 7.96,18.34 7.44,17.94L4.95,18.95C4.73,19.03 4.46,18.95 4.34,18.73L2.34,15.27C2.22,15.05 2.27,14.78 2.46,14.63L4.57,12.97C4.53,12.65 4.5,12.33 4.5,12C4.5,11.67 4.53,11.34 4.57,11.03L2.46,9.37C2.27,9.22 2.22,8.95 2.34,8.73L4.34,5.27C4.46,5.05 4.73,4.96 4.95,5.05L7.44,6.05C7.96,5.66 8.5,5.32 9.13,5.07L9.5,2.42C9.54,2.18 9.75,2 10,2H14C14.25,2 14.46,2.18 14.5,2.42L14.87,5.07C15.5,5.32 16.04,5.66 16.56,6.05L19.05,5.05C19.27,4.96 19.54,5.05 19.66,5.27L21.66,8.73C21.78,8.95 21.73,9.22 21.54,9.37L19.43,11.03C19.47,11.34 19.5,11.66 19.5,12C19.5,12.34 19.47,12.65 19.43,12.97L21.54,14.63C21.73,14.78 21.78,15.05 21.66,15.27L19.66,18.73C19.54,18.95 19.27,19.04 19.05,18.95L16.56,17.95C16.04,18.34 15.5,18.68 14.87,18.93L14.5,21.58C14.46,21.82 14.25,22 14,22H10" Fill="#E0FFFFFF" Width="16" Height="16" Stretch="Uniform" />
@@ -432,7 +483,7 @@
                 <Border Grid.Row="1" Background="#08FFFFFF" CornerRadius="0,0,16,16" BorderBrush="#10FFFFFF" BorderThickness="0,1,0,0">
                     <Grid>
                         <!-- 备忘录列表 -->
-                        <Grid Margin="4,0,0,0">
+                        <Grid Margin="0,-5,-10,-12">
                             <Grid.Style>
                                 <Style TargetType="Grid">
                                     <Setter Property="Visibility" Value="Collapsed" />
@@ -451,7 +502,7 @@
                                      SelectedItem="{Binding SelectedMemo}"
                                      Background="Transparent"
                                      BorderThickness="0"
-                                     Padding="8,5,0,0"
+                                     Padding="8,5,8,8"
                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                      ScrollViewer.VerticalScrollBarVisibility="Visible"
                                      ScrollViewer.CanContentScroll="True"
@@ -545,7 +596,7 @@
                             </Grid.RowDefinitions>
 
                             <!-- 添加新待办事项的输入框 -->
-                            <Border Grid.Row="0" Background="#15FFFFFF" CornerRadius="12" Padding="12" Margin="8,8,8,8">
+                            <Border Grid.Row="0" Background="#15FFFFFF" CornerRadius="12" Padding="12" Margin="8,8,8,8" Visibility="{Binding TodoListViewModel.IsInputVisible, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />

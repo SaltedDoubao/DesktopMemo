@@ -29,6 +29,9 @@ public partial class TodoListViewModel : ObservableObject
     [ObservableProperty]
     private string _statusText = "就绪";
 
+    [ObservableProperty]
+    private bool _isInputVisible = true;
+
     public int IncompleteTodoCount => IncompleteTodos.Count;
     public int CompletedTodoCount => CompletedTodos.Count;
 
@@ -211,6 +214,16 @@ public partial class TodoListViewModel : ObservableObject
         }
 
         SetStatus("已更新待办事项");
+    }
+
+    /// <summary>
+    /// 切换待办事项输入区域的显示/隐藏。
+    /// </summary>
+    [RelayCommand]
+    private void ToggleInput()
+    {
+        IsInputVisible = !IsInputVisible;
+        SetStatus(IsInputVisible ? "显示输入区域" : "隐藏输入区域");
     }
 
     private void SetStatus(string status)
