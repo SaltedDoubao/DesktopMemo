@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" msdata:Ordinal="5" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- 主視窗 -->
+  <data name="MainWindow_Title_Memo" xml:space="preserve">
+    <value>備忘錄</value>
+  </data>
+  <data name="MainWindow_Title_Todo" xml:space="preserve">
+    <value>待辦事項</value>
+  </data>
+  <data name="MainWindow_Title_Edit" xml:space="preserve">
+    <value>編輯備忘錄</value>
+  </data>
+  
+  <!-- 按鈕 -->
+  <data name="Button_New" xml:space="preserve">
+    <value>新建備忘錄</value>
+  </data>
+  <data name="Button_Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Button_Close" xml:space="preserve">
+    <value>關閉</value>
+  </data>
+  <data name="Button_Back" xml:space="preserve">
+    <value>返回列表</value>
+  </data>
+  <data name="Button_Save" xml:space="preserve">
+    <value>儲存並返回</value>
+  </data>
+  <data name="Button_Delete" xml:space="preserve">
+    <value>刪除備忘錄</value>
+  </data>
+  <data name="Button_Add" xml:space="preserve">
+    <value>新增</value>
+  </data>
+  <data name="Button_Clear" xml:space="preserve">
+    <value>清除</value>
+  </data>
+  <data name="Button_Apply" xml:space="preserve">
+    <value>套用</value>
+  </data>
+  
+  <!-- 待辦事項 -->
+  <data name="Todo_Placeholder" xml:space="preserve">
+    <value>新增待辦事項...</value>
+  </data>
+  <data name="Todo_Section_Incomplete" xml:space="preserve">
+    <value>待辦</value>
+  </data>
+  <data name="Todo_Section_Completed" xml:space="preserve">
+    <value>已完成</value>
+  </data>
+  
+  <!-- 備忘錄列表 -->
+  <data name="Memo_UpdateTime" xml:space="preserve">
+    <value>更新：{0:MM/dd HH:mm}</value>
+  </data>
+  <data name="Memo_NewTitle" xml:space="preserve">
+    <value>新的備忘錄</value>
+  </data>
+  
+  <!-- 設定面板 -->
+  <data name="Settings_Title" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Settings_Topmost_Title" xml:space="preserve">
+    <value>視窗置頂模式</value>
+  </data>
+  <data name="Settings_Topmost_Normal" xml:space="preserve">
+    <value>普通模式</value>
+  </data>
+  <data name="Settings_Topmost_Desktop" xml:space="preserve">
+    <value>桌面置頂</value>
+  </data>
+  <data name="Settings_Topmost_Always" xml:space="preserve">
+    <value>總是置頂</value>
+  </data>
+  
+  <data name="Settings_Position_Title" xml:space="preserve">
+    <value>視窗位置</value>
+  </data>
+  <data name="Settings_Position_Current" xml:space="preserve">
+    <value>目前位置：</value>
+  </data>
+  <data name="Settings_Position_X" xml:space="preserve">
+    <value>X：</value>
+  </data>
+  <data name="Settings_Position_Y" xml:space="preserve">
+    <value>Y：</value>
+  </data>
+  <data name="Settings_Position_Remember" xml:space="preserve">
+    <value>記住目前位置</value>
+  </data>
+  <data name="Settings_Position_Restore" xml:space="preserve">
+    <value>恢復儲存位置</value>
+  </data>
+  
+  <data name="Settings_Appearance_Title" xml:space="preserve">
+    <value>外觀設定</value>
+  </data>
+  <data name="Settings_Opacity_Label" xml:space="preserve">
+    <value>背景透明度</value>
+  </data>
+  <data name="Settings_Opacity_Current" xml:space="preserve">
+    <value>目前：{0:F0}%</value>
+  </data>
+  <data name="Settings_Opacity_Tip" xml:space="preserve">
+    <value>0% = 完全透明，100% = 白色背景</value>
+  </data>
+  
+  <data name="Settings_Language_Title" xml:space="preserve">
+    <value>語言設定</value>
+  </data>
+  <data name="Settings_Language_Label" xml:space="preserve">
+    <value>介面語言</value>
+  </data>
+  
+  <data name="Settings_Other_Title" xml:space="preserve">
+    <value>其他選項</value>
+  </data>
+  <data name="Settings_ClickThrough" xml:space="preserve">
+    <value>穿透模式</value>
+  </data>
+  <data name="Settings_AutoStart" xml:space="preserve">
+    <value>開機自動啟動</value>
+  </data>
+  
+  <data name="Settings_Status_Title" xml:space="preserve">
+    <value>狀態資訊</value>
+  </data>
+  
+  <data name="Settings_ImportExport_Title" xml:space="preserve">
+    <value>匯入 / 匯出</value>
+  </data>
+  <data name="Settings_ImportLegacy" xml:space="preserve">
+    <value>匯入舊資料</value>
+  </data>
+  <data name="Settings_ExportMarkdown" xml:space="preserve">
+    <value>匯出 Markdown</value>
+  </data>
+  <data name="Settings_SaveSettings" xml:space="preserve">
+    <value>儲存設定</value>
+  </data>
+  
+  <!-- 對話方塊 -->
+  <data name="Dialog_Exit_Title" xml:space="preserve">
+    <value>結束確認</value>
+  </data>
+  <data name="Dialog_Exit_Message" xml:space="preserve">
+    <value>是否最小化到系統匣？</value>
+  </data>
+  <data name="Dialog_Exit_DontShowAgain" xml:space="preserve">
+    <value>不再顯示此確認</value>
+  </data>
+  <data name="Dialog_Exit_Minimize" xml:space="preserve">
+    <value>最小化到系統匣</value>
+  </data>
+  <data name="Dialog_Exit_Exit" xml:space="preserve">
+    <value>完全結束</value>
+  </data>
+  <data name="Dialog_Exit_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  
+  <!-- 工具提示 -->
+  <data name="Tooltip_ToggleMode" xml:space="preserve">
+    <value>點擊切換到待辦事項/備忘錄</value>
+  </data>
+  <data name="Tooltip_Pin" xml:space="preserve">
+    <value>固定/取消固定視窗</value>
+  </data>
+  <data name="Tooltip_BackToList" xml:space="preserve">
+    <value>返回列表</value>
+  </data>
+  <data name="Tooltip_SaveAndBack" xml:space="preserve">
+    <value>儲存並返回</value>
+  </data>
+  <data name="Tooltip_Delete" xml:space="preserve">
+    <value>刪除備忘錄</value>
+  </data>
+  <data name="Tooltip_AddTodo" xml:space="preserve">
+    <value>新增</value>
+  </data>
+  <data name="Tooltip_DeleteTodo" xml:space="preserve">
+    <value>刪除</value>
+  </data>
+  <data name="Tooltip_Return" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="Tooltip_ToggleTodoInput" xml:space="preserve">
+    <value>顯示/隱藏待辦輸入區</value>
+  </data>
+  <data name="Tooltip_HideTodoInput" xml:space="preserve">
+    <value>隱藏輸入區域</value>
+  </data>
+  <data name="Tooltip_ShowTodoInput" xml:space="preserve">
+    <value>顯示輸入區域</value>
+  </data>
+  
+  <!-- 語言名稱 -->
+  <data name="Language_zhCN" xml:space="preserve">
+    <value>簡體中文</value>
+  </data>
+  <data name="Language_enUS" xml:space="preserve">
+    <value>English (US)</value>
+  </data>
+  <data name="Language_zhTW" xml:space="preserve">
+    <value>繁體中文</value>
+  </data>
+  <data name="Language_jaJP" xml:space="preserve">
+    <value>日本語</value>
+  </data>
+  <data name="Language_koKR" xml:space="preserve">
+    <value>한국어</value>
+  </data>
+  
+  <!-- 對話方塊 - 刪除確認 -->
+  <data name="Dialog_DeleteConfirm_Title" xml:space="preserve">
+    <value>刪除確認</value>
+  </data>
+  <data name="Dialog_DeleteConfirm_Message" xml:space="preserve">
+    <value>確定要刪除備忘錄「{0}」嗎？
+
+此操作無法復原。</value>
+  </data>
+  <data name="Dialog_DeleteConfirm_DontShowAgain" xml:space="preserve">
+    <value>不再顯示此確認</value>
+  </data>
+  <data name="Dialog_Confirm" xml:space="preserve">
+    <value>確定</value>
+  </data>
+  
+  <!-- 系統匣 -->
+  <data name="Tray_ShowHide" xml:space="preserve">
+    <value>顯示/隱藏視窗</value>
+  </data>
+  <data name="Tray_NewMemo" xml:space="preserve">
+    <value>新建便箋</value>
+  </data>
+  <data name="Tray_Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Tray_WindowControl" xml:space="preserve">
+    <value>視窗控制</value>
+  </data>
+  <data name="Tray_TopmostMode" xml:space="preserve">
+    <value>置頂模式</value>
+  </data>
+  <data name="Tray_TopmostNormal" xml:space="preserve">
+    <value>普通模式</value>
+  </data>
+  <data name="Tray_TopmostDesktop" xml:space="preserve">
+    <value>桌面置頂</value>
+  </data>
+  <data name="Tray_TopmostAlways" xml:space="preserve">
+    <value>總是置頂</value>
+  </data>
+  <data name="Tray_Position" xml:space="preserve">
+    <value>視窗位置</value>
+  </data>
+  <data name="Tray_QuickPosition" xml:space="preserve">
+    <value>快速定位</value>
+  </data>
+  <data name="Tray_Position_TopLeft" xml:space="preserve">
+    <value>左上角</value>
+  </data>
+  <data name="Tray_Position_TopCenter" xml:space="preserve">
+    <value>頂部中央</value>
+  </data>
+  <data name="Tray_Position_TopRight" xml:space="preserve">
+    <value>右上角</value>
+  </data>
+  <data name="Tray_Position_Center" xml:space="preserve">
+    <value>螢幕中央</value>
+  </data>
+  <data name="Tray_Position_BottomLeft" xml:space="preserve">
+    <value>左下角</value>
+  </data>
+  <data name="Tray_Position_BottomRight" xml:space="preserve">
+    <value>右下角</value>
+  </data>
+  <data name="Tray_RememberPosition" xml:space="preserve">
+    <value>記住目前位置</value>
+  </data>
+  <data name="Tray_RestorePosition" xml:space="preserve">
+    <value>恢復儲存位置</value>
+  </data>
+  <data name="Tray_ClickThrough" xml:space="preserve">
+    <value>穿透模式</value>
+  </data>
+  <data name="Tray_Tools" xml:space="preserve">
+    <value>工具</value>
+  </data>
+  <data name="Tray_Export" xml:space="preserve">
+    <value>匯出便箋</value>
+  </data>
+  <data name="Tray_Import" xml:space="preserve">
+    <value>匯入便箋</value>
+  </data>
+  <data name="Tray_Clear" xml:space="preserve">
+    <value>清空內容</value>
+  </data>
+  <data name="Tray_About" xml:space="preserve">
+    <value>關於</value>
+  </data>
+  <data name="Tray_Restart" xml:space="preserve">
+    <value>重新啟動系統匣圖示</value>
+  </data>
+  <data name="Tray_ReenableExit" xml:space="preserve">
+    <value>重新啟用結束提示</value>
+  </data>
+  <data name="Tray_ReenableDelete" xml:space="preserve">
+    <value>重新啟用刪除提示</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>結束</value>
+  </data>
+  
+</root>
+
