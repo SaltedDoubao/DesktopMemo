@@ -400,5 +400,5 @@ If settings are abnormal, you can:
 - Check if async operations block UI thread
 - Check for memory leaks (especially event subscriptions)
 
-For more issues, please provide feedback in the repository [Issues](../../issues) section.
+For more issues, please provide feedback in the repository [Issues](../../../issues) section.
 
