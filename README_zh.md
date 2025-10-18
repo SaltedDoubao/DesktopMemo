@@ -143,7 +143,7 @@ DesktopMemo_rebuild/
 
 提交前建议执行 `dotnet build` / `dotnet run`，确保基本验证通过。
 
-其他开发注意事项详见 [应用开发规范.md](docs/应用开发规范.md)
+其他开发注意事项详见 [应用开发规范](docs/应用开发规范.md)
 
 ## 📝 更新日志
 

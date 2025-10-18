@@ -143,7 +143,7 @@ If you haven't changed the version number, you **must** clear the `artifacts/vX.
 
 It's recommended to run `dotnet build` / `dotnet run` before submitting to ensure basic validation passes.
 
-For other development considerations, see [应用开发规范.md](docs/应用开发规范.md)
+For other development considerations, see [Development Guidelines](docs/Development-Guidelines.md)
 
 ## 📝 Changelog
 
