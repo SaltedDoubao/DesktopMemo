@@ -59,416 +59,320 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   
-  <!-- 主窗口 -->
+  <!-- メインウィンドウ -->
   <data name="MainWindow_Title_Memo" xml:space="preserve">
-    <value>备忘录</value>
-    <comment>主窗口标题 - 备忘录模式</comment>
+    <value>メモ</value>
   </data>
   <data name="MainWindow_Title_Todo" xml:space="preserve">
-    <value>待办事项</value>
-    <comment>主窗口标题 - 待办事项模式</comment>
+    <value>ToDoリスト</value>
   </data>
   <data name="MainWindow_Title_Edit" xml:space="preserve">
-    <value>编辑备忘录</value>
-    <comment>主窗口标题 - 编辑模式</comment>
+    <value>メモの編集</value>
   </data>
   
-  <!-- 按钮 -->
+  <!-- ボタン -->
   <data name="Button_New" xml:space="preserve">
-    <value>新建备忘录</value>
-    <comment>新建备忘录按钮</comment>
+    <value>新規メモ</value>
   </data>
   <data name="Button_Settings" xml:space="preserve">
-    <value>设置</value>
-    <comment>设置按钮</comment>
+    <value>設定</value>
   </data>
   <data name="Button_Close" xml:space="preserve">
-    <value>关闭</value>
-    <comment>关闭按钮</comment>
+    <value>閉じる</value>
   </data>
   <data name="Button_Back" xml:space="preserve">
-    <value>返回列表</value>
-    <comment>返回按钮</comment>
+    <value>リストに戻る</value>
   </data>
   <data name="Button_Save" xml:space="preserve">
-    <value>保存并返回</value>
-    <comment>保存按钮</comment>
+    <value>保存して戻る</value>
   </data>
   <data name="Button_Delete" xml:space="preserve">
-    <value>删除备忘录</value>
-    <comment>删除按钮</comment>
+    <value>メモを削除</value>
   </data>
   <data name="Button_Add" xml:space="preserve">
-    <value>添加</value>
-    <comment>添加按钮</comment>
+    <value>追加</value>
   </data>
   <data name="Button_Clear" xml:space="preserve">
-    <value>清除</value>
-    <comment>清除按钮</comment>
+    <value>クリア</value>
   </data>
   <data name="Button_Apply" xml:space="preserve">
-    <value>应用</value>
-    <comment>应用按钮</comment>
+    <value>適用</value>
   </data>
   
-  <!-- 待办事项 -->
+  <!-- ToDo -->
   <data name="Todo_Placeholder" xml:space="preserve">
-    <value>添加新的待办事项...</value>
-    <comment>待办事项输入框占位符</comment>
+    <value>新しいToDoを追加...</value>
   </data>
   <data name="Todo_Section_Incomplete" xml:space="preserve">
-    <value>待办</value>
-    <comment>未完成待办事项区域标题</comment>
+    <value>未完了</value>
   </data>
   <data name="Todo_Section_Completed" xml:space="preserve">
-    <value>已完成</value>
-    <comment>已完成待办事项区域标题</comment>
+    <value>完了済み</value>
   </data>
   
-  <!-- 备忘录列表 -->
+  <!-- メモリスト -->
   <data name="Memo_UpdateTime" xml:space="preserve">
     <value>更新：{0:MM/dd HH:mm}</value>
-    <comment>备忘录更新时间格式</comment>
   </data>
   <data name="Memo_NewTitle" xml:space="preserve">
-    <value>新的备忘录</value>
-    <comment>新建备忘录的默认标题</comment>
+    <value>新しいメモ</value>
   </data>
   
-  <!-- 设置面板 -->
+  <!-- 設定パネル -->
   <data name="Settings_Title" xml:space="preserve">
-    <value>设置</value>
-    <comment>设置面板标题</comment>
+    <value>設定</value>
   </data>
   <data name="Settings_Topmost_Title" xml:space="preserve">
-    <value>窗口置顶模式</value>
-    <comment>窗口置顶模式设置标题</comment>
+    <value>ウィンドウ最前面モード</value>
   </data>
   <data name="Settings_Topmost_Normal" xml:space="preserve">
-    <value>普通模式</value>
-    <comment>普通置顶模式</comment>
+    <value>通常モード</value>
   </data>
   <data name="Settings_Topmost_Desktop" xml:space="preserve">
-    <value>桌面置顶</value>
-    <comment>桌面置顶模式</comment>
+    <value>デスクトップ最前面</value>
   </data>
   <data name="Settings_Topmost_Always" xml:space="preserve">
-    <value>总是置顶</value>
-    <comment>总是置顶模式</comment>
+    <value>常に最前面</value>
   </data>
   
   <data name="Settings_Position_Title" xml:space="preserve">
-    <value>窗口位置</value>
-    <comment>窗口位置设置标题</comment>
+    <value>ウィンドウ位置</value>
   </data>
   <data name="Settings_Position_Current" xml:space="preserve">
-    <value>当前位置:</value>
-    <comment>当前位置标签</comment>
+    <value>現在の位置：</value>
   </data>
   <data name="Settings_Position_X" xml:space="preserve">
-    <value>X:</value>
-    <comment>X 坐标标签</comment>
+    <value>X：</value>
   </data>
   <data name="Settings_Position_Y" xml:space="preserve">
-    <value>Y:</value>
-    <comment>Y 坐标标签</comment>
+    <value>Y：</value>
   </data>
   <data name="Settings_Position_Remember" xml:space="preserve">
-    <value>记住当前位置</value>
-    <comment>记住位置按钮</comment>
+    <value>位置を記憶</value>
   </data>
   <data name="Settings_Position_Restore" xml:space="preserve">
-    <value>恢复保存位置</value>
-    <comment>恢复位置按钮</comment>
+    <value>位置を復元</value>
   </data>
   
   <data name="Settings_Appearance_Title" xml:space="preserve">
-    <value>外观设置</value>
-    <comment>外观设置标题</comment>
+    <value>外観設定</value>
   </data>
   <data name="Settings_Opacity_Label" xml:space="preserve">
-    <value>背景透明度</value>
-    <comment>透明度设置标签</comment>
+    <value>背景の透明度</value>
   </data>
   <data name="Settings_Opacity_Current" xml:space="preserve">
-    <value>当前：{0:F0}%</value>
-    <comment>当前透明度值</comment>
+    <value>現在：{0:F0}%</value>
   </data>
   <data name="Settings_Opacity_Tip" xml:space="preserve">
-    <value>0% = 完全透明，100% = 全白色背景</value>
-    <comment>透明度提示文本</comment>
+    <value>0% = 完全透明、100% = 白色背景</value>
   </data>
   
   <data name="Settings_Language_Title" xml:space="preserve">
-    <value>语言设置</value>
-    <comment>语言设置标题</comment>
+    <value>言語設定</value>
   </data>
   <data name="Settings_Language_Label" xml:space="preserve">
-    <value>界面语言</value>
-    <comment>语言选择标签</comment>
+    <value>インターフェース言語</value>
   </data>
   
   <data name="Settings_Other_Title" xml:space="preserve">
-    <value>其他选项</value>
-    <comment>其他选项标题</comment>
+    <value>その他のオプション</value>
   </data>
   <data name="Settings_ClickThrough" xml:space="preserve">
-    <value>穿透模式</value>
-    <comment>穿透模式选项</comment>
+    <value>クリックスルーモード</value>
   </data>
   <data name="Settings_AutoStart" xml:space="preserve">
-    <value>开机自启动</value>
-    <comment>自动启动选项</comment>
+    <value>スタートアップに登録</value>
   </data>
   
   <data name="Settings_Status_Title" xml:space="preserve">
-    <value>状态信息</value>
-    <comment>状态信息标题</comment>
+    <value>ステータス情報</value>
   </data>
   
   <data name="Settings_ImportExport_Title" xml:space="preserve">
-    <value>导入 / 导出</value>
-    <comment>导入导出标题</comment>
+    <value>インポート / エクスポート</value>
   </data>
   <data name="Settings_ImportLegacy" xml:space="preserve">
-    <value>导入旧数据</value>
-    <comment>导入旧数据按钮</comment>
+    <value>旧データをインポート</value>
   </data>
   <data name="Settings_ExportMarkdown" xml:space="preserve">
-    <value>导出 Markdown</value>
-    <comment>导出 Markdown 按钮</comment>
+    <value>Markdownをエクスポート</value>
   </data>
   <data name="Settings_SaveSettings" xml:space="preserve">
-    <value>保存设置</value>
-    <comment>保存设置按钮</comment>
+    <value>設定を保存</value>
   </data>
   
-  <!-- 对话框 -->
+  <!-- ダイアログ -->
   <data name="Dialog_Exit_Title" xml:space="preserve">
-    <value>退出确认</value>
-    <comment>退出确认对话框标题</comment>
+    <value>終了確認</value>
   </data>
   <data name="Dialog_Exit_Message" xml:space="preserve">
-    <value>是否最小化到托盘？</value>
-    <comment>退出确认对话框消息</comment>
+    <value>トレイに最小化しますか？</value>
   </data>
   <data name="Dialog_Exit_DontShowAgain" xml:space="preserve">
-    <value>不再显示此确认</value>
-    <comment>不再显示复选框</comment>
+    <value>今後表示しない</value>
   </data>
   <data name="Dialog_Exit_Minimize" xml:space="preserve">
-    <value>最小化到托盘</value>
-    <comment>最小化到托盘按钮</comment>
+    <value>トレイに最小化</value>
   </data>
   <data name="Dialog_Exit_Exit" xml:space="preserve">
-    <value>完全退出</value>
-    <comment>完全退出按钮</comment>
+    <value>完全に終了</value>
   </data>
   <data name="Dialog_Exit_Cancel" xml:space="preserve">
-    <value>取消</value>
-    <comment>取消按钮</comment>
+    <value>キャンセル</value>
   </data>
   
-  <!-- 工具提示 -->
+  <!-- ツールチップ -->
   <data name="Tooltip_ToggleMode" xml:space="preserve">
-    <value>点击切换到待办事项/备忘录</value>
-    <comment>切换模式提示</comment>
+    <value>クリックでToDo/メモモードを切り替え</value>
   </data>
   <data name="Tooltip_Pin" xml:space="preserve">
-    <value>固定/取消固定窗口</value>
-    <comment>固定窗口提示</comment>
+    <value>ウィンドウを固定/固定解除</value>
   </data>
   <data name="Tooltip_BackToList" xml:space="preserve">
-    <value>返回列表</value>
-    <comment>返回列表按钮提示</comment>
+    <value>リストに戻る</value>
   </data>
   <data name="Tooltip_SaveAndBack" xml:space="preserve">
-    <value>保存并返回</value>
-    <comment>保存并返回按钮提示</comment>
+    <value>保存して戻る</value>
   </data>
   <data name="Tooltip_Delete" xml:space="preserve">
-    <value>删除备忘录</value>
-    <comment>删除按钮提示</comment>
+    <value>メモを削除</value>
   </data>
   <data name="Tooltip_AddTodo" xml:space="preserve">
-    <value>添加</value>
-    <comment>添加待办事项按钮提示</comment>
+    <value>追加</value>
   </data>
   <data name="Tooltip_DeleteTodo" xml:space="preserve">
-    <value>删除</value>
-    <comment>删除待办事项按钮提示</comment>
+    <value>削除</value>
   </data>
   <data name="Tooltip_Return" xml:space="preserve">
-    <value>返回</value>
-    <comment>返回按钮提示</comment>
+    <value>戻る</value>
   </data>
   <data name="Tooltip_ToggleTodoInput" xml:space="preserve">
-    <value>显示/隐藏待办输入区</value>
-    <comment>切换待办事项输入区显示状态</comment>
+    <value>ToDo入力エリアの表示/非表示</value>
   </data>
   <data name="Tooltip_HideTodoInput" xml:space="preserve">
-    <value>隐藏待办输入区</value>
-    <comment>隐藏待办事项输入区</comment>
+    <value>入力エリアを非表示</value>
   </data>
   <data name="Tooltip_ShowTodoInput" xml:space="preserve">
-    <value>显示待办输入区</value>
-    <comment>显示待办事项输入区</comment>
+    <value>入力エリアを表示</value>
   </data>
   
-  <!-- 语言名称 -->
+  <!-- 言語名 -->
   <data name="Language_zhCN" xml:space="preserve">
-    <value>简体中文</value>
-    <comment>简体中文语言名</comment>
+    <value>簡体字中国語</value>
   </data>
   <data name="Language_enUS" xml:space="preserve">
-    <value>English (US)</value>
-    <comment>英语语言名</comment>
+    <value>英語 (米国)</value>
   </data>
   <data name="Language_zhTW" xml:space="preserve">
-    <value>繁體中文</value>
-    <comment>繁体中文语言名</comment>
+    <value>繁体字中国語</value>
   </data>
   <data name="Language_jaJP" xml:space="preserve">
     <value>日本語</value>
-    <comment>日语语言名</comment>
   </data>
   <data name="Language_koKR" xml:space="preserve">
     <value>한국어</value>
-    <comment>韩语语言名</comment>
   </data>
   
-  <!-- 对话框 - 删除确认 -->
+  <!-- ダイアログ - 削除確認 -->
   <data name="Dialog_DeleteConfirm_Title" xml:space="preserve">
-    <value>删除确认</value>
-    <comment>删除确认对话框标题</comment>
+    <value>削除確認</value>
   </data>
   <data name="Dialog_DeleteConfirm_Message" xml:space="preserve">
-    <value>确定要删除备忘录"{0}"吗？
+    <value>メモ「{0}」を削除してもよろしいですか？
 
-此操作不可撤销。</value>
-    <comment>删除确认对话框消息</comment>
+この操作は元に戻せません。</value>
   </data>
   <data name="Dialog_DeleteConfirm_DontShowAgain" xml:space="preserve">
-    <value>不再显示此确认</value>
-    <comment>不再显示删除确认复选框</comment>
+    <value>今後表示しない</value>
   </data>
   <data name="Dialog_Confirm" xml:space="preserve">
-    <value>确定</value>
-    <comment>确定按钮</comment>
+    <value>確認</value>
   </data>
   
-  <!-- 系统托盘 -->
+  <!-- システムトレイ -->
   <data name="Tray_ShowHide" xml:space="preserve">
-    <value>显示/隐藏窗口</value>
-    <comment>托盘菜单 - 显示/隐藏窗口</comment>
+    <value>ウィンドウを表示/非表示</value>
   </data>
   <data name="Tray_NewMemo" xml:space="preserve">
-    <value>新建便签</value>
-    <comment>托盘菜单 - 新建便签</comment>
+    <value>新規メモ</value>
   </data>
   <data name="Tray_Settings" xml:space="preserve">
-    <value>设置</value>
-    <comment>托盘菜单 - 设置</comment>
+    <value>設定</value>
   </data>
   <data name="Tray_WindowControl" xml:space="preserve">
-    <value>窗口控制</value>
-    <comment>托盘菜单 - 窗口控制组</comment>
+    <value>ウィンドウ制御</value>
   </data>
   <data name="Tray_TopmostMode" xml:space="preserve">
-    <value>置顶模式</value>
-    <comment>托盘菜单 - 置顶模式组</comment>
+    <value>最前面モード</value>
   </data>
   <data name="Tray_TopmostNormal" xml:space="preserve">
-    <value>普通模式</value>
-    <comment>托盘菜单 - 普通置顶模式</comment>
+    <value>通常モード</value>
   </data>
   <data name="Tray_TopmostDesktop" xml:space="preserve">
-    <value>桌面置顶</value>
-    <comment>托盘菜单 - 桌面置顶模式</comment>
+    <value>デスクトップ最前面</value>
   </data>
   <data name="Tray_TopmostAlways" xml:space="preserve">
-    <value>总是置顶</value>
-    <comment>托盘菜单 - 总是置顶模式</comment>
+    <value>常に最前面</value>
   </data>
   <data name="Tray_Position" xml:space="preserve">
-    <value>窗口位置</value>
-    <comment>托盘菜单 - 窗口位置组</comment>
+    <value>ウィンドウ位置</value>
   </data>
   <data name="Tray_QuickPosition" xml:space="preserve">
-    <value>快速定位</value>
-    <comment>托盘菜单 - 快速定位组</comment>
+    <value>クイック配置</value>
   </data>
   <data name="Tray_Position_TopLeft" xml:space="preserve">
-    <value>左上角</value>
-    <comment>托盘菜单 - 左上角位置</comment>
+    <value>左上</value>
   </data>
   <data name="Tray_Position_TopCenter" xml:space="preserve">
-    <value>顶部中央</value>
-    <comment>托盘菜单 - 顶部中央位置</comment>
+    <value>上中央</value>
   </data>
   <data name="Tray_Position_TopRight" xml:space="preserve">
-    <value>右上角</value>
-    <comment>托盘菜单 - 右上角位置</comment>
+    <value>右上</value>
   </data>
   <data name="Tray_Position_Center" xml:space="preserve">
-    <value>屏幕中央</value>
-    <comment>托盘菜单 - 屏幕中央位置</comment>
+    <value>画面中央</value>
   </data>
   <data name="Tray_Position_BottomLeft" xml:space="preserve">
-    <value>左下角</value>
-    <comment>托盘菜单 - 左下角位置</comment>
+    <value>左下</value>
   </data>
   <data name="Tray_Position_BottomRight" xml:space="preserve">
-    <value>右下角</value>
-    <comment>托盘菜单 - 右下角位置</comment>
+    <value>右下</value>
   </data>
   <data name="Tray_RememberPosition" xml:space="preserve">
-    <value>记住当前位置</value>
-    <comment>托盘菜单 - 记住位置</comment>
+    <value>位置を記憶</value>
   </data>
   <data name="Tray_RestorePosition" xml:space="preserve">
-    <value>恢复保存位置</value>
-    <comment>托盘菜单 - 恢复位置</comment>
+    <value>位置を復元</value>
   </data>
   <data name="Tray_ClickThrough" xml:space="preserve">
-    <value>穿透模式</value>
-    <comment>托盘菜单 - 穿透模式</comment>
+    <value>クリックスルーモード</value>
   </data>
   <data name="Tray_Tools" xml:space="preserve">
-    <value>工具</value>
-    <comment>托盘菜单 - 工具组</comment>
+    <value>ツール</value>
   </data>
   <data name="Tray_Export" xml:space="preserve">
-    <value>导出便签</value>
-    <comment>托盘菜单 - 导出便签</comment>
+    <value>メモをエクスポート</value>
   </data>
   <data name="Tray_Import" xml:space="preserve">
-    <value>导入便签</value>
-    <comment>托盘菜单 - 导入便签</comment>
+    <value>メモをインポート</value>
   </data>
   <data name="Tray_Clear" xml:space="preserve">
-    <value>清空内容</value>
-    <comment>托盘菜单 - 清空内容</comment>
+    <value>内容をクリア</value>
   </data>
   <data name="Tray_About" xml:space="preserve">
-    <value>关于</value>
-    <comment>托盘菜单 - 关于</comment>
+    <value>バージョン情報</value>
   </data>
   <data name="Tray_Restart" xml:space="preserve">
-    <value>重启托盘图标</value>
-    <comment>托盘菜单 - 重启托盘</comment>
+    <value>トレイアイコンを再起動</value>
   </data>
   <data name="Tray_ReenableExit" xml:space="preserve">
-    <value>重新启用退出提示</value>
-    <comment>托盘菜单 - 重新启用退出提示</comment>
+    <value>終了確認を再有効化</value>
   </data>
   <data name="Tray_ReenableDelete" xml:space="preserve">
-    <value>重新启用删除提示</value>
-    <comment>托盘菜单 - 重新启用删除提示</comment>
+    <value>削除確認を再有効化</value>
   </data>
   <data name="Tray_Exit" xml:space="preserve">
-    <value>退出</value>
-    <comment>托盘菜单 - 退出</comment>
+    <value>終了</value>
   </data>
   
 </root>

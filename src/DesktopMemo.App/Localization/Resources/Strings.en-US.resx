@@ -246,6 +246,15 @@
   <data name="Tooltip_Return" xml:space="preserve">
     <value>Return</value>
   </data>
+  <data name="Tooltip_ToggleTodoInput" xml:space="preserve">
+    <value>Toggle Todo Input Area</value>
+  </data>
+  <data name="Tooltip_HideTodoInput" xml:space="preserve">
+    <value>Hide Input Area</value>
+  </data>
+  <data name="Tooltip_ShowTodoInput" xml:space="preserve">
+    <value>Show Input Area</value>
+  </data>
   
   <!-- Language Names -->
   <data name="Language_zhCN" xml:space="preserve">
@@ -256,6 +265,12 @@
   </data>
   <data name="Language_zhTW" xml:space="preserve">
     <value>Traditional Chinese</value>
+  </data>
+  <data name="Language_jaJP" xml:space="preserve">
+    <value>Japanese</value>
+  </data>
+  <data name="Language_koKR" xml:space="preserve">
+    <value>Korean</value>
   </data>
   
   <!-- Dialogs - Delete Confirmation -->
