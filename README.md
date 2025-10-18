@@ -147,13 +147,15 @@ For other development considerations, see [应用开发规范.md](docs/应用开
 
 ## 📝 Changelog
 
-### v2.2.0 (Latest)
+### v2.2.1 (Latest)
 - Added multi-language support
   - Currently supported languages: 
-    - Simplified Chinese
-    - Traditional Chinese
+    - Simplified Chinese (简体中文)
+    - Traditional Chinese (繁體中文)
     - English
-- Fixed timestamp display error
+    - Japanese (日本語)
+    - Korean (한국어)
+- Added toggle functionality for todo input area visibility
 - Optimized some UI logic to enhance user experience
 
 For more history, see [Releases](../../releases)
@@ -163,8 +165,6 @@ For more history, see [Releases](../../releases)
 ### Updates that may be implemented soon
 - [ ] Add preset window size schemes
 - [ ] Add theme switching functionality
-- [x] ~~Multi-language support~~ ✅ Implemented (v2.2.0)
-- [x] ~~Todo-list functionality~~ ✅ Implemented (v2.1.0)
 
 ### Future update trends
 - To be added...
