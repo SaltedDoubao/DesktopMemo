@@ -16,6 +16,7 @@ namespace DesktopMemo.App.ViewModels;
 public partial class TodoListViewModel : ObservableObject
 {
     private readonly ITodoRepository _todoRepository;
+    private bool _isInitializing;
 
     [ObservableProperty]
     private ObservableCollection<TodoItem> _incompleteTodos = new();
@@ -35,6 +36,11 @@ public partial class TodoListViewModel : ObservableObject
     public int IncompleteTodoCount => IncompleteTodos.Count;
     public int CompletedTodoCount => CompletedTodos.Count;
 
+    /// <summary>
+    /// 输入区域可见性改变事件
+    /// </summary>
+    public event EventHandler<bool>? InputVisibilityChanged;
+
     public TodoListViewModel(ITodoRepository todoRepository)
     {
         _todoRepository = todoRepository;
@@ -45,7 +51,9 @@ public partial class TodoListViewModel : ObservableObject
     /// </summary>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
+        _isInitializing = true;
         await LoadTodosAsync(cancellationToken);
+        _isInitializing = false;
     }
 
     /// <summary>
@@ -224,6 +232,18 @@ public partial class TodoListViewModel : ObservableObject
     {
         IsInputVisible = !IsInputVisible;
         SetStatus(IsInputVisible ? "显示输入区域" : "隐藏输入区域");
+    }
+
+    partial void OnIsInputVisibleChanged(bool value)
+    {
+        // 初始化期间不触发保存事件
+        if (_isInitializing)
+        {
+            return;
+        }
+
+        // 触发事件，通知 MainViewModel 保存设置
+        InputVisibilityChanged?.Invoke(this, value);
     }
 
     private void SetStatus(string status)

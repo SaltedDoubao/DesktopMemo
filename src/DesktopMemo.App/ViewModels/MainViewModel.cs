@@ -148,6 +148,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // 订阅语言切换事件
         _localizationService.LanguageChanged += OnLanguageChanged;
 
+        // 订阅待办事项输入区域可见性变化事件
+        _todoListViewModel.InputVisibilityChanged += OnTodoInputVisibilityChanged;
+
         // 初始化应用信息
         InitializeAppInfo();
     }
@@ -211,6 +214,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             IsInTodoListMode = true;
         }
+
+        // 恢复待办事项输入区域的显示状态
+        _todoListViewModel.IsInputVisible = settings.TodoInputVisible;
 
         SetStatus("就绪");
         _trayService.UpdateTopmostState(SelectedTopmostMode);
@@ -873,6 +879,26 @@ public partial class MainViewModel : ObservableObject, IDisposable
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"保存当前页面失败: {ex}");
+            }
+        });
+    }
+
+    private void OnTodoInputVisibilityChanged(object? sender, bool isVisible)
+    {
+        // 更新设置
+        WindowSettings = WindowSettings with { TodoInputVisible = isVisible };
+        
+        // 异步保存到设置
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _settingsService.SaveAsync(WindowSettings);
+                System.Diagnostics.Debug.WriteLine($"待办输入区域状态已保存: {isVisible}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存待办输入区域状态失败: {ex}");
             }
         });
     }
