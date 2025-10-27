@@ -402,3 +402,55 @@ If settings are abnormal, you can:
 
 For more issues, please provide feedback in the repository [Issues](../../../issues) section.
 
+## 12. Future: MySQL Cloud Storage Integration
+
+DesktopMemo is planning to add MySQL-based cloud storage and sync capabilities. This feature will allow users to sync their memos and todos across multiple devices.
+
+### Current Status
+- ✅ Local SQLite storage implemented (v2.3.0)
+- ✅ Sync status fields added to data models
+- 📝 MySQL integration specification defined
+
+### Key Features (Planned)
+- Optional cloud sync (user opt-in)
+- Multi-device synchronization
+- Conflict resolution strategies
+- End-to-end encryption support
+- Incremental sync for performance
+
+### Architecture
+The MySQL integration will follow a "local-first" architecture:
+- Local SQLite remains the primary data source
+- Cloud sync operates asynchronously in the background
+- Changes are tracked using version numbers and timestamps
+- Conflicts are resolved using configurable strategies
+
+### Implementation Guidelines
+For detailed technical specifications, API design, data models, and implementation guidelines, please refer to:
+- English: [MySQL Integration Specification](MySQL-Integration-Specification.md)
+- 中文: [MySQL 集成规范](MySQL-集成规范.md)
+
+### Migration Path
+1. **Phase 1: Preparation** (Current - v2.3.0)
+   - Local SQLite storage
+   - Sync-ready data models
+2. **Phase 2: Backend Development**
+   - MySQL schema design
+   - REST API implementation
+   - Authentication system
+3. **Phase 3: Client Integration**
+   - Cloud sync service
+   - UI components
+   - Conflict resolution
+4. **Phase 4: Testing & Rollout**
+   - Beta testing
+   - Gradual rollout
+   - Monitoring and iteration
+
+### Contributing
+If you're interested in contributing to the MySQL integration:
+1. Review the [MySQL Integration Specification](MySQL-Integration-Specification.md)
+2. Check existing issues tagged with `cloud-sync`
+3. Discuss your approach in the issue before implementing
+4. Follow the coding standards and async programming best practices outlined in this document
+
