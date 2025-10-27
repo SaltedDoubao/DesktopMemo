@@ -787,14 +787,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "2.1.0";
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "2.3.0";
             var appDir = AppContext.BaseDirectory;
             var dataPath = Path.Combine(appDir, ".memodata");
-            AppInfo = $"版本：{version} | 数据目录：{dataPath}";
+            var versionLabel = _localizationService["Settings_Status_Version"];
+            var dataDirectoryLabel = _localizationService["Settings_Status_DataDirectory"];
+            AppInfo = $"{versionLabel}：{version} | {dataDirectoryLabel}：{dataPath}";
         }
         catch
         {
-            AppInfo = "版本：2.1.0 | 数据目录：<应用目录>\\.memodata";
+            var versionLabel = _localizationService["Settings_Status_Version"];
+            var dataDirectoryLabel = _localizationService["Settings_Status_DataDirectory"];
+            AppInfo = $"{versionLabel}：2.3.0 | {dataDirectoryLabel}：<应用目录>\\.memodata";
         }
     }
 
@@ -823,6 +827,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         // 通知 UI 刷新所有本地化文本
         OnPropertyChanged(nameof(LocalizationService));
+        
+        // 更新应用信息（使用新语言）
+        InitializeAppInfo();
         
         // 更新托盘菜单文本
         _trayService.UpdateMenuTexts(key => _localizationService[key]);

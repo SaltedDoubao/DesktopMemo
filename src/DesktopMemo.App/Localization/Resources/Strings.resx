@@ -194,10 +194,6 @@
     <value>当前：{0:F0}%</value>
     <comment>当前透明度值</comment>
   </data>
-  <data name="Settings_Opacity_Tip" xml:space="preserve">
-    <value>0% = 完全透明，100% = 全白色背景</value>
-    <comment>透明度提示文本</comment>
-  </data>
   
   <data name="Settings_Language_Title" xml:space="preserve">
     <value>语言设置</value>
@@ -224,6 +220,14 @@
   <data name="Settings_Status_Title" xml:space="preserve">
     <value>状态信息</value>
     <comment>状态信息标题</comment>
+  </data>
+  <data name="Settings_Status_Version" xml:space="preserve">
+    <value>版本</value>
+    <comment>版本标签</comment>
+  </data>
+  <data name="Settings_Status_DataDirectory" xml:space="preserve">
+    <value>数据目录</value>
+    <comment>数据目录标签</comment>
   </data>
   
   <data name="Settings_ImportExport_Title" xml:space="preserve">

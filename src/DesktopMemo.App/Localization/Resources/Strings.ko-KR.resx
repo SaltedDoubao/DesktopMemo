@@ -163,9 +163,6 @@
   <data name="Settings_Opacity_Current" xml:space="preserve">
     <value>현재: {0:F0}%</value>
   </data>
-  <data name="Settings_Opacity_Tip" xml:space="preserve">
-    <value>0% = 완전 투명, 100% = 흰색 배경</value>
-  </data>
   
   <data name="Settings_Language_Title" xml:space="preserve">
     <value>언어 설정</value>
@@ -186,6 +183,12 @@
   
   <data name="Settings_Status_Title" xml:space="preserve">
     <value>상태 정보</value>
+  </data>
+  <data name="Settings_Status_Version" xml:space="preserve">
+    <value>버전</value>
+  </data>
+  <data name="Settings_Status_DataDirectory" xml:space="preserve">
+    <value>데이터 디렉토리</value>
   </data>
   
   <data name="Settings_ImportExport_Title" xml:space="preserve">

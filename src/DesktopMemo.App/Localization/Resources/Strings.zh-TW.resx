@@ -163,9 +163,6 @@
   <data name="Settings_Opacity_Current" xml:space="preserve">
     <value>目前：{0:F0}%</value>
   </data>
-  <data name="Settings_Opacity_Tip" xml:space="preserve">
-    <value>0% = 完全透明，100% = 白色背景</value>
-  </data>
   
   <data name="Settings_Language_Title" xml:space="preserve">
     <value>語言設定</value>
@@ -186,6 +183,12 @@
   
   <data name="Settings_Status_Title" xml:space="preserve">
     <value>狀態資訊</value>
+  </data>
+  <data name="Settings_Status_Version" xml:space="preserve">
+    <value>版本</value>
+  </data>
+  <data name="Settings_Status_DataDirectory" xml:space="preserve">
+    <value>資料目錄</value>
   </data>
   
   <data name="Settings_ImportExport_Title" xml:space="preserve">
