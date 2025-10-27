@@ -15,7 +15,10 @@ public sealed record Memo(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyList<string> Tags,
-    bool IsPinned)
+    bool IsPinned,
+    int Version = 1,
+    SyncStatus SyncStatus = SyncStatus.Synced,
+    DateTimeOffset? DeletedAt = null)
 {
     /// <summary>
     /// 获取用于显示的标题。如果内容不为空，使用第一行作为标题；否则使用原标题。
@@ -59,7 +62,9 @@ public sealed record Memo(
     {
         Content = content,
         Preview = BuildPreview(content),
-        UpdatedAt = timestamp
+        UpdatedAt = timestamp,
+        Version = Version + 1,
+        SyncStatus = SyncStatus.PendingSync
     };
 
     public Memo WithMetadata(string title, IReadOnlyList<string> tags, bool isPinned, DateTimeOffset timestamp) => this with
@@ -67,7 +72,26 @@ public sealed record Memo(
         Title = title,
         Tags = tags,
         IsPinned = isPinned,
-        UpdatedAt = timestamp
+        UpdatedAt = timestamp,
+        Version = Version + 1,
+        SyncStatus = SyncStatus.PendingSync
+    };
+
+    /// <summary>
+    /// 标记为已同步（云同步使用）。
+    /// </summary>
+    public Memo MarkAsSynced(int remoteVersion) => this with
+    {
+        Version = remoteVersion,
+        SyncStatus = SyncStatus.Synced
+    };
+
+    /// <summary>
+    /// 标记为冲突状态（云同步使用）。
+    /// </summary>
+    public Memo MarkAsConflict() => this with
+    {
+        SyncStatus = SyncStatus.Conflict
     };
 
     private static string BuildPreview(string content)

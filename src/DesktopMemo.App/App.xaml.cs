@@ -28,11 +28,15 @@ public partial class App : WpfApp
         var services = new ServiceCollection();
 
         // 核心服务
-        services.AddSingleton<IMemoRepository>(_ => new FileMemoRepository(dataDirectory));
-        services.AddSingleton<ITodoRepository>(_ => new JsonTodoRepository(dataDirectory));
+        services.AddSingleton<IMemoRepository>(_ => new SqliteIndexedMemoRepository(dataDirectory));
+        services.AddSingleton<ITodoRepository>(_ => new SqliteTodoRepository(dataDirectory));
         services.AddSingleton<ISettingsService>(_ => new JsonSettingsService(dataDirectory));
         services.AddSingleton<IMemoSearchService, MemoSearchService>();
         services.AddSingleton(_ => new MemoMigrationService(dataDirectory, appDirectory));
+        
+        // 数据迁移服务
+        services.AddSingleton<TodoMigrationService>();
+        services.AddSingleton<MemoMetadataMigrationService>();
 
         // 窗口和托盘服务
         services.AddSingleton<IWindowService, WindowService>();
@@ -54,6 +58,26 @@ public partial class App : WpfApp
 
         try
         {
+            // 执行数据迁移
+            var appDirectory = AppContext.BaseDirectory;
+            var dataDirectory = Path.Combine(appDirectory, ".memodata");
+            
+            // 1. Todo 数据迁移（JSON -> SQLite）
+            var todoMigrationService = Services.GetRequiredService<TodoMigrationService>();
+            var todoMigrationResult = await todoMigrationService.MigrateFromJsonToSqliteAsync(dataDirectory);
+            if (todoMigrationResult.Success && todoMigrationResult.MigratedCount > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"TodoList 迁移成功: {todoMigrationResult.Message}");
+            }
+            
+            // 2. 备忘录元数据迁移（index.json -> SQLite 索引）
+            var memoMetadataMigrationService = Services.GetRequiredService<MemoMetadataMigrationService>();
+            var memoMigrationResult = await memoMetadataMigrationService.MigrateToSqliteIndexAsync(dataDirectory);
+            if (memoMigrationResult.Success && memoMigrationResult.MigratedCount > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"备忘录索引迁移成功: {memoMigrationResult.Message}");
+            }
+
             // 加载语言设置
             var settingsService = Services.GetRequiredService<ISettingsService>();
             var localizationService = Services.GetRequiredService<ILocalizationService>();
