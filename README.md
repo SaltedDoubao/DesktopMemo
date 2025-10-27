@@ -147,7 +147,19 @@ For other development considerations, see [Development Guidelines](docs/Developm
 
 ## 📝 Changelog
 
-### v2.2.1 (Latest)
+### v2.3.0 (Latest)
+- Added SQLite-based data storage and migration support
+  - Memo index migration (JSON → SQLite)
+  - Todo list migration (JSON → SQLite)
+  - Automatic migration on first run
+- Optimized settings panel UI
+  - Improved font size hierarchy and spacing
+  - Enhanced ComboBox and CheckBox styles
+  - Removed redundant quick position buttons
+- Completed multi-language support for status information
+  - Version and data directory labels now support all languages
+
+### v2.2.1
 - Added multi-language support
   - Currently supported languages: 
     - Simplified Chinese (简体中文)
