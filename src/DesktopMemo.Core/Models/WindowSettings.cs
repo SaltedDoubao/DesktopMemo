@@ -20,9 +20,10 @@ public sealed record WindowSettings(
     bool DefaultExitToTray = true,
     string PreferredLanguage = "zh-CN",
     string CurrentPage = "memo",
-    bool TodoInputVisible = true)
+    bool TodoInputVisible = true,
+    AppTheme Theme = AppTheme.Light)
 {
-    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, WindowConstants.DEFAULT_TRANSPARENCY, false, true, false, true, true, true, "zh-CN", "memo", true);
+    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, WindowConstants.DEFAULT_TRANSPARENCY, false, true, false, true, true, true, "zh-CN", "memo", true, AppTheme.System);
 
     public WindowSettings WithLocation(double left, double top)
         => this with { Left = left, Top = top };
