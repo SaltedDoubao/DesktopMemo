@@ -186,6 +186,22 @@
     <value>外观设置</value>
     <comment>外观设置标题</comment>
   </data>
+  <data name="Settings_Theme_Label" xml:space="preserve">
+    <value>主题</value>
+    <comment>主题选择标签</comment>
+  </data>
+  <data name="Settings_Theme_Light" xml:space="preserve">
+    <value>亮色</value>
+    <comment>亮色主题</comment>
+  </data>
+  <data name="Settings_Theme_Dark" xml:space="preserve">
+    <value>暗色</value>
+    <comment>暗色主题</comment>
+  </data>
+  <data name="Settings_Theme_System" xml:space="preserve">
+    <value>跟随系统</value>
+    <comment>跟随系统主题</comment>
+  </data>
   <data name="Settings_Opacity_Label" xml:space="preserve">
     <value>背景透明度</value>
     <comment>透明度设置标签</comment>

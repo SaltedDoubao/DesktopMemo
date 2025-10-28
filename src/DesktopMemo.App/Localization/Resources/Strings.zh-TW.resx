@@ -157,6 +157,18 @@
   <data name="Settings_Appearance_Title" xml:space="preserve">
     <value>外觀設定</value>
   </data>
+  <data name="Settings_Theme_Label" xml:space="preserve">
+    <value>主題</value>
+  </data>
+  <data name="Settings_Theme_Light" xml:space="preserve">
+    <value>淺色</value>
+  </data>
+  <data name="Settings_Theme_Dark" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="Settings_Theme_System" xml:space="preserve">
+    <value>跟隨系統</value>
+  </data>
   <data name="Settings_Opacity_Label" xml:space="preserve">
     <value>背景透明度</value>
   </data>

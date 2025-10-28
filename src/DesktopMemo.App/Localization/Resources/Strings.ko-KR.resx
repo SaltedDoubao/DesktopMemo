@@ -157,6 +157,18 @@
   <data name="Settings_Appearance_Title" xml:space="preserve">
     <value>외관 설정</value>
   </data>
+  <data name="Settings_Theme_Label" xml:space="preserve">
+    <value>테마</value>
+  </data>
+  <data name="Settings_Theme_Light" xml:space="preserve">
+    <value>라이트</value>
+  </data>
+  <data name="Settings_Theme_Dark" xml:space="preserve">
+    <value>다크</value>
+  </data>
+  <data name="Settings_Theme_System" xml:space="preserve">
+    <value>시스템 따라가기</value>
+  </data>
   <data name="Settings_Opacity_Label" xml:space="preserve">
     <value>배경 투명도</value>
   </data>

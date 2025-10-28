@@ -157,6 +157,18 @@
   <data name="Settings_Appearance_Title" xml:space="preserve">
     <value>外観設定</value>
   </data>
+  <data name="Settings_Theme_Label" xml:space="preserve">
+    <value>テーマ</value>
+  </data>
+  <data name="Settings_Theme_Light" xml:space="preserve">
+    <value>ライト</value>
+  </data>
+  <data name="Settings_Theme_Dark" xml:space="preserve">
+    <value>ダーク</value>
+  </data>
+  <data name="Settings_Theme_System" xml:space="preserve">
+    <value>システムに従う</value>
+  </data>
   <data name="Settings_Opacity_Label" xml:space="preserve">
     <value>背景の透明度</value>
   </data>

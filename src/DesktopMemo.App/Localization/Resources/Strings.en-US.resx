@@ -157,6 +157,18 @@
   <data name="Settings_Appearance_Title" xml:space="preserve">
     <value>Appearance</value>
   </data>
+  <data name="Settings_Theme_Label" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Settings_Theme_Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Settings_Theme_Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Settings_Theme_System" xml:space="preserve">
+    <value>Follow System</value>
+  </data>
   <data name="Settings_Opacity_Label" xml:space="preserve">
     <value>Background Opacity</value>
   </data>
