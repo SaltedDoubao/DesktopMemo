@@ -1,0 +1,40 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- 亮色主题颜色定义 -->
+    
+    <!-- 背景颜色 -->
+    <SolidColorBrush x:Key="PrimaryBackgroundColor" Color="#F5F5F7"/>
+    <SolidColorBrush x:Key="CardBackgroundColor" Color="White"/>
+    <SolidColorBrush x:Key="SecondaryBackgroundColor" Color="#E8E8ED"/>
+    <SolidColorBrush x:Key="InputBackgroundColor" Color="#F5F5F7"/>
+    
+    <!-- 文本颜色 -->
+    <SolidColorBrush x:Key="PrimaryTextColor" Color="#1D1D1F"/>
+    <SolidColorBrush x:Key="SecondaryTextColor" Color="#86868B"/>
+    
+    <!-- 边框颜色 -->
+    <SolidColorBrush x:Key="PrimaryBorderColor" Color="#D1D1D6"/>
+    <SolidColorBrush x:Key="FocusBorderColor" Color="#007AFF"/>
+    
+    <!-- 按钮颜色 -->
+    <SolidColorBrush x:Key="ButtonBackgroundColor" Color="#E8E8ED"/>
+    <SolidColorBrush x:Key="ButtonBackgroundHoverColor" Color="#D1D1D6"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPressedColor" Color="#C7C7CC"/>
+    <SolidColorBrush x:Key="ButtonForegroundColor" Color="#1D1D1F"/>
+    
+    <!-- 主色调（蓝色按钮等） -->
+    <SolidColorBrush x:Key="AccentColor" Color="#007AFF"/>
+    <SolidColorBrush x:Key="AccentHoverColor" Color="#0051D5"/>
+    <SolidColorBrush x:Key="AccentPressedColor" Color="#004BB8"/>
+    
+    <!-- 下拉框/弹出框颜色 -->
+    <SolidColorBrush x:Key="PopupBackgroundColor" Color="White"/>
+    <SolidColorBrush x:Key="PopupBorderColor" Color="#D1D1D6"/>
+    <SolidColorBrush x:Key="ItemHighlightColor" Color="#E8E8ED"/>
+    
+    <!-- 图标颜色 -->
+    <SolidColorBrush x:Key="IconColor" Color="#86868B"/>
+    
+</ResourceDictionary>
+
