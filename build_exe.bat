@@ -18,7 +18,6 @@ dotnet publish src/DesktopMemo.App/DesktopMemo.App.csproj ^
 
 if %ERRORLEVEL% NEQ 0 (
     echo Packaging failed!
-    pause
     exit /b 1
 )
 
