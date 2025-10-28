@@ -153,11 +153,11 @@ For other development considerations, see [Development Guidelines](docs/Developm
   - Todo list migration (JSON → SQLite)
   - Automatic migration on first run
 - Optimized settings panel UI
+  - Added theme switching functionality (Light/Dark)
   - Improved font size hierarchy and spacing
   - Enhanced ComboBox and CheckBox styles
   - Removed redundant quick position buttons
 - Completed multi-language support for status information
-  - Version and data directory labels now support all languages
 
 For more history, see [Releases](../../releases)
 
@@ -165,7 +165,6 @@ For more history, see [Releases](../../releases)
 
 ### Updates that may be implemented soon
 - [ ] Add preset window size schemes
-- [ ] Add theme switching functionality
 
 ### Future update trends
 - To be added...
