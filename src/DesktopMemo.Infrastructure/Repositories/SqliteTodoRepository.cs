@@ -250,17 +250,39 @@ public sealed class SqliteTodoRepository : ITodoRepository, IDisposable
 
         public TodoItem ToModel()
         {
+            static DateTimeOffset ParseRequired(string value)
+            {
+                if (DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind, out var result))
+                {
+                    return result;
+                }
+                return DateTimeOffset.Now;
+            }
+
+            static DateTimeOffset? ParseOptional(string? value)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    return null;
+                }
+                return DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind, out var result)
+                    ? result
+                    : null;
+            }
+
             return new TodoItem(
                 Guid.Parse(Id),
                 Content,
                 IsCompleted == 1,
-                DateTimeOffset.Parse(CreatedAt),
-                DateTimeOffset.Parse(UpdatedAt),
+                ParseRequired(CreatedAt),
+                ParseRequired(UpdatedAt),
                 SortOrder,
                 Version,
                 (SyncStatus)SyncStatus,
-                CompletedAt != null ? DateTimeOffset.Parse(CompletedAt) : null,
-                DeletedAt != null ? DateTimeOffset.Parse(DeletedAt) : null
+                ParseOptional(CompletedAt),
+                ParseOptional(DeletedAt)
             );
         }
 

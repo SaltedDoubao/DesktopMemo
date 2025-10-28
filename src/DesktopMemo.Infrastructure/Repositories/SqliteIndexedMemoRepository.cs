@@ -116,6 +116,24 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
 
                 // 从 Markdown 文件读取内容
                 var content = await LoadContentFromFileAsync(dto.FilePath, cancellationToken).ConfigureAwait(false);
+
+                // 回退：若数据库记录的 file_path 无法读取，则尝试使用标准路径并自愈更新数据库
+                if (content == null)
+                {
+                    var id = Guid.Parse(dto.Id);
+                    var fallbackPath = GetMemoPath(id);
+                    if (!string.Equals(fallbackPath, dto.FilePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var fallbackContent = await LoadContentFromFileAsync(fallbackPath, cancellationToken).ConfigureAwait(false);
+                        if (fallbackContent != null)
+                        {
+                            const string updatePathSql = "UPDATE memos SET file_path = @FilePath WHERE id = @Id";
+                            await connection.ExecuteAsync(updatePathSql, new { FilePath = fallbackPath, Id = dto.Id }).ConfigureAwait(false);
+                            content = fallbackContent;
+                        }
+                    }
+                }
+
                 if (content != null)
                 {
                     memos.Add(dto.ToMemo(content));
@@ -163,6 +181,22 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
             }
 
             var content = await LoadContentFromFileAsync(dto.FilePath, cancellationToken).ConfigureAwait(false);
+
+            if (content == null)
+            {
+                var fallbackPath = GetMemoPath(id);
+                if (!string.Equals(fallbackPath, dto.FilePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    var fallbackContent = await LoadContentFromFileAsync(fallbackPath, cancellationToken).ConfigureAwait(false);
+                    if (fallbackContent != null)
+                    {
+                        const string updatePathSql = "UPDATE memos SET file_path = @FilePath WHERE id = @Id";
+                        await connection.ExecuteAsync(updatePathSql, new { FilePath = fallbackPath, Id = dto.Id }).ConfigureAwait(false);
+                        content = fallbackContent;
+                    }
+                }
+            }
+
             return content != null ? dto.ToMemo(content) : null;
         }
         finally
@@ -436,18 +470,41 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
                 ? Array.Empty<string>()
                 : Tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
+            // 兼容空字符串与非ISO格式的时间
+            static DateTimeOffset ParseRequired(string value)
+            {
+                if (DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind, out var result))
+                {
+                    return result;
+                }
+                return DateTimeOffset.Now;
+            }
+
+            static DateTimeOffset? ParseOptional(string? value)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    return null;
+                }
+                return DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind, out var result)
+                    ? result
+                    : null;
+            }
+
             return new Memo(
                 Guid.Parse(Id),
                 Title,
                 content,
                 Preview,
-                DateTimeOffset.Parse(CreatedAt),
-                DateTimeOffset.Parse(UpdatedAt),
+                ParseRequired(CreatedAt),
+                ParseRequired(UpdatedAt),
                 tagList,
                 IsPinned == 1,
                 Version,
                 (SyncStatus)SyncStatus,
-                DeletedAt != null ? DateTimeOffset.Parse(DeletedAt) : null
+                ParseOptional(DeletedAt)
             );
         }
     }
