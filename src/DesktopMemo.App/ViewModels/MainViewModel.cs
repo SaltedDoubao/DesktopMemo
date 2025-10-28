@@ -121,6 +121,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private CultureInfo? _selectedLanguage;
 
+    [ObservableProperty]
+    private AppTheme _selectedTheme = AppTheme.Light;
+
     private bool _disposed;
 
     public MainViewModel(
@@ -205,6 +208,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         // 初始化选择的语言
         SelectedLanguage = _localizationService.CurrentCulture;
+        
+        // 初始化主题
+        SelectedTheme = settings.Theme;
         
         // 初始化托盘菜单文本
         _trayService.UpdateMenuTexts(key => _localizationService[key]);
@@ -443,16 +449,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task TogglePinAsync()
     {
         IsWindowPinned = !IsWindowPinned;
-
-        // 实际控制窗口置顶状态
-        if (IsWindowPinned)
-        {
-            _windowService.SetTopmostMode(TopmostMode.Always);
-        }
-        else
-        {
-            _windowService.SetTopmostMode(SelectedTopmostMode);
-        }
 
         // 如果有选中的备忘录，保存其固定状态
         if (SelectedMemo is not null)
@@ -862,6 +858,43 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SetStatus($"语言已切换到 {value.NativeName}");
         }
     }
+
+    partial void OnSelectedThemeChanged(AppTheme value)
+    {
+        if (!_isInitializing)
+        {
+            // 更新内存中的设置
+            WindowSettings = WindowSettings with { Theme = value };
+            
+            // 保存到设置（异步）
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _settingsService.SaveAsync(WindowSettings);
+                    System.Diagnostics.Debug.WriteLine($"主题设置已保存: {value}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"保存主题设置失败: {ex}");
+                }
+            });
+            
+            var themeName = value switch
+            {
+                AppTheme.Light => "亮色",
+                AppTheme.Dark => "暗色",
+                AppTheme.System => "跟随系统",
+                _ => "未知"
+            };
+            SetStatus($"主题已切换到 {themeName}");
+            
+            // 触发主题变更事件，让MainWindow更新UI
+            ThemeChanged?.Invoke(this, value);
+        }
+    }
+
+    public event EventHandler<AppTheme>? ThemeChanged;
 
     partial void OnIsInTodoListModeChanged(bool value)
     {

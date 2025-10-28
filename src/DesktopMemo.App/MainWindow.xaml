@@ -354,6 +354,148 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- 苹果风格圆形滑块样式 -->
+        <Style x:Key="AppleSliderStyle" TargetType="Slider">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Border x:Name="TrackBackground"
+                                    Grid.Row="1"
+                                    Height="4"
+                                    Background="#E5E5EA"
+                                    CornerRadius="2"
+                                    VerticalAlignment="Center"/>
+                            <Border x:Name="PART_SelectionRange"
+                                    Grid.Row="1"
+                                    Height="4"
+                                    Background="#007AFF"
+                                    CornerRadius="2"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"/>
+                            <Track x:Name="PART_Track" Grid.Row="1">
+                                <Track.Thumb>
+                                    <Thumb x:Name="Thumb">
+                                        <Thumb.Style>
+                                            <Style TargetType="Thumb">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Thumb">
+                                                            <Grid>
+                                                                <Ellipse x:Name="ThumbEllipse"
+                                                                         Width="20"
+                                                                         Height="20"
+                                                                         Fill="White"
+                                                                         Stroke="#D1D1D6"
+                                                                         StrokeThickness="0.5"/>
+                                                                <Ellipse x:Name="ThumbShadow"
+                                                                         Width="20"
+                                                                         Height="20">
+                                                                    <Ellipse.Effect>
+                                                                        <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="0" Opacity="0.2"/>
+                                                                    </Ellipse.Effect>
+                                                                </Ellipse>
+                                                            </Grid>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="ThumbEllipse" Property="Width" Value="22"/>
+                                                                    <Setter TargetName="ThumbEllipse" Property="Height" Value="22"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsDragging" Value="True">
+                                                                    <Setter TargetName="ThumbEllipse" Property="Width" Value="24"/>
+                                                                    <Setter TargetName="ThumbEllipse" Property="Height" Value="24"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Thumb.Style>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 暗色主题滑块样式 -->
+        <Style x:Key="AppleSliderStyleDark" TargetType="Slider">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Border x:Name="TrackBackground"
+                                    Grid.Row="1"
+                                    Height="4"
+                                    Background="#48484A"
+                                    CornerRadius="2"
+                                    VerticalAlignment="Center"/>
+                            <Border x:Name="PART_SelectionRange"
+                                    Grid.Row="1"
+                                    Height="4"
+                                    Background="#0A84FF"
+                                    CornerRadius="2"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"/>
+                            <Track x:Name="PART_Track" Grid.Row="1">
+                                <Track.Thumb>
+                                    <Thumb x:Name="Thumb">
+                                        <Thumb.Style>
+                                            <Style TargetType="Thumb">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Thumb">
+                                                            <Grid>
+                                                                <Ellipse x:Name="ThumbEllipse"
+                                                                         Width="20"
+                                                                         Height="20"
+                                                                         Fill="#E5E5EA"
+                                                                         Stroke="#636366"
+                                                                         StrokeThickness="0.5"/>
+                                                                <Ellipse x:Name="ThumbShadow"
+                                                                         Width="20"
+                                                                         Height="20">
+                                                                    <Ellipse.Effect>
+                                                                        <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="0" Opacity="0.4"/>
+                                                                    </Ellipse.Effect>
+                                                                </Ellipse>
+                                                            </Grid>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="ThumbEllipse" Property="Width" Value="22"/>
+                                                                    <Setter TargetName="ThumbEllipse" Property="Height" Value="22"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsDragging" Value="True">
+                                                                    <Setter TargetName="ThumbEllipse" Property="Width" Value="24"/>
+                                                                    <Setter TargetName="ThumbEllipse" Property="Height" Value="24"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Thumb.Style>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Border x:Name="MainContainer" Style="{StaticResource GlassmorphismBorder}" Margin="0">
@@ -831,61 +973,72 @@
                 </Border>
             </Grid>
 
-            <Border x:Name="SettingsPanel" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="340" Background="#F0101010" BorderBrush="#30FFFFFF" BorderThickness="1,0,0,0" CornerRadius="0,16,16,0" Visibility="{Binding IsSettingsPanelVisible, Converter={StaticResource BoolToVisibilityConverter}}" MouseLeftButtonDown="SettingsPanel_MouseLeftButtonDown">
+            <Border x:Name="SettingsPanel" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="340" Background="{DynamicResource PrimaryBackgroundColor}" BorderThickness="0" CornerRadius="0,16,16,0" Visibility="{Binding IsSettingsPanelVisible, Converter={StaticResource BoolToVisibilityConverter}}" MouseLeftButtonDown="SettingsPanel_MouseLeftButtonDown">
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="0" Opacity="0.15"/>
+                </Border.Effect>
                 <Border.RenderTransform>
                     <TranslateTransform X="340" />
                 </Border.RenderTransform>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{StaticResource GlassScrollViewer}">
-                    <StackPanel Margin="24,20,24,24">
+                    <StackPanel Margin="20,16,20,20">
                         <!-- 标题栏 -->
-                        <Grid Margin="0,0,0,24">
+                        <Grid Margin="0,0,0,20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Ellipse Width="10" Height="10" Fill="#FF2196F3" VerticalAlignment="Center" Margin="0,0,12,0">
-                                    <Ellipse.Effect>
-                                        <DropShadowEffect Color="#FF2196F3" BlurRadius="8" ShadowDepth="0" Opacity="0.6"/>
-                                    </Ellipse.Effect>
-                                </Ellipse>
-                                <TextBlock Text="{Binding LocalizationService[Settings_Title]}" FontSize="20" FontWeight="SemiBold" Foreground="#F5FFFFFF" />
-                            </StackPanel>
-                            <Button Grid.Column="1" Width="36" Height="36" Command="{Binding ToggleSettingsCommand}" Style="{StaticResource GlassButton}" ToolTip="{Binding LocalizationService[Tooltip_Return]}">
-                                <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Fill="#E0FFFFFF" Width="18" Height="18" Stretch="Uniform" />
+                            <TextBlock Grid.Column="0" Text="{Binding LocalizationService[Settings_Title]}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextColor}" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Width="32" Height="32" Command="{Binding ToggleSettingsCommand}" Background="{DynamicResource ButtonBackgroundColor}" BorderThickness="0" ToolTip="{Binding LocalizationService[Tooltip_Return]}" Cursor="Hand">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="#E8E8ED"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="16">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="border" Property="Background" Value="#D1D1D6"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsPressed" Value="True">
+                                                            <Setter TargetName="border" Property="Background" Value="#C7C7CC"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                                <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Fill="#1D1D1F" Width="16" Height="16" Stretch="Uniform" />
                             </Button>
                         </Grid>
 
                         <!-- 窗口置顶设置 -->
-                        <Border Background="#20FFFFFF" CornerRadius="10" Padding="18,16" Margin="0,0,0,16">
+                        <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="12" Padding="16,14" Margin="0,0,0,12">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.08"/>
+                            </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="{Binding LocalizationService[Settings_Topmost_Title]}" FontSize="15" FontWeight="SemiBold" Foreground="#F0FFFFFF" Margin="0,0,0,14" />
-                                <RadioButton Content="{Binding LocalizationService[Settings_Topmost_Normal]}" GroupName="TopmostMode" Style="{StaticResource ModernRadioButton}" IsChecked="{Binding SelectedTopmostMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Normal}" FontSize="13" Margin="0,0,0,6" />
-                                <RadioButton Content="{Binding LocalizationService[Settings_Topmost_Desktop]}" GroupName="TopmostMode" Style="{StaticResource ModernRadioButton}" IsChecked="{Binding SelectedTopmostMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Desktop}" FontSize="13" Margin="0,0,0,6" />
-                                <RadioButton Content="{Binding LocalizationService[Settings_Topmost_Always]}" GroupName="TopmostMode" Style="{StaticResource ModernRadioButton}" IsChecked="{Binding SelectedTopmostMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Always}" FontSize="13" />
+                                <TextBlock Text="{Binding LocalizationService[Settings_Topmost_Title]}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,12" />
+                                <RadioButton Content="{Binding LocalizationService[Settings_Topmost_Normal]}" GroupName="TopmostMode" Style="{StaticResource ModernRadioButton}" IsChecked="{Binding SelectedTopmostMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Normal}" FontSize="13" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,8" />
+                                <RadioButton Content="{Binding LocalizationService[Settings_Topmost_Desktop]}" GroupName="TopmostMode" Style="{StaticResource ModernRadioButton}" IsChecked="{Binding SelectedTopmostMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Desktop}" FontSize="13" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,8" />
+                                <RadioButton Content="{Binding LocalizationService[Settings_Topmost_Always]}" GroupName="TopmostMode" Style="{StaticResource ModernRadioButton}" IsChecked="{Binding SelectedTopmostMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Always}" FontSize="13" Foreground="{DynamicResource PrimaryTextColor}" />
                             </StackPanel>
                         </Border>
 
                         <!-- 窗口位置设置 -->
-                        <Border Background="#20FFFFFF" CornerRadius="10" Padding="18,16" Margin="0,0,0,16">
+                        <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="12" Padding="16,14" Margin="0,0,0,12">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.08"/>
+                            </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="{Binding LocalizationService[Settings_Position_Title]}" FontSize="15" FontWeight="SemiBold" Foreground="#F0FFFFFF" Margin="0,0,0,14" />
+                                <TextBlock Text="{Binding LocalizationService[Settings_Position_Title]}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,12" />
                                 
-                                <!-- 当前位置显示 -->
-                                <StackPanel Margin="0,0,0,14">
-                                    <TextBlock Text="{Binding LocalizationService[Settings_Position_Current]}" Foreground="#B0FFFFFF" FontSize="12" Margin="0,0,0,6" />
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding CurrentLeft, StringFormat='X: {0:F0}'}" Foreground="#E0FFFFFF" FontSize="13" />
-                                        <TextBlock Grid.Column="1" Text="{Binding CurrentTop, StringFormat='Y: {0:F0}'}" Foreground="#E0FFFFFF" FontSize="13" />
-                                    </Grid>
-                                </StackPanel>
-
-                                <!-- 自定义位置输入 -->
-                                <StackPanel Margin="0,0,0,14">
+                                <!-- 位置输入 -->
+                                <StackPanel Margin="0,0,0,12">
                                     <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -894,12 +1047,80 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding LocalizationService[Settings_Position_X]}" Foreground="#B0FFFFFF" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBox Grid.Column="1" Text="{Binding CustomPositionX}" Background="#30FFFFFF" Foreground="#FFFFFFFF" BorderBrush="#50FFFFFF" BorderThickness="1" Padding="8,6" FontSize="13" Height="34" VerticalContentAlignment="Center" />
-                                        <TextBlock Grid.Column="3" Text="{Binding LocalizationService[Settings_Position_Y]}" Foreground="#B0FFFFFF" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBox Grid.Column="4" Text="{Binding CustomPositionY}" Background="#30FFFFFF" Foreground="#FFFFFFFF" BorderBrush="#50FFFFFF" BorderThickness="1" Padding="8,6" FontSize="13" Height="34" VerticalContentAlignment="Center" />
+                                        <TextBlock Grid.Column="0" Text="{Binding LocalizationService[Settings_Position_X]}" Foreground="{DynamicResource PrimaryTextColor}" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <TextBox Grid.Column="1" Text="{Binding CustomPositionX}" Background="{DynamicResource InputBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}" BorderBrush="{DynamicResource PrimaryBorderColor}" BorderThickness="1" Padding="8,6" FontSize="13" Height="32" VerticalContentAlignment="Center">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="TextBox">
+                                                                <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                                    <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="border" Property="BorderBrush" Value="#007AFF"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsFocused" Value="True">
+                                                                        <Setter TargetName="border" Property="BorderBrush" Value="#007AFF"/>
+                                                                        <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
+                                        <TextBlock Grid.Column="3" Text="{Binding LocalizationService[Settings_Position_Y]}" Foreground="{DynamicResource PrimaryTextColor}" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <TextBox Grid.Column="4" Text="{Binding CustomPositionY}" Background="{DynamicResource InputBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}" BorderBrush="{DynamicResource PrimaryBorderColor}" BorderThickness="1" Padding="8,6" FontSize="13" Height="32" VerticalContentAlignment="Center">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="TextBox">
+                                                                <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                                    <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="border" Property="BorderBrush" Value="#007AFF"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsFocused" Value="True">
+                                                                        <Setter TargetName="border" Property="BorderBrush" Value="#007AFF"/>
+                                                                        <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
                                     </Grid>
-                                    <Button Content="{Binding LocalizationService[Button_Apply]}" Command="{Binding ApplyCustomPositionCommand}" Style="{StaticResource GlassButton}" Height="34" FontSize="13" HorizontalAlignment="Stretch" />
+                                    <Button Command="{Binding ApplyCustomPositionCommand}" Height="32" FontSize="13" HorizontalAlignment="Stretch" Background="#007AFF" Foreground="White" BorderThickness="0" Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Content="{Binding LocalizationService[Button_Apply]}"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="border" Property="Background" Value="#0051D5"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsPressed" Value="True">
+                                                                    <Setter TargetName="border" Property="Background" Value="#004BB8"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
                                 </StackPanel>
 
                                 <!-- 位置记忆按钮 -->
@@ -909,51 +1130,109 @@
                                         <ColumnDefinition Width="8" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Button Content="{Binding LocalizationService[Settings_Position_Remember]}" Command="{Binding RememberPositionCommand}" Style="{StaticResource GlassButton}" Grid.Column="0" Height="34" FontSize="13" />
-                                    <Button Content="{Binding LocalizationService[Settings_Position_Restore]}" Command="{Binding RestorePositionCommand}" Style="{StaticResource GlassButton}" Grid.Column="2" Height="34" FontSize="13" />
+                                    <Button Command="{Binding RememberPositionCommand}" Grid.Column="0" Height="32" FontSize="13" Background="{DynamicResource ButtonBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}" BorderThickness="0" Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Content="{Binding LocalizationService[Settings_Position_Remember]}"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="border" Property="Background" Value="#D1D1D6"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsPressed" Value="True">
+                                                                    <Setter TargetName="border" Property="Background" Value="#C7C7CC"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    <Button Command="{Binding RestorePositionCommand}" Grid.Column="2" Height="32" FontSize="13" Background="{DynamicResource ButtonBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}" BorderThickness="0" Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Content="{Binding LocalizationService[Settings_Position_Restore]}"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="border" Property="Background" Value="#D1D1D6"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsPressed" Value="True">
+                                                                    <Setter TargetName="border" Property="Background" Value="#C7C7CC"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- 外观设置 -->
-                        <Border Background="#20FFFFFF" CornerRadius="10" Padding="18,16" Margin="0,0,0,16">
+                        <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="12" Padding="16,14" Margin="0,0,0,12">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.08"/>
+                            </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="{Binding LocalizationService[Settings_Appearance_Title]}" FontSize="15" FontWeight="SemiBold" Foreground="#F0FFFFFF" Margin="0,0,0,14" />
-                                <TextBlock Text="{Binding LocalizationService[Settings_Opacity_Label]}" Foreground="#E0FFFFFF" FontSize="13" Margin="0,0,0,6" />
-                                <TextBlock Text="{Binding BackgroundOpacityPercent, StringFormat={}{0:F0}%}" Foreground="#B0FFFFFF" FontSize="13" Margin="0,0,0,10" />
-                                <Slider x:Name="BackgroundOpacitySlider" Minimum="0" Maximum="100" Value="{Binding BackgroundOpacityPercent, Mode=TwoWay}" ValueChanged="BackgroundOpacitySlider_ValueChanged" Height="24" />
+                                <TextBlock Text="{Binding LocalizationService[Settings_Appearance_Title]}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,12" />
+                                
+                                <!-- 主题选择 -->
+                                <TextBlock Text="{Binding LocalizationService[Settings_Theme_Label]}" Foreground="{DynamicResource PrimaryTextColor}" FontSize="13" Margin="0,0,0,8" />
+                                <StackPanel Margin="0,0,0,16">
+                                    <RadioButton Content="{Binding LocalizationService[Settings_Theme_Light]}" GroupName="Theme" Style="{StaticResource ModernRadioButton}" IsChecked="{Binding SelectedTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light}" FontSize="13" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,8" />
+                                    <RadioButton Content="{Binding LocalizationService[Settings_Theme_Dark]}" GroupName="Theme" Style="{StaticResource ModernRadioButton}" IsChecked="{Binding SelectedTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark}" FontSize="13" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,8" />
+                                    <RadioButton Content="{Binding LocalizationService[Settings_Theme_System]}" GroupName="Theme" Style="{StaticResource ModernRadioButton}" IsChecked="{Binding SelectedTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=System}" FontSize="13" Foreground="{DynamicResource PrimaryTextColor}" />
+                                </StackPanel>
+                                
+                                <!-- 透明度设置 -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding LocalizationService[Settings_Opacity_Label]}" Foreground="{DynamicResource PrimaryTextColor}" FontSize="13" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding BackgroundOpacityPercent, StringFormat={}{0:F0}%}" Foreground="#007AFF" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </Grid>
+                                <Slider x:Name="BackgroundOpacitySlider" Minimum="0" Maximum="100" Value="{Binding BackgroundOpacityPercent, Mode=TwoWay}" ValueChanged="BackgroundOpacitySlider_ValueChanged" Height="24" Style="{StaticResource AppleSliderStyle}" />
                             </StackPanel>
                         </Border>
 
                         <!-- 语言设置 -->
-                        <Border Background="#20FFFFFF" CornerRadius="10" Padding="18,16" Margin="0,0,0,16">
+                        <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="12" Padding="16,14" Margin="0,0,0,12">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.08"/>
+                            </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="{Binding LocalizationService[Settings_Language_Title]}" FontSize="15" FontWeight="SemiBold" Foreground="#F0FFFFFF" Margin="0,0,0,14" />
-                                <TextBlock Text="{Binding LocalizationService[Settings_Language_Label]}" Foreground="#E0FFFFFF" FontSize="13" Margin="0,0,0,10" />
-                                <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                                <TextBlock Text="{Binding LocalizationService[Settings_Language_Title]}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding LocalizationService[Settings_Language_Label]}" Foreground="{DynamicResource SecondaryTextColor}" FontSize="12" Margin="0,0,0,8" />
+                                <ComboBox x:Name="LanguageComboBox"
+                                          ItemsSource="{Binding AvailableLanguages}"
                                           SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
                                           DisplayMemberPath="NativeName"
-                                          Background="#FF2A2A2A"
-                                          Foreground="#F0FFFFFF"
-                                          BorderBrush="#50FFFFFF"
+                                          Background="{DynamicResource InputBackgroundColor}"
+                                          Foreground="{DynamicResource PrimaryTextColor}"
+                                          BorderBrush="{DynamicResource PrimaryBorderColor}"
                                           BorderThickness="1"
                                           Padding="10,7"
                                           FontSize="13"
-                                          Height="36">
-                                    <ComboBox.Resources>
-                                        <!-- 下拉框弹出部分的样式 -->
-                                        <Style TargetType="Border" x:Key="ComboBoxDropDownBorder">
-                                            <Setter Property="Background" Value="#FF2A2A2A"/>
-                                            <Setter Property="BorderBrush" Value="#50FFFFFF"/>
-                                            <Setter Property="BorderThickness" Value="1"/>
-                                            <Setter Property="CornerRadius" Value="4"/>
-                                        </Style>
-                                    </ComboBox.Resources>
+                                          Height="34">
                                     <ComboBox.ItemContainerStyle>
                                         <Style TargetType="ComboBoxItem">
-                                            <Setter Property="Foreground" Value="#F0FFFFFF"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}"/>
                                             <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Padding" Value="10,8"/>
+                                            <Setter Property="Padding" Value="12,8"/>
                                             <Setter Property="FontSize" Value="13"/>
                                             <Setter Property="Template">
                                                 <Setter.Value>
@@ -962,16 +1241,18 @@
                                                                 Background="{TemplateBinding Background}"
                                                                 BorderBrush="{TemplateBinding BorderBrush}"
                                                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                                                Padding="{TemplateBinding Padding}">
+                                                                Padding="{TemplateBinding Padding}"
+                                                                CornerRadius="6">
                                                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                                                         </Border>
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsHighlighted" Value="True">
-                                                                <Setter TargetName="Bd" Property="Background" Value="#FF4A4A4A"/>
+                                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ItemHighlightColor}"/>
                                                             </Trigger>
                                                             <Trigger Property="IsSelected" Value="True">
-                                                                <Setter TargetName="Bd" Property="Background" Value="#FF2196F3"/>
+                                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColor}"/>
+                                                                <Setter Property="Foreground" Value="White"/>
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -979,7 +1260,7 @@
                                             </Setter>
                                         </Style>
                                     </ComboBox.ItemContainerStyle>
-                                    <!-- 自定义下拉框模板以修改弹出容器背景 -->
+                                    <!-- 自定义下拉框模板 -->
                                     <ComboBox.Template>
                                         <ControlTemplate TargetType="ComboBox">
                                             <Grid>
@@ -994,32 +1275,37 @@
                                                                     Background="{TemplateBinding Background}"
                                                                     BorderBrush="{TemplateBinding BorderBrush}"
                                                                     BorderThickness="{TemplateBinding BorderThickness}"
-                                                                    CornerRadius="4">
+                                                                    CornerRadius="8">
                                                                 <Grid>
                                                                     <Grid.ColumnDefinitions>
                                                                         <ColumnDefinition Width="*"/>
                                                                         <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <ContentPresenter Grid.Column="0"
-                                                                                      Margin="10,0,0,0"
+                                                                                      Margin="12,0,0,0"
                                                                                       HorizontalAlignment="Left"
                                                                                       VerticalAlignment="Center"
                                                                                       Content="{TemplateBinding Content}"/>
                                                                     <Path Grid.Column="1"
                                                                           Data="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
-                                                                          Fill="#B0FFFFFF"
-                                                                          Width="14"
-                                                                          Height="14"
+                                                                          Fill="{DynamicResource IconColor}"
+                                                                          Width="12"
+                                                                          Height="12"
                                                                           Stretch="Uniform"
-                                                                          Margin="0,0,10,0"/>
+                                                                          Margin="0,0,12,0"/>
                                                                 </Grid>
                                                             </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="border" Property="BorderBrush" Value="#007AFF"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
                                                         </ControlTemplate>
                                                     </ToggleButton.Template>
                                                     <ToggleButton.Style>
                                                         <Style TargetType="ToggleButton">
-                                                            <Setter Property="Background" Value="#FF2A2A2A"/>
-                                                            <Setter Property="BorderBrush" Value="#50FFFFFF"/>
+                                                            <Setter Property="Background" Value="{DynamicResource InputBackgroundColor}"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBorderColor}"/>
                                                             <Setter Property="BorderThickness" Value="1"/>
                                                         </Style>
                                                     </ToggleButton.Style>
@@ -1029,7 +1315,7 @@
                                                                   Content="{TemplateBinding SelectionBoxItem}"
                                                                   ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                                                   ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                                                  Margin="10,0,30,0"
+                                                                  Margin="12,0,30,0"
                                                                   VerticalAlignment="Center"
                                                                   HorizontalAlignment="Left"/>
                                                 <Popup x:Name="Popup"
@@ -1037,14 +1323,18 @@
                                                        IsOpen="{TemplateBinding IsDropDownOpen}"
                                                        AllowsTransparency="True"
                                                        Focusable="False"
-                                                       PopupAnimation="Slide">
+                                                       PopupAnimation="Fade">
                                                     <Border x:Name="DropDownBorder"
-                                                            Background="#FF2A2A2A"
-                                                            BorderBrush="#50FFFFFF"
+                                                            Background="{DynamicResource CardBackgroundColor}"
+                                                            BorderBrush="{DynamicResource PrimaryBorderColor}"
                                                             BorderThickness="1"
-                                                            CornerRadius="4"
+                                                            CornerRadius="10"
                                                             MinWidth="{TemplateBinding ActualWidth}"
-                                                            MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                                            MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                                            Padding="4">
+                                                        <Border.Effect>
+                                                            <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="0" Opacity="0.15"/>
+                                                        </Border.Effect>
                                                         <ScrollViewer Margin="0" SnapsToDevicePixels="True">
                                                             <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
                                                         </ScrollViewer>
@@ -1058,34 +1348,109 @@
                         </Border>
 
                         <!-- 其他设置 -->
-                        <Border Background="#20FFFFFF" CornerRadius="10" Padding="18,16" Margin="0,0,0,16">
+                        <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="12" Padding="16,14" Margin="0,0,0,12">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.08"/>
+                            </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="{Binding LocalizationService[Settings_Other_Title]}" FontSize="15" FontWeight="SemiBold" Foreground="#F0FFFFFF" Margin="0,0,0,14" />
-                                <CheckBox Content="{Binding LocalizationService[Settings_ClickThrough]}" IsChecked="{Binding IsClickThroughEnabled, Mode=TwoWay}" Style="{StaticResource SettingsCheckBox}" Margin="0,0,0,10" />
-                                <CheckBox Content="{Binding LocalizationService[Settings_AutoStart]}" IsChecked="{Binding IsAutoStartEnabled, Mode=TwoWay}" Style="{StaticResource SettingsCheckBox}" />
+                                <TextBlock Text="{Binding LocalizationService[Settings_Other_Title]}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,12" />
+                                <CheckBox Content="{Binding LocalizationService[Settings_ClickThrough]}" IsChecked="{Binding IsClickThroughEnabled, Mode=TwoWay}" Style="{StaticResource SettingsCheckBox}" Foreground="{DynamicResource PrimaryTextColor}" FontSize="13" Margin="0,0,0,10" />
+                                <CheckBox Content="{Binding LocalizationService[Settings_AutoStart]}" IsChecked="{Binding IsAutoStartEnabled, Mode=TwoWay}" Style="{StaticResource SettingsCheckBox}" Foreground="{DynamicResource PrimaryTextColor}" FontSize="13" />
                             </StackPanel>
                         </Border>
 
                         <!-- 状态信息 -->
-                        <Border Background="#20FFFFFF" CornerRadius="10" Padding="18,16" Margin="0,0,0,16">
+                        <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="12" Padding="16,14" Margin="0,0,0,12">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.08"/>
+                            </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="{Binding LocalizationService[Settings_Status_Title]}" FontSize="15" FontWeight="SemiBold" Foreground="#F0FFFFFF" Margin="0,0,0,14" />
-                                <TextBlock Text="{Binding StatusText}" Foreground="#E0FFFFFF" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" LineHeight="18"/>
-                                <TextBlock Text="{Binding AppInfo}" Foreground="#B0FFFFFF" FontSize="11" TextWrapping="Wrap" LineHeight="16" />
+                                <TextBlock Text="{Binding LocalizationService[Settings_Status_Title]}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource PrimaryTextColor}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" LineHeight="18"/>
+                                <TextBlock Text="{Binding AppInfo}" Foreground="{DynamicResource SecondaryTextColor}" FontSize="11" TextWrapping="Wrap" LineHeight="16" />
                             </StackPanel>
                         </Border>
 
                         <!-- 导入导出 -->
-                        <Border Background="#20FFFFFF" CornerRadius="10" Padding="18,16" Margin="0,0,0,16">
+                        <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="12" Padding="16,14" Margin="0,0,0,12">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.08"/>
+                            </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="{Binding LocalizationService[Settings_ImportExport_Title]}" FontSize="15" FontWeight="SemiBold" Foreground="#F0FFFFFF" Margin="0,0,0,14" />
-                                <Button Content="{Binding LocalizationService[Settings_ImportLegacy]}" Command="{Binding ImportLegacyCommand}" Style="{StaticResource GlassButton}" Margin="0,0,0,10" Height="36" FontSize="13" />
-                                <Button Content="{Binding LocalizationService[Settings_ExportMarkdown]}" Command="{Binding ExportMarkdownCommand}" Style="{StaticResource GlassButton}" Height="36" FontSize="13" />
+                                <TextBlock Text="{Binding LocalizationService[Settings_ImportExport_Title]}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,12" />
+                                <Button Command="{Binding ImportLegacyCommand}" Margin="0,0,0,8" Height="34" FontSize="13" Background="{DynamicResource ButtonBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}" BorderThickness="0" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Content="{Binding LocalizationService[Settings_ImportLegacy]}"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#D1D1D6"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#C7C7CC"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Button Command="{Binding ExportMarkdownCommand}" Height="34" FontSize="13" Background="{DynamicResource ButtonBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}" BorderThickness="0" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Content="{Binding LocalizationService[Settings_ExportMarkdown]}"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#D1D1D6"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#C7C7CC"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
                             </StackPanel>
                         </Border>
 
                         <!-- 保存设置按钮 -->
-                        <Button Content="{Binding LocalizationService[Settings_SaveSettings]}" Command="{Binding PersistWindowSettingsCommand}" Style="{StaticResource GlassButton}" Height="40" HorizontalAlignment="Stretch" FontSize="14" FontWeight="SemiBold" />
+                        <Button Command="{Binding PersistWindowSettingsCommand}" Height="40" HorizontalAlignment="Stretch" FontSize="14" FontWeight="SemiBold" Background="#007AFF" Foreground="White" BorderThickness="0" Cursor="Hand">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Content="{Binding LocalizationService[Settings_SaveSettings]}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="#0051D5"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="#004BB8"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </StackPanel>
                 </ScrollViewer>
             </Border>

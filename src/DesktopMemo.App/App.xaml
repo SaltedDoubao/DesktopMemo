@@ -6,6 +6,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <!-- 默认加载亮色主题 -->
+                <ResourceDictionary Source="Resources/Themes/Light.xaml" />
                 <ResourceDictionary Source="Resources/Styles.xaml" />
                 <ResourceDictionary Source="Resources/GlassResources.xaml" />
             </ResourceDictionary.MergedDictionaries>

@@ -10,6 +10,7 @@ using System.Windows.Threading;
 using DesktopMemo.App.ViewModels;
 using DesktopMemo.Core.Contracts;
 using DesktopMemo.Core.Helpers;
+using DesktopMemo.Core.Models;
 using WpfApp = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -35,6 +36,7 @@ public partial class MainWindow : Window
 
             DataContext = _viewModel;
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+            _viewModel.ThemeChanged += OnThemeChanged;
 
             ConfigureWindow();
             ConfigureTrayService();
@@ -56,7 +58,8 @@ public partial class MainWindow : Window
     {
         Loaded += (s, e) =>
         {
-            _windowService.SetTopmostMode(TopmostMode.Desktop);
+            // 按当前用户选择的置顶模式应用，而非强制 Desktop
+            _windowService.SetTopmostMode(_viewModel.SelectedTopmostMode);
             _windowService.PlayFadeInAnimation();
         };
     }
@@ -167,6 +170,9 @@ public partial class MainWindow : Window
         {
             // 配置已在 App.OnStartup 中加载，这里只需要应用UI状态
             ApplySettingsPanelVisibility(_viewModel.IsSettingsPanelVisible);
+            
+            // 应用初始主题
+            ApplyTheme(_viewModel.SelectedTheme);
         }
         catch (Exception ex)
         {
@@ -188,10 +194,70 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnThemeChanged(object? sender, AppTheme theme)
+    {
+        Dispatcher.Invoke(() => ApplyTheme(theme));
+    }
+
+    private void ApplyTheme(AppTheme theme)
+    {
+        var actualTheme = theme;
+        
+        // 如果选择了跟随系统，检测系统主题
+        if (theme == AppTheme.System)
+        {
+            actualTheme = IsSystemDarkMode() ? AppTheme.Dark : AppTheme.Light;
+        }
+
+        // 找到旧的主题字典并移除
+        var oldThemeDict = System.Windows.Application.Current.Resources.MergedDictionaries
+            .FirstOrDefault(d => d.Source != null && d.Source.OriginalString.Contains("Themes/"));
+        
+        if (oldThemeDict != null)
+        {
+            System.Windows.Application.Current.Resources.MergedDictionaries.Remove(oldThemeDict);
+        }
+
+        // 根据主题添加新的资源字典
+        var themeUri = new Uri(
+            actualTheme == AppTheme.Dark 
+                ? "Resources/Themes/Dark.xaml" 
+                : "Resources/Themes/Light.xaml", 
+            UriKind.Relative);
+        
+        System.Windows.Application.Current.Resources.MergedDictionaries.Insert(0, 
+            new ResourceDictionary { Source = themeUri });
+
+        // 更新滑块样式
+        if (BackgroundOpacitySlider != null)
+        {
+            BackgroundOpacitySlider.Style = actualTheme == AppTheme.Dark 
+                ? (Style)FindResource("AppleSliderStyleDark") 
+                : (Style)FindResource("AppleSliderStyle");
+        }
+    }
+
+
+    private bool IsSystemDarkMode()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            var value = key?.GetValue("AppsUseLightTheme");
+            return value is int intValue && intValue == 0;
+        }
+        catch
+        {
+            return false; // 默认为亮色模式
+        }
+    }
+
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         _autoSaveTimer?.Stop();
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        _viewModel.ThemeChanged -= OnThemeChanged;
     }
 
     private void OnLocationChanged(object? sender, EventArgs e)
