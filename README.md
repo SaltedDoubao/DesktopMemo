@@ -159,17 +159,6 @@ For other development considerations, see [Development Guidelines](docs/Developm
 - Completed multi-language support for status information
   - Version and data directory labels now support all languages
 
-### v2.2.1
-- Added multi-language support
-  - Currently supported languages: 
-    - Simplified Chinese (简体中文)
-    - Traditional Chinese (繁體中文)
-    - English
-    - Japanese (日本語)
-    - Korean (한국어)
-- Added toggle functionality for todo input area visibility
-- Optimized some UI logic to enhance user experience
-
 For more history, see [Releases](../../releases)
 
 ## 🚧 Roadmap
