@@ -26,61 +26,131 @@ This document is for developers contributing to DesktopMemo, helping you quickly
 
 ```
 DesktopMemo_rebuild/
-├── DesktopMemo.sln
-├── build_exe.bat                   # Build script for the executable
-├── docs/                           # Project documentation
-├── src/
-│   ├── DesktopMemo.App/            # WPF frontend
-│   │   ├── App.xaml(.cs)           # Startup & DI registration
+├── DesktopMemo.sln                 # Visual Studio solution file
+├── Directory.Build.props            # Unified build properties configuration
+├── build_exe.bat                    # Build script for the executable
+├── LICENSE                          # Open source license
+├── README.md                        # Project documentation (English)
+├── README_zh.md                     # Project documentation (Chinese)
+├── CLAUDE.md                        # Claude AI development guide
+├── docs/                            # Project documentation
+│   ├── Development-Guidelines.md   # Development guidelines (this document)
+│   ├── 应用开发规范.md             # Development guidelines (Chinese)
+│   ├── MySQL-Integration-Specification.md # MySQL integration specification (English)
+│   └── MySQL-集成规范.md           # MySQL integration specification (Chinese)
+├── src/                             # Source code directory
+│   ├── DesktopMemo.App/            # WPF frontend application
+│   │   ├── App.xaml(.cs)           # Application startup & DI registration
 │   │   ├── MainWindow.xaml(.cs)    # Main window
+│   │   ├── AssemblyInfo.cs         # Assembly information
+│   │   ├── DesktopMemo.App.csproj  # Project file
 │   │   ├── ViewModels/             # MVVM view models
-│   │   │   ├── MainViewModel.cs    # Main view model
-│   │   │   ├── MemoListViewModel.cs
+│   │   │   ├── MainViewModel.cs    # Main view model (core logic)
+│   │   │   ├── MemoListViewModel.cs # Memo list view model
 │   │   │   └── TodoListViewModel.cs # Todo list view model
-│   │   ├── Converters/             # Value converters
-│   │   │   ├── EnumToBooleanConverter.cs
-│   │   │   ├── InverseBooleanToVisibilityConverter.cs
-│   │   │   └── CountToVisibilityConverter.cs # Numeric-to-visibility converter
-│   │   ├── Localization/           # Multi-language resources
-│   │   │   ├── LocalizationService.cs
-│   │   │   └── Resources/
-│   │   │       ├── Strings.resx           # Simplified Chinese (default)
-│   │   │       ├── Strings.en-US.resx     # English (US)
-│   │   │       ├── Strings.zh-TW.resx     # Traditional Chinese
-│   │   │       ├── Strings.ja-JP.resx     # Japanese
-│   │   │       └── Strings.ko-KR.resx     # Korean
-│   │   └── Resources/              # Styles and resources
-│   ├── DesktopMemo.Core/           # Domain models and contracts
-│   │   ├── Contracts/
-│   │   │   ├── IMemoRepository.cs
-│   │   │   ├── ITodoRepository.cs  # Todo repository interface
-│   │   │   ├── ISettingsService.cs
-│   │   │   └── IWindowService.cs, etc.
-│   │   └── Models/
-│   │       ├── Memo.cs
-│   │       ├── TodoItem.cs         # Todo item model
-│   │       └── WindowSettings.cs
-│   └── DesktopMemo.Infrastructure/ # Implementation layer (file storage, system services)
-│       ├── Repositories/
-│       │   ├── FileMemoRepository.cs
-│       │   └── JsonTodoRepository.cs # JSON todo storage
-│       └── Services/
-│           ├── JsonSettingsService.cs
-│           ├── MemoSearchService.cs
-│           ├── WindowService.cs
-│           └── TrayService.cs, etc.
-├── artifacts/                      # Build output directory
-└── publish/                        # Published artifacts
+│   │   ├── Views/                  # View components
+│   │   │   ├── ConfirmationDialog.xaml(.cs)      # Generic confirmation dialog
+│   │   │   └── ExitConfirmationDialog.xaml(.cs)  # Exit confirmation dialog
+│   │   ├── Converters/             # WPF value converters
+│   │   │   ├── EnumToBooleanConverter.cs         # Enum to boolean converter
+│   │   │   ├── InverseBooleanToVisibilityConverter.cs # Inverse boolean visibility converter
+│   │   │   └── CountToVisibilityConverter.cs     # Number to visibility converter
+│   │   ├── Localization/           # Multi-language localization
+│   │   │   ├── LocalizationService.cs # Localization service
+│   │   │   ├── LocalizeExtension.cs   # XAML localization extension
+│   │   │   └── Resources/             # Resource files
+│   │   │       ├── Strings.resx       # Simplified Chinese (default)
+│   │   │       ├── Strings.en-US.resx # English
+│   │   │       ├── Strings.zh-TW.resx # Traditional Chinese
+│   │   │       ├── Strings.ja-JP.resx # Japanese
+│   │   │       └── Strings.ko-KR.resx # Korean
+│   │   ├── Resources/              # UI resources
+│   │   │   ├── Styles.xaml         # Global styles
+│   │   │   ├── GlassResources.xaml # Glass effect resources
+│   │   │   └── Themes/             # Themes
+│   │   │       ├── Light.xaml      # Light theme
+│   │   │       └── Dark.xaml       # Dark theme
+│   │   └── Services/               # Application layer services (reserved)
+│   ├── DesktopMemo.Core/           # Core domain layer (pure .NET library)
+│   │   ├── DesktopMemo.Core.csproj # Project file
+│   │   ├── Constants/              # Constant definitions
+│   │   │   └── WindowConstants.cs  # Window-related constants
+│   │   ├── Contracts/              # Contract interfaces
+│   │   │   ├── IMemoRepository.cs       # Memo repository interface
+│   │   │   ├── ITodoRepository.cs       # Todo repository interface
+│   │   │   ├── ISettingsService.cs      # Settings service interface
+│   │   │   ├── IWindowService.cs        # Window service interface
+│   │   │   ├── IWindowSettingsService.cs # Window settings service interface
+│   │   │   ├── ITrayService.cs          # System tray service interface
+│   │   │   ├── ILocalizationService.cs  # Localization service interface
+│   │   │   └── IMemoSearchService.cs    # Memo search service interface
+│   │   ├── Models/                 # Domain models
+│   │   │   ├── Memo.cs             # Memo model
+│   │   │   ├── TodoItem.cs         # Todo item model
+│   │   │   ├── WindowSettings.cs   # Window settings model
+│   │   │   ├── AppTheme.cs         # Application theme enum
+│   │   │   └── SyncStatus.cs       # Sync status enum
+│   │   └── Helpers/                # Helper utility classes
+│   │       ├── TransparencyHelper.cs # Transparency calculation helper
+│   │       └── DebounceHelper.cs     # Debounce helper
+│   ├── DesktopMemo.Infrastructure/ # Infrastructure layer (implementation layer)
+│   │   ├── DesktopMemo.Infrastructure.csproj # Project file
+│   │   ├── Repositories/           # Data repository implementations
+│   │   │   ├── FileMemoRepository.cs          # File-based memo storage
+│   │   │   ├── SqliteIndexedMemoRepository.cs # SQLite memo storage (v2.3.0+)
+│   │   │   ├── JsonTodoRepository.cs          # JSON todo storage
+│   │   │   └── SqliteTodoRepository.cs        # SQLite todo storage (v2.3.0+)
+│   │   └── Services/               # Service implementations
+│   │       ├── JsonSettingsService.cs         # JSON settings service
+│   │       ├── MemoSearchService.cs           # Memo search service
+│   │       ├── WindowService.cs               # Window service (Win32 API)
+│   │       ├── TrayService.cs                 # System tray service
+│   │       ├── MemoMigrationService.cs        # Memo migration service
+│   │       ├── MemoMetadataMigrationService.cs # Memo metadata migration
+│   │       └── TodoMigrationService.cs        # Todo migration service
+│   └── images/                     # Application icon resources
+│       └── logo.ico                # Application icon
+├── artifacts/                      # Build output directory (organized by version)
+│   └── v<version>/
+│       ├── bin/                    # Binary output
+│       └── obj/                    # Intermediate files
+└── publish/                        # Published artifacts directory
 ```
 
-### Key Directories
+### Key Directories and Files
 
-- `DesktopMemo.App/ViewModels/MainViewModel.cs`: Core application logic, handles memo list, edit state, page switching, and settings panel.
-- `DesktopMemo.App/ViewModels/TodoListViewModel.cs`: Todo view model, handles CRUD operations and state toggling for todo items.
-- `DesktopMemo.Infrastructure/Repositories/FileMemoRepository.cs`: File storage implementation, maintains `content` directory and `index.json`.
-- `DesktopMemo.Infrastructure/Repositories/JsonTodoRepository.cs`: JSON todo storage implementation, maintains `todos.json`.
-- `DesktopMemo.App/Converters/CountToVisibilityConverter.cs`: Number to visibility converter for UI display control.
-- `DesktopMemo.App/Resources/Styles.xaml`: Global styles and themes.
+**Frontend Application Layer (DesktopMemo.App)**
+- `ViewModels/MainViewModel.cs`: Core application logic, handles memo list, edit state, page switching, settings panel, theme switching, etc.
+- `ViewModels/TodoListViewModel.cs`: Todo view model, handles CRUD operations and state toggling for todo items.
+- `ViewModels/MemoListViewModel.cs`: Memo list view model.
+- `Views/ConfirmationDialog.xaml`: Generic confirmation dialog with support for custom messages and "Don't show again" option.
+- `Views/ExitConfirmationDialog.xaml`: Exit confirmation dialog.
+- `Converters/CountToVisibilityConverter.cs`: Number to visibility converter for UI display control (e.g., todo count badge).
+- `Localization/LocalizationService.cs`: Multi-language localization service, supports Chinese, English, Japanese, Korean, and Traditional Chinese.
+- `Resources/Styles.xaml`: Global style definitions.
+- `Resources/GlassResources.xaml`: Glass effect (Aero) resource dictionary.
+- `Resources/Themes/Light.xaml` and `Dark.xaml`: Light and dark theme resources.
+
+**Core Domain Layer (DesktopMemo.Core)**
+- `Contracts/`: All interface definitions, implementing the Dependency Inversion Principle.
+- `Models/Memo.cs`: Memo domain model, includes sync status fields.
+- `Models/TodoItem.cs`: Todo item domain model.
+- `Models/WindowSettings.cs`: Window settings model (position, size, transparency, etc.).
+- `Constants/WindowConstants.cs`: Window-related constants (e.g., default transparency, dimensions).
+- `Helpers/TransparencyHelper.cs`: Transparency calculation helper, centralized management of transparency percentage conversion.
+- `Helpers/DebounceHelper.cs`: Debounce helper for optimizing frequently triggered operations (e.g., window resizing).
+
+**Infrastructure Layer (DesktopMemo.Infrastructure)**
+- `Repositories/FileMemoRepository.cs`: File-based memo storage implementation (v2.2.0 and earlier).
+- `Repositories/SqliteIndexedMemoRepository.cs`: SQLite-based memo storage implementation (v2.3.0+, with full-text search index).
+- `Repositories/JsonTodoRepository.cs`: JSON file-based todo storage implementation.
+- `Repositories/SqliteTodoRepository.cs`: SQLite-based todo storage implementation (v2.3.0+).
+- `Services/JsonSettingsService.cs`: JSON-based application settings service.
+- `Services/MemoSearchService.cs`: Memo search service, supports keyword search.
+- `Services/WindowService.cs`: Window service, wraps Win32 API calls (topmost, transparency, etc.).
+- `Services/TrayService.cs`: System tray service, manages tray icon and menu.
+- `Services/MemoMigrationService.cs`: Memo data migration service (for version upgrades).
+- `Services/TodoMigrationService.cs`: Todo data migration service (for version upgrades).
 
 ## 4. Build and Output
 
