@@ -185,13 +185,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             EditorTitle = SelectedMemo.Title;
             EditorContent = SelectedMemo.Content;
-            IsWindowPinned = SelectedMemo.IsPinned;
         }
         else
         {
             EditorTitle = string.Empty;
             EditorContent = string.Empty;
-            IsWindowPinned = false;
         }
 
         if (IsTrayEnabled)
@@ -267,6 +265,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         System.Diagnostics.Debug.WriteLine($"透明度初始化完成: 实际值={actualOpacity}, 百分比={BackgroundOpacityPercent}");
         
         IsClickThroughEnabled = _windowService.IsClickThroughEnabled;
+        
+        // 恢复窗口固定状态
+        System.Diagnostics.Debug.WriteLine($"[ApplyWindowSettings] 恢复窗口固定状态: {settings.IsWindowPinned}");
+        IsWindowPinned = settings.IsWindowPinned;
+        
         UpdateCurrentPosition();
     }
 
@@ -289,7 +292,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         SelectedMemo = memo;
         EditorTitle = memo.Title;
         EditorContent = memo.Content;
-        IsWindowPinned = memo.IsPinned;
         IsEditMode = true;
         OnPropertyChanged(nameof(MemoCount));
         SetStatus("已新建备忘录");
@@ -305,7 +307,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         var updated = SelectedMemo
             .WithContent(EditorContent, DateTimeOffset.Now)
-            .WithMetadata(EditorTitle, SelectedMemo.Tags, IsWindowPinned, DateTimeOffset.Now);
+            .WithMetadata(EditorTitle, SelectedMemo.Tags, SelectedMemo.IsPinned, DateTimeOffset.Now);
 
         await _memoRepository.UpdateAsync(updated);
 
@@ -424,13 +426,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             EditorTitle = SelectedMemo.Title;
             EditorContent = SelectedMemo.Content;
-            IsWindowPinned = SelectedMemo.IsPinned;
         }
         else
         {
             EditorTitle = string.Empty;
             EditorContent = string.Empty;
-            IsWindowPinned = false;
         }
 
         IsEditMode = false;
@@ -446,16 +446,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private async Task TogglePinAsync()
+    private void TogglePin()
     {
+        System.Diagnostics.Debug.WriteLine($"[TogglePin] 切换前: IsWindowPinned={IsWindowPinned}, _isInitializing={_isInitializing}");
         IsWindowPinned = !IsWindowPinned;
-
-        // 如果有选中的备忘录，保存其固定状态
-        if (SelectedMemo is not null)
-        {
-            await SaveMemoAsync();
-        }
-
+        System.Diagnostics.Debug.WriteLine($"[TogglePin] 切换后: IsWindowPinned={IsWindowPinned}");
         SetStatus(IsWindowPinned ? "窗口已固定，无法拖动" : "窗口已解除固定");
     }
 
@@ -732,6 +727,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 IsAutoStartEnabled = false;
             }
+            
+            // 清理无效的 DesktopMemo 自启动项
+            CleanupInvalidAutoStartEntries();
         }
         catch
         {
@@ -757,6 +755,57 @@ public partial class MainViewModel : ObservableObject, IDisposable
         var hashString = BitConverter.ToString(hashBytes.Take(4).ToArray()).Replace("-", "");
         
         return $"DesktopMemo_{hashString}";
+    }
+
+    /// <summary>
+    /// 清理注册表中无效的 DesktopMemo 自启动项
+    /// 删除指向不存在文件的条目，防止注册表污染
+    /// </summary>
+    private void CleanupInvalidAutoStartEntries()
+    {
+        try
+        {
+            var keyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(keyPath, true);
+            if (key == null) return;
+
+            var valueNames = key.GetValueNames();
+            var currentAppName = GetUniqueAutoStartKeyName();
+            
+            foreach (var valueName in valueNames)
+            {
+                // 只处理 DesktopMemo 相关的键
+                if (!valueName.StartsWith("DesktopMemo", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var value = key.GetValue(valueName);
+                if (value is string path)
+                {
+                    // 清理引号
+                    var cleanPath = path.Trim('"');
+                    
+                    // 如果是当前应用的键，跳过
+                    if (valueName == currentAppName)
+                    {
+                        continue;
+                    }
+                    
+                    // 如果文件不存在，删除这个注册表项
+                    if (!File.Exists(cleanPath))
+                    {
+                        key.DeleteValue(valueName, false);
+                        System.Diagnostics.Debug.WriteLine($"已清理无效的自启动项: {valueName} -> {cleanPath}");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // 清理失败不影响主要功能
+            System.Diagnostics.Debug.WriteLine($"清理无效自启动项时出错: {ex.Message}");
+        }
     }
 
     partial void OnIsTrayEnabledChanged(bool value)
@@ -786,14 +835,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             {
                 EditorTitle = string.Empty;
                 EditorContent = string.Empty;
-                IsWindowPinned = false;
             }
             return;
         }
 
         EditorTitle = newValue.Title;
         EditorContent = newValue.Content;
-        IsWindowPinned = newValue.IsPinned;
     }
 
     partial void OnMemosChanging(ObservableCollection<Memo> value)
@@ -970,6 +1017,39 @@ public partial class MainViewModel : ObservableObject, IDisposable
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"保存待办输入区域状态失败: {ex}");
+            }
+        });
+    }
+
+    partial void OnIsWindowPinnedChanged(bool value)
+    {
+        System.Diagnostics.Debug.WriteLine($"[OnIsWindowPinnedChanged] 被触发: value={value}, _isInitializing={_isInitializing}");
+        
+        // 初始化期间不保存设置，避免覆盖刚加载的设置
+        if (_isInitializing)
+        {
+            System.Diagnostics.Debug.WriteLine($"[OnIsWindowPinnedChanged] 初始化期间，跳过保存");
+            return;
+        }
+        
+        // 更新内存中的设置
+        var oldSettings = WindowSettings;
+        WindowSettings = WindowSettings with { IsWindowPinned = value };
+        System.Diagnostics.Debug.WriteLine($"[OnIsWindowPinnedChanged] 更新设置: {oldSettings.IsWindowPinned} -> {WindowSettings.IsWindowPinned}");
+        
+        // 异步保存到设置
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"[OnIsWindowPinnedChanged] 开始保存到磁盘: {value}");
+                await _settingsService.SaveAsync(WindowSettings);
+                System.Diagnostics.Debug.WriteLine($"[OnIsWindowPinnedChanged] ✓ 窗口固定状态已保存: {value}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[OnIsWindowPinnedChanged] ✗ 保存窗口固定状态失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[OnIsWindowPinnedChanged] 异常详情: {ex}");
             }
         });
     }
