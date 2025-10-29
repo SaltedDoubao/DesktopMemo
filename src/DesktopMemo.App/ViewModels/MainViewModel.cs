@@ -691,7 +691,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void ManageAutoStart(bool enable)
     {
-        const string appName = "DesktopMemo";
+        var appName = GetUniqueAutoStartKeyName();
         var keyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
         using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(keyPath, true);
@@ -715,17 +715,48 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
-            const string appName = "DesktopMemo";
+            var appName = GetUniqueAutoStartKeyName();
             var keyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
             using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(keyPath, false);
             var value = key?.GetValue(appName);
-            IsAutoStartEnabled = value != null;
+            
+            // 检查值是否存在且路径匹配当前应用
+            if (value is string registeredPath && !string.IsNullOrEmpty(Environment.ProcessPath))
+            {
+                // 移除引号并比较路径
+                var cleanPath = registeredPath.Trim('"');
+                IsAutoStartEnabled = string.Equals(cleanPath, Environment.ProcessPath, StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                IsAutoStartEnabled = false;
+            }
         }
         catch
         {
             IsAutoStartEnabled = false;
         }
+    }
+
+    /// <summary>
+    /// 获取基于应用程序路径的唯一自启动注册表键名
+    /// 这样可以让不同位置的应用实例独立管理自己的自启动状态
+    /// </summary>
+    private string GetUniqueAutoStartKeyName()
+    {
+        var exePath = Environment.ProcessPath ?? string.Empty;
+        if (string.IsNullOrEmpty(exePath))
+        {
+            return "DesktopMemo";
+        }
+
+        // 使用路径的哈希值生成唯一标识符
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(exePath.ToLowerInvariant()));
+        var hashString = BitConverter.ToString(hashBytes.Take(4).ToArray()).Replace("-", "");
+        
+        return $"DesktopMemo_{hashString}";
     }
 
     partial void OnIsTrayEnabledChanged(bool value)
