@@ -21,9 +21,10 @@ public sealed record WindowSettings(
     string PreferredLanguage = "zh-CN",
     string CurrentPage = "memo",
     bool TodoInputVisible = true,
-    AppTheme Theme = AppTheme.Light)
+    AppTheme Theme = AppTheme.Light,
+    bool IsWindowPinned = false)
 {
-    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, WindowConstants.DEFAULT_TRANSPARENCY, false, true, false, true, true, true, "zh-CN", "memo", true, AppTheme.System);
+    public static WindowSettings Default => new(900, 600, double.NaN, double.NaN, WindowConstants.DEFAULT_TRANSPARENCY, false, true, false, true, true, true, "zh-CN", "memo", true, AppTheme.System, false);
 
     public WindowSettings WithLocation(double left, double top)
         => this with { Left = left, Top = top };
