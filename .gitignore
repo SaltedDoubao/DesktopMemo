@@ -45,3 +45,6 @@ Desktop.ini
 backups/
 temp/
 .local/
+.cursor/
+.gemini/
+CLAUDE.md
