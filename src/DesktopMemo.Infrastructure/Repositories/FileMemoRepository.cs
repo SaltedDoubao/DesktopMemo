@@ -147,7 +147,13 @@ public sealed class FileMemoRepository : IMemoRepository
         }
 
         var content = await reader.ReadToEndAsync().ConfigureAwait(false);
-        var metadata = ParseMetadata(metadataBuilder.ToString());
+        
+        // 获取文件系统时间戳作为后备方案
+        var fileInfo = new FileInfo(path);
+        var fileCreatedAt = new DateTimeOffset(fileInfo.CreationTimeUtc);
+        var fileUpdatedAt = new DateTimeOffset(fileInfo.LastWriteTimeUtc);
+        
+        var metadata = ParseMetadata(metadataBuilder.ToString(), fileCreatedAt, fileUpdatedAt);
 
         return new Memo(
             metadata.Id,
@@ -239,12 +245,12 @@ public sealed class FileMemoRepository : IMemoRepository
 
     private string GetMemoPath(Guid id) => Path.Combine(_contentDirectory, $"{id:N}.md");
 
-    private static MemoMetadata ParseMetadata(string yaml)
+    private static MemoMetadata ParseMetadata(string yaml, DateTimeOffset fileCreatedAt, DateTimeOffset fileUpdatedAt)
     {
         var id = Guid.Empty;
         var title = string.Empty;
-        var createdAt = DateTimeOffset.Now;
-        var updatedAt = DateTimeOffset.Now;
+        DateTimeOffset? createdAt = null;
+        DateTimeOffset? updatedAt = null;
         var isPinned = false;
         var tags = new List<string>();
 
@@ -312,7 +318,11 @@ public sealed class FileMemoRepository : IMemoRepository
             id = Guid.NewGuid();
         }
 
-        return new MemoMetadata(id, title, createdAt, updatedAt, tags, isPinned);
+        // 如果 YAML front matter 中没有时间戳，使用文件系统时间作为后备方案
+        var finalCreatedAt = createdAt ?? fileCreatedAt;
+        var finalUpdatedAt = updatedAt ?? fileUpdatedAt;
+
+        return new MemoMetadata(id, title, finalCreatedAt, finalUpdatedAt, tags, isPinned);
     }
 
     private sealed class MemoIndex

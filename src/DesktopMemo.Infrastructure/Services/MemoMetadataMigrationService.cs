@@ -39,6 +39,7 @@ public sealed class MemoMetadataMigrationService
         // 如果 SQLite 数据库已存在，进一步检查是否为空库（没有任何 memo 记录）
         if (File.Exists(memosDb))
         {
+            _logger?.LogInformation("✓ 检测到 SQLite 数据库文件存在: {DbPath}", memosDb);
             try
             {
                 using var connection = new SqliteConnection($"Data Source={memosDb}");
@@ -66,12 +67,14 @@ public sealed class MemoMetadataMigrationService
 
                 if (count > 0)
                 {
-                    _logger?.LogInformation("备忘录 SQLite 索引已存在且包含 {Count} 条记录，跳过迁移", count);
+                    _logger?.LogInformation("✓ 备忘录 SQLite 索引已存在且包含 {Count} 条记录，跳过迁移", count);
+                    System.Diagnostics.Debug.WriteLine($"[迁移检查] SQLite已存在 {count} 条记录，跳过迁移");
                     return new MigrationResult(false, 0, "SQLite 索引已存在且非空");
                 }
                 else
                 {
-                    _logger?.LogInformation("检测到 SQLite 索引存在但为空，将尝试从 index.json 进行迁移");
+                    _logger?.LogInformation("⚠ 检测到 SQLite 索引存在但为空，将尝试从 index.json 进行迁移");
+                    System.Diagnostics.Debug.WriteLine("[迁移检查] SQLite为空，将执行迁移");
                     // 继续执行迁移逻辑（不 return）
                 }
             }
@@ -94,13 +97,15 @@ public sealed class MemoMetadataMigrationService
 
         try
         {
-            _logger?.LogInformation("开始迁移备忘录元数据到 SQLite 索引...");
+            _logger?.LogInformation("⚡ 开始迁移备忘录元数据到 SQLite 索引...");
+            System.Diagnostics.Debug.WriteLine("[迁移执行] 开始从 index.json 迁移到 SQLite");
 
             // 1. 使用旧的 Repository 读取所有备忘录
             var oldRepository = new FileMemoRepository(dataDirectory);
             var memos = await oldRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
 
             _logger?.LogInformation("读取到 {Count} 条备忘录", memos.Count);
+            System.Diagnostics.Debug.WriteLine($"[迁移执行] 从 index.json 读取到 {memos.Count} 条备忘录");
 
             if (memos.Count == 0)
             {
@@ -120,12 +125,16 @@ public sealed class MemoMetadataMigrationService
             }
 
             // 2. 创建 SQLite Repository 并写入数据
+            System.Diagnostics.Debug.WriteLine($"[迁移执行] 开始写入 {memos.Count} 条备忘录到 SQLite（这会更新文件修改时间）");
             using (var sqliteRepository = new SqliteIndexedMemoRepository(dataDirectory))
             {
+                int written = 0;
                 foreach (var memo in memos)
                 {
                     await sqliteRepository.AddAsync(memo, cancellationToken).ConfigureAwait(false);
+                    written++;
                 }
+                System.Diagnostics.Debug.WriteLine($"[迁移执行] ✓ 已写入 {written} 条备忘录");
             }
 
             // 3. 备份原 index.json 文件
