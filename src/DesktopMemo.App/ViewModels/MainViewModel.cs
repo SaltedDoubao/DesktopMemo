@@ -28,6 +28,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly MemoMigrationService _migrationService;
     private readonly TodoListViewModel _todoListViewModel;
     private readonly ILocalizationService _localizationService;
+    private readonly ILogService _logService;
+    private readonly LogViewModel _logViewModel;
     private readonly DebounceHelper _settingsSaveDebouncer;
 
     [ObservableProperty]
@@ -47,6 +49,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _isSettingsPanelVisible;
+
+    [ObservableProperty]
+    private bool _isLogPanelVisible;
 
     [ObservableProperty]
     private bool _isWindowPinned;
@@ -114,6 +119,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public TodoListViewModel TodoListViewModel => _todoListViewModel;
 
+    public LogViewModel LogViewModel => _logViewModel;
+
     public ILocalizationService LocalizationService => _localizationService;
 
     public IEnumerable<CultureInfo> AvailableLanguages => _localizationService.GetSupportedLanguages();
@@ -134,7 +141,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IMemoSearchService searchService,
         MemoMigrationService migrationService,
         TodoListViewModel todoListViewModel,
-        ILocalizationService localizationService)
+        ILocalizationService localizationService,
+        ILogService logService,
+        LogViewModel logViewModel)
     {
         _memoRepository = memoRepository;
         _settingsService = settingsService;
@@ -144,6 +153,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _migrationService = migrationService;
         _todoListViewModel = todoListViewModel;
         _localizationService = localizationService;
+        _logService = logService;
+        _logViewModel = logViewModel;
         _settingsSaveDebouncer = new DebounceHelper(500); // 500毫秒防抖延迟
 
         Memos.CollectionChanged += OnMemosCollectionChanged;
@@ -166,16 +177,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ApplyWindowSettings(settings);
 
         var memos = await _memoRepository.GetAllAsync(cancellationToken);
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel初始化] 从仓库加载了 {memos.Count} 条备忘录");
 
         if (memos.Count == 0)
         {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel初始化] 备忘录为空，尝试从旧版本导入");
             var migrated = await _migrationService.LoadFromLegacyAsync();
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel初始化] 找到 {migrated.Count} 条旧版本备忘录");
             foreach (var migratedMemo in migrated)
             {
                 await _memoRepository.AddAsync(migratedMemo, cancellationToken);
             }
 
             memos = await _memoRepository.GetAllAsync(cancellationToken);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel初始化] 导入后共有 {memos.Count} 条备忘录");
         }
 
         Memos = new ObservableCollection<Memo>(memos.OrderByDescending(m => m.UpdatedAt));
@@ -294,6 +309,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         EditorContent = memo.Content;
         IsEditMode = true;
         OnPropertyChanged(nameof(MemoCount));
+        _logService.Info("Memo", $"创建新备忘录: {memo.Title}");
         SetStatus("已新建备忘录");
     }
 
@@ -319,6 +335,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         OnPropertyChanged(nameof(MemoCount));
+        _logService.Info("Memo", $"保存备忘录: {updated.Title}");
         SetStatus("已保存");
     }
 
@@ -359,28 +376,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
             catch (InvalidOperationException ex)
             {
                 // 对话框无法显示（可能是Owner问题或窗口状态异常）
-                SetStatus($"无法显示删除确认对话框: {ex.Message}");
+                _logService.Error("UI", "无法显示删除确认对话框", ex);
+                SetStatus($"无法显示删除确认对话框: {ex.Message}", LogLevel.Error);
                 System.Diagnostics.Debug.WriteLine($"删除确认对话框InvalidOperationException: {ex}");
                 return;
             }
             catch (System.ComponentModel.Win32Exception ex)
             {
                 // Win32相关错误
-                SetStatus($"系统错误，无法显示对话框: {ex.Message}");
+                _logService.Error("UI", "系统错误，无法显示对话框", ex);
+                SetStatus($"系统错误，无法显示对话框: {ex.Message}", LogLevel.Error);
                 System.Diagnostics.Debug.WriteLine($"删除确认对话框Win32Exception: {ex}");
                 return;
             }
             catch (UnauthorizedAccessException ex)
             {
                 // 权限问题
-                SetStatus($"权限不足，无法显示对话框: {ex.Message}");
+                _logService.Error("UI", "权限不足，无法显示对话框", ex);
+                SetStatus($"权限不足，无法显示对话框: {ex.Message}", LogLevel.Error);
                 System.Diagnostics.Debug.WriteLine($"删除确认对话框UnauthorizedAccessException: {ex}");
                 return;
             }
             catch (Exception ex)
             {
                 // 其他未预期异常
-                SetStatus($"对话框错误: {ex.Message}");
+                _logService.Error("UI", "对话框错误", ex);
+                SetStatus($"对话框错误: {ex.Message}", LogLevel.Error);
                 System.Diagnostics.Debug.WriteLine($"删除确认对话框未知异常: {ex}");
                 return;
             }
@@ -417,6 +438,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         // 执行删除操作
         var deleting = SelectedMemo;
+        _logService.Info("Memo", $"删除备忘录: {deleting.Title}");
         await _memoRepository.DeleteAsync(deleting.Id);
 
         Memos.Remove(deleting);
@@ -442,7 +464,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void ToggleSettings()
     {
         IsSettingsPanelVisible = !IsSettingsPanelVisible;
+        if (IsSettingsPanelVisible)
+        {
+            IsLogPanelVisible = false; // 关闭日志面板
+        }
         SetStatus(IsSettingsPanelVisible ? "打开设置" : "关闭设置");
+    }
+
+    [RelayCommand]
+    private void ToggleLog()
+    {
+        if (IsLogPanelVisible)
+        {
+            // 从日志页面返回设置页面
+            IsLogPanelVisible = false;
+            IsSettingsPanelVisible = true;
+            SetStatus("返回设置");
+        }
+        else
+        {
+            // 从设置页面打开日志页面
+            IsLogPanelVisible = true;
+            IsSettingsPanelVisible = false;
+            _logViewModel.RefreshLogsCommand.Execute(null); // 刷新日志
+            SetStatus("打开日志");
+        }
     }
 
     [RelayCommand]
@@ -471,6 +517,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             .WithAppearance(BackgroundOpacity, isTopMost, isDesktopMode, IsClickThroughEnabled);
 
         await _settingsService.SaveAsync(WindowSettings);
+        _logService.Info("Settings", "保存窗口设置");
         SetStatus("设置已保存");
         _trayService.UpdateTopmostState(SelectedTopmostMode);
         _trayService.UpdateClickThroughState(IsClickThroughEnabled);
@@ -676,11 +723,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             ManageAutoStart(value);
+            _logService.Info("Settings", value ? "启用开机自启动" : "禁用开机自启动");
             SetStatus(value ? "已启用开机自启动" : "已禁用开机自启动");
         }
         catch (Exception ex)
         {
-            SetStatus($"设置开机自启动失败: {ex.Message}");
+            _logService.Error("Settings", "设置开机自启动失败", ex);
+            SetStatus($"设置开机自启动失败: {ex.Message}", LogLevel.Error);
         }
     }
 
@@ -881,10 +930,27 @@ public partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(MemoCount));
     }
 
-    public void SetStatus(string status)
+    public void SetStatus(string status, LogLevel logLevel = LogLevel.Info)
     {
         StatusText = status;
         _trayService.UpdateText($"DesktopMemo - {status}");
+        
+        // 同时记录到日志系统
+        switch (logLevel)
+        {
+            case LogLevel.Debug:
+                _logService.Debug("UI", status);
+                break;
+            case LogLevel.Info:
+                _logService.Info("UI", status);
+                break;
+            case LogLevel.Warning:
+                _logService.Warning("UI", status);
+                break;
+            case LogLevel.Error:
+                _logService.Error("UI", status);
+                break;
+        }
     }
 
     public void MarkEditing()
@@ -929,10 +995,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 }
                 catch (Exception ex)
                 {
+                    _logService.Error("Settings", "保存语言设置失败", ex);
                     System.Diagnostics.Debug.WriteLine($"保存语言设置失败: {ex}");
                 }
             });
             
+            _logService.Info("Settings", $"切换语言到 {value.NativeName}");
             SetStatus($"语言已切换到 {value.NativeName}");
         }
     }
@@ -954,6 +1022,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 }
                 catch (Exception ex)
                 {
+                    _logService.Error("Settings", "保存主题设置失败", ex);
                     System.Diagnostics.Debug.WriteLine($"保存主题设置失败: {ex}");
                 }
             });
@@ -965,6 +1034,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 AppTheme.System => "跟随系统",
                 _ => "未知"
             };
+            _logService.Info("Settings", $"切换主题到 {themeName}");
             SetStatus($"主题已切换到 {themeName}");
             
             // 触发主题变更事件，让MainWindow更新UI
@@ -1116,6 +1186,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ImportLegacyAsync()
     {
+        _logService.Info("Migration", "开始导入旧版本备忘录");
         var legacyMemos = await _migrationService.LoadFromLegacyAsync();
         int importCount = 0;
 
@@ -1130,6 +1201,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var memos = await _memoRepository.GetAllAsync();
             Memos = new ObservableCollection<Memo>(memos.OrderByDescending(m => m.UpdatedAt));
             SelectedMemo = Memos.FirstOrDefault();
+            _logService.Info("Migration", $"成功导入 {importCount} 条备忘录");
+        }
+        else
+        {
+            _logService.Info("Migration", "未发现旧版本数据");
         }
 
         SetStatus(importCount > 0 ? $"导入 {importCount} 条备忘录" : "未发现旧数据");
@@ -1149,6 +1225,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
             var path = Path.Combine(exportDir, $"{memo.Id:N}.md");
             await File.WriteAllTextAsync(path, memo.Content);
             count++;
+        }
+
+        if (count > 0)
+        {
+            _logService.Info("Export", $"导出 {count} 条备忘录到 {exportDir}");
+        }
+        else
+        {
+            _logService.Warning("Export", "没有可导出的备忘录");
         }
 
         SetStatus(count > 0 ? $"导出 {count} 条备忘录" : "没有可导出的备忘录");

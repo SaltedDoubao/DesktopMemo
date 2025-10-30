@@ -28,6 +28,7 @@ public partial class App : WpfApp
         var services = new ServiceCollection();
 
         // 核心服务
+        services.AddSingleton<ILogService>(_ => new FileLogService(dataDirectory));
         services.AddSingleton<IMemoRepository>(_ => new SqliteIndexedMemoRepository(dataDirectory));
         services.AddSingleton<ITodoRepository>(_ => new SqliteTodoRepository(dataDirectory));
         services.AddSingleton<ISettingsService>(_ => new JsonSettingsService(dataDirectory));
@@ -47,6 +48,7 @@ public partial class App : WpfApp
 
         // ViewModel
         services.AddSingleton<TodoListViewModel>();
+        services.AddSingleton<LogViewModel>();
         services.AddSingleton<MainViewModel>();
 
         return services.BuildServiceProvider();
@@ -62,21 +64,44 @@ public partial class App : WpfApp
             var appDirectory = AppContext.BaseDirectory;
             var dataDirectory = Path.Combine(appDirectory, ".memodata");
             
+            // 初始化日志服务
+            var logService = Services.GetRequiredService<ILogService>();
+            logService.Info("App", "应用程序启动");
+            
+            System.Diagnostics.Debug.WriteLine("========== 应用启动 - 开始数据迁移检查 ==========");
+            
             // 1. Todo 数据迁移（JSON -> SQLite）
+            logService.Info("Migration", "开始 Todo 数据迁移");
             var todoMigrationService = Services.GetRequiredService<TodoMigrationService>();
             var todoMigrationResult = await todoMigrationService.MigrateFromJsonToSqliteAsync(dataDirectory);
             if (todoMigrationResult.Success && todoMigrationResult.MigratedCount > 0)
             {
-                System.Diagnostics.Debug.WriteLine($"TodoList 迁移成功: {todoMigrationResult.Message}");
+                System.Diagnostics.Debug.WriteLine($"[App启动] TodoList 迁移成功: {todoMigrationResult.Message}");
+                logService.Info("Migration", $"TodoList 迁移成功: {todoMigrationResult.Message}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[App启动] TodoList 迁移结果: {todoMigrationResult.Message}");
+                logService.Debug("Migration", $"TodoList 迁移结果: {todoMigrationResult.Message}");
             }
             
             // 2. 备忘录元数据迁移（index.json -> SQLite 索引）
+            logService.Info("Migration", "开始备忘录元数据迁移");
             var memoMetadataMigrationService = Services.GetRequiredService<MemoMetadataMigrationService>();
             var memoMigrationResult = await memoMetadataMigrationService.MigrateToSqliteIndexAsync(dataDirectory);
             if (memoMigrationResult.Success && memoMigrationResult.MigratedCount > 0)
             {
-                System.Diagnostics.Debug.WriteLine($"备忘录索引迁移成功: {memoMigrationResult.Message}");
+                System.Diagnostics.Debug.WriteLine($"[App启动] ⚠️ 备忘录索引迁移执行: 迁移了 {memoMigrationResult.MigratedCount} 条（会更新文件时间戳）");
+                logService.Warning("Migration", $"备忘录索引迁移执行: 迁移了 {memoMigrationResult.MigratedCount} 条（会更新文件时间戳）");
             }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[App启动] 备忘录索引迁移结果: {memoMigrationResult.Message}");
+                logService.Debug("Migration", $"备忘录索引迁移结果: {memoMigrationResult.Message}");
+            }
+            
+            System.Diagnostics.Debug.WriteLine("========== 数据迁移检查完成 ==========");
+            logService.Info("Migration", "数据迁移检查完成");
 
             // 加载语言设置
             var settingsService = Services.GetRequiredService<ISettingsService>();
@@ -114,9 +139,14 @@ public partial class App : WpfApp
 
             MainWindow = window;
             window.Show();
+            
+            logService.Info("App", "应用程序主窗口已显示");
         }
         catch (Exception ex)
         {
+            var logService = Services.GetService<ILogService>();
+            logService?.Error("App", "应用程序启动失败", ex);
+            
             System.Windows.MessageBox.Show($"应用程序启动失败: {ex.Message}\n\n请尝试删除 .memodata 目录后重新启动应用程序。", 
                 "DesktopMemo 启动错误",
                 MessageBoxButton.OK, MessageBoxImage.Error);
@@ -126,7 +156,17 @@ public partial class App : WpfApp
 
     protected override void OnExit(ExitEventArgs e)
     {
+        var logService = Services.GetService<ILogService>();
+        logService?.Info("App", "应用程序正在退出");
+        
         Services.GetService<ITrayService>()?.Dispose();
+        
+        // 释放日志服务（等待文件写入完成）
+        if (logService is IDisposable disposableLog)
+        {
+            disposableLog.Dispose();
+        }
+        
         base.OnExit(e);
     }
 }

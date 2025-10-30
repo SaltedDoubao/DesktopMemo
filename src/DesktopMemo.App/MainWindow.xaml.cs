@@ -121,6 +121,10 @@ public partial class MainWindow : Window
         {
             Dispatcher.Invoke(() => ApplySettingsPanelVisibility(_viewModel.IsSettingsPanelVisible));
         }
+        else if (e.PropertyName == nameof(MainViewModel.IsLogPanelVisible))
+        {
+            Dispatcher.Invoke(() => ApplyLogPanelVisibility(_viewModel.IsLogPanelVisible));
+        }
     }
 
     private void ApplySettingsPanelVisibility(bool show)
@@ -146,8 +150,8 @@ public partial class MainWindow : Window
 
         var animation = new DoubleAnimation
         {
-            From = show ? 320 : 0,
-            To = show ? 0 : 320,
+            From = show ? 340 : 0,
+            To = show ? 0 : 340,
             Duration = TimeSpan.FromMilliseconds(300),
             EasingFunction = new ExponentialEase
             {
@@ -163,6 +167,46 @@ public partial class MainWindow : Window
         transform.BeginAnimation(System.Windows.Media.TranslateTransform.XProperty, animation);
     }
 
+    private void ApplyLogPanelVisibility(bool show)
+    {
+        if (show)
+        {
+            LogPanel.Visibility = Visibility.Visible;
+            AnimateLogPanel(true);
+        }
+        else
+        {
+            AnimateLogPanel(false);
+        }
+    }
+
+    private void AnimateLogPanel(bool show)
+    {
+        if (LogPanel.RenderTransform is not System.Windows.Media.TranslateTransform transform)
+        {
+            transform = new System.Windows.Media.TranslateTransform();
+            LogPanel.RenderTransform = transform;
+        }
+
+        var animation = new DoubleAnimation
+        {
+            From = show ? 340 : 0,
+            To = show ? 0 : 340,
+            Duration = TimeSpan.FromMilliseconds(300),
+            EasingFunction = new ExponentialEase
+            {
+                EasingMode = show ? EasingMode.EaseOut : EasingMode.EaseIn
+            }
+        };
+
+        if (!show)
+        {
+            animation.Completed += (s, e) => LogPanel.Visibility = Visibility.Collapsed;
+        }
+
+        transform.BeginAnimation(System.Windows.Media.TranslateTransform.XProperty, animation);
+    }
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
@@ -170,6 +214,7 @@ public partial class MainWindow : Window
         {
             // 配置已在 App.OnStartup 中加载，这里只需要应用UI状态
             ApplySettingsPanelVisibility(_viewModel.IsSettingsPanelVisible);
+            ApplyLogPanelVisibility(_viewModel.IsLogPanelVisible);
             
             // 应用初始主题
             ApplyTheme(_viewModel.SelectedTheme);
@@ -276,10 +321,18 @@ public partial class MainWindow : Window
 
     private void SettingsPanel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.Source == sender && _viewModel.IsSettingsPanelVisible)
+        if (e.Source == sender)
         {
-            _viewModel.IsSettingsPanelVisible = false;
-            e.Handled = true;
+            if (_viewModel.IsSettingsPanelVisible)
+            {
+                _viewModel.IsSettingsPanelVisible = false;
+                e.Handled = true;
+            }
+            else if (_viewModel.IsLogPanelVisible)
+            {
+                _viewModel.IsLogPanelVisible = false;
+                e.Handled = true;
+            }
         }
     }
 
@@ -288,6 +341,11 @@ public partial class MainWindow : Window
         if (_viewModel.IsSettingsPanelVisible)
         {
             _viewModel.IsSettingsPanelVisible = false;
+            e.Handled = true;
+        }
+        else if (_viewModel.IsLogPanelVisible)
+        {
+            _viewModel.IsLogPanelVisible = false;
             e.Handled = true;
         }
     }

@@ -1365,7 +1365,35 @@
                                 <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.08"/>
                             </Border.Effect>
                             <StackPanel>
-                                <TextBlock Text="{Binding LocalizationService[Settings_Status_Title]}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" Margin="0,0,0,12" />
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding LocalizationService[Settings_Status_Title]}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextColor}" VerticalAlignment="Center" />
+                                    <Button Grid.Column="1" Command="{Binding ToggleLogCommand}" Background="{DynamicResource ButtonBackgroundColor}" BorderThickness="0" Padding="8,4" ToolTip="查看详细日志" Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Background" Value="#E8E8ED"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#D5D5DC"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <TextBlock Text="▶" FontSize="14" Foreground="{DynamicResource PrimaryTextColor}" />
+                                    </Button>
+                                </Grid>
                                 <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource PrimaryTextColor}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" LineHeight="18"/>
                                 <TextBlock Text="{Binding AppInfo}" Foreground="{DynamicResource SecondaryTextColor}" FontSize="11" TextWrapping="Wrap" LineHeight="16" />
                             </StackPanel>
@@ -1453,6 +1481,292 @@
                         </Button>
                     </StackPanel>
                 </ScrollViewer>
+            </Border>
+
+            <!-- 日志面板 -->
+            <Border x:Name="LogPanel" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="340" Background="{DynamicResource PrimaryBackgroundColor}" BorderThickness="0" CornerRadius="0,16,16,0" Visibility="{Binding IsLogPanelVisible, Converter={StaticResource BoolToVisibilityConverter}}" MouseLeftButtonDown="SettingsPanel_MouseLeftButtonDown">
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="0" Opacity="0.15"/>
+                </Border.Effect>
+                <Border.RenderTransform>
+                    <TranslateTransform X="340" />
+                </Border.RenderTransform>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 标题栏 -->
+                    <Grid Grid.Row="0" Margin="20,12,20,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="应用日志" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextColor}" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Width="32" Height="32" Command="{Binding ToggleLogCommand}" Background="{DynamicResource ButtonBackgroundColor}" BorderThickness="0" ToolTip="返回设置" Cursor="Hand">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="{DynamicResource ButtonBackgroundColor}"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                                    <TextBlock Text="◀" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextColor}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource ButtonHoverBackgroundColor}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+
+                    <!-- 日志过滤和操作栏 -->
+                    <Border Grid.Row="1" Background="{DynamicResource CardBackgroundColor}" CornerRadius="10" Padding="10" Margin="20,0,20,8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- 过滤按钮 -->
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="级别: " FontSize="11" Foreground="{DynamicResource SecondaryTextColor}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <ToggleButton Content="调试" IsChecked="{Binding LogViewModel.SelectedLogLevel, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Debug, Mode=TwoWay}" FontSize="10" Padding="6,3" Margin="0,0,4,0" Cursor="Hand">
+                                    <ToggleButton.Style>
+                                        <Style TargetType="ToggleButton">
+                                            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundColor}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ToggleButton">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter Property="Background" Value="#808080"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource ButtonHoverBackgroundColor}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ToggleButton.Style>
+                                </ToggleButton>
+                                <ToggleButton Content="信息" IsChecked="{Binding LogViewModel.SelectedLogLevel, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Info, Mode=TwoWay}" FontSize="10" Padding="6,3" Margin="0,0,4,0" Cursor="Hand">
+                                    <ToggleButton.Style>
+                                        <Style TargetType="ToggleButton">
+                                            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundColor}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ToggleButton">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter Property="Background" Value="#2196F3"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource ButtonHoverBackgroundColor}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ToggleButton.Style>
+                                </ToggleButton>
+                                <ToggleButton Content="警告" IsChecked="{Binding LogViewModel.SelectedLogLevel, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Warning, Mode=TwoWay}" FontSize="10" Padding="6,3" Margin="0,0,4,0" Cursor="Hand">
+                                    <ToggleButton.Style>
+                                        <Style TargetType="ToggleButton">
+                                            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundColor}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ToggleButton">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter Property="Background" Value="#FF9800"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource ButtonHoverBackgroundColor}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ToggleButton.Style>
+                                </ToggleButton>
+                                <ToggleButton Content="错误" IsChecked="{Binding LogViewModel.SelectedLogLevel, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Error, Mode=TwoWay}" FontSize="10" Padding="6,3" Cursor="Hand">
+                                    <ToggleButton.Style>
+                                        <Style TargetType="ToggleButton">
+                                            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundColor}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextColor}"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ToggleButton">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter Property="Background" Value="#F44336"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource ButtonHoverBackgroundColor}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ToggleButton.Style>
+                                </ToggleButton>
+                            </StackPanel>
+
+                            <!-- 操作按钮 -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" FontSize="10" Foreground="{DynamicResource SecondaryTextColor}" VerticalAlignment="Center">
+                                    <Run Text="显示: "/>
+                                    <Run Text="{Binding LogViewModel.DisplayedLogCount}" FontWeight="Bold"/>
+                                    <Run Text=" / "/>
+                                    <Run Text="{Binding LogViewModel.TotalLogCount}"/>
+                                </TextBlock>
+                                <Button Grid.Column="2" Content="历史" Command="{Binding LogViewModel.LoadHistoryLogsCommand}" FontSize="10" Padding="6,3" Margin="0,0,4,0" Background="{DynamicResource ButtonBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}" BorderThickness="0" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource ButtonHoverBackgroundColor}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Button Grid.Column="3" Content="清空" Command="{Binding LogViewModel.ClearLogsCommand}" FontSize="10" Padding="6,3" Background="#F44336" Foreground="White" BorderThickness="0" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#E53935"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- 日志列表 -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{StaticResource GlassScrollViewer}" Margin="20,0,20,16">
+                        <ItemsControl ItemsSource="{Binding LogViewModel.Logs}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="8" Padding="8,6" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <!-- 日志头部 -->
+                                            <Grid Grid.Row="0" Margin="0,0,0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- 日志级别标签 -->
+                                                <Border Grid.Column="0" CornerRadius="3" Padding="5,2" Margin="0,0,6,0">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#808080"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Level}" Value="Debug">
+                                                                    <Setter Property="Background" Value="#808080"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Level}" Value="Info">
+                                                                    <Setter Property="Background" Value="#2196F3"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Level}" Value="Warning">
+                                                                    <Setter Property="Background" Value="#FF9800"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Level}" Value="Error">
+                                                                    <Setter Property="Background" Value="#F44336"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding LevelName}" FontSize="9" Foreground="White" FontWeight="Bold" />
+                                                </Border>
+
+                                                <!-- 来源 -->
+                                                <TextBlock Grid.Column="1" Text="{Binding Source}" FontSize="10" Foreground="{DynamicResource SecondaryTextColor}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+
+                                                <!-- 时间戳 -->
+                                                <TextBlock Grid.Column="2" Text="{Binding Timestamp, StringFormat='HH:mm:ss'}" FontSize="9" Foreground="{DynamicResource SecondaryTextColor}" VerticalAlignment="Center" />
+                                            </Grid>
+
+                                            <!-- 日志消息 -->
+                                            <TextBlock Grid.Row="1" Text="{Binding Message}" FontSize="10" Foreground="{DynamicResource PrimaryTextColor}" TextWrapping="Wrap" LineHeight="15" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
             </Border>
         </Grid>
     </Border>
