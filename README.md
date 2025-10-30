@@ -104,7 +104,8 @@ On first run, `/.memodata` will be generated in the executable directory:
 └── settings.json            # Window and global settings
 ```
 
-### Importing Old Data (for users before v2.0.0)
+<details>
+<summary>Importing Old Data (for users before v2.0.0)</summary>
 
 Data from versions before v2.0.0 is not compatible with the new version and can be imported as follows:
 
@@ -116,6 +117,8 @@ Data from versions before v2.0.0 is not compatible with the new version and can 
 
 **Manual Import**
 * You can also choose to manually copy the previous text and paste it into the new version memo
+
+</details>
 
 ## 🧭 Project Structure
 

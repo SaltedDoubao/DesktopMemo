@@ -104,7 +104,8 @@ dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration 
 └── settings.json            # 窗口与全局设置
 ```
 
-### 导入旧数据 (针对v2.0.0之前的用户)
+<details>
+<summary>导入旧数据 (针对v2.0.0之前的用户)</summary>
 
 v2.0.0之前的数据与新版本不兼容，可通过以下方式导入：
 
@@ -116,6 +117,8 @@ v2.0.0之前的数据与新版本不兼容，可通过以下方式导入：
 
 **手动导入**
 * 您也可以选择手动复制先前的文本，并粘贴到新版备忘录中
+
+</details>
 
 ## 🧭 项目结构概览
 
