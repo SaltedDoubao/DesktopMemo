@@ -1359,13 +1359,19 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 状态信息 -->
+                        <!-- 应用信息 -->
                         <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="12" Padding="16,14" Margin="0,0,0,12">
                             <Border.Effect>
                                 <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.08"/>
                             </Border.Effect>
-                            <StackPanel>
-                                <Grid Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                
+                                <!-- 标题栏 -->
+                                <Grid Grid.Row="0" Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -1374,7 +1380,7 @@
                                     <Button Grid.Column="1" Command="{Binding ToggleLogCommand}" Background="{DynamicResource ButtonBackgroundColor}" BorderThickness="0" Padding="8,4" ToolTip="查看详细日志" Cursor="Hand">
                                         <Button.Style>
                                             <Style TargetType="Button">
-                                                <Setter Property="Background" Value="#E8E8ED"/>
+                                                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundColor}"/>
                                                 <Setter Property="Template">
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="Button">
@@ -1386,7 +1392,7 @@
                                                 </Setter>
                                                 <Style.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#D5D5DC"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ButtonHoverBackgroundColor}"/>
                                                     </Trigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -1394,9 +1400,10 @@
                                         <TextBlock Text="▶" FontSize="14" Foreground="{DynamicResource PrimaryTextColor}" />
                                     </Button>
                                 </Grid>
-                                <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource PrimaryTextColor}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" LineHeight="18"/>
-                                <TextBlock Text="{Binding AppInfo}" Foreground="{DynamicResource SecondaryTextColor}" FontSize="11" TextWrapping="Wrap" LineHeight="16" />
-                            </StackPanel>
+                                
+                                <!-- 应用版本和数据目录 -->
+                                <TextBlock Grid.Row="1" Text="{Binding AppInfo}" Foreground="{DynamicResource SecondaryTextColor}" FontSize="11" TextWrapping="Wrap" LineHeight="16" />
+                            </Grid>
                         </Border>
 
                         <!-- 导入导出 -->
@@ -1652,9 +1659,7 @@
                             <!-- 操作按钮 -->
                             <Grid Grid.Row="1">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" FontSize="10" Foreground="{DynamicResource SecondaryTextColor}" VerticalAlignment="Center">
@@ -1663,27 +1668,7 @@
                                     <Run Text=" / "/>
                                     <Run Text="{Binding LogViewModel.TotalLogCount}"/>
                                 </TextBlock>
-                                <Button Grid.Column="2" Content="历史" Command="{Binding LogViewModel.LoadHistoryLogsCommand}" FontSize="10" Padding="6,3" Margin="0,0,4,0" Background="{DynamicResource ButtonBackgroundColor}" Foreground="{DynamicResource PrimaryTextColor}" BorderThickness="0" Cursor="Hand">
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
-                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="{DynamicResource ButtonHoverBackgroundColor}"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                                <Button Grid.Column="3" Content="清空" Command="{Binding LogViewModel.ClearLogsCommand}" FontSize="10" Padding="6,3" Background="#F44336" Foreground="White" BorderThickness="0" Cursor="Hand">
+                                <Button Grid.Column="1" Content="清空" Command="{Binding LogViewModel.ClearLogsCommand}" FontSize="10" Padding="6,3" Background="#F44336" Foreground="White" BorderThickness="0" Cursor="Hand">
                                     <Button.Style>
                                         <Style TargetType="Button">
                                             <Setter Property="Template">

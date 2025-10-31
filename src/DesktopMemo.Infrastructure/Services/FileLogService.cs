@@ -38,8 +38,12 @@ public sealed class FileLogService : ILogService, IDisposable
         var today = DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
         _currentLogFile = Path.Combine(_logDirectory, $"app_{today}.log");
 
-        // 启动时记录一条信息
-        Info("FileLogService", "日志服务已初始化");
+        // 启动时记录所有级别的测试日志，验证日志系统工作正常
+        Debug("FileLogService", "日志服务已初始化 - DEBUG 级别");
+        Info("FileLogService", "日志服务已初始化 - INFO 级别");
+        Warning("FileLogService", "日志服务已初始化 - WARNING 级别（测试）");
+        
+        System.Diagnostics.Debug.WriteLine($"[FileLogService] 日志文件路径: {_currentLogFile}");
     }
 
     public void Debug(string source, string message)
@@ -80,10 +84,16 @@ public sealed class FileLogService : ILogService, IDisposable
             }
 
             // 写入文件（异步，不等待）
+            // 注意：所有级别的日志（包括Debug）都会被写入文件
             _ = Task.Run(() => WriteToFileAsync(entry));
 
             // 触发事件
             LogAdded?.Invoke(this, entry);
+            
+            // 在调试模式下输出所有日志到控制台（用于验证）
+            #if DEBUG
+            System.Diagnostics.Debug.WriteLine($"[日志记录] [{entry.Level}] [{entry.Source}] {entry.Message}");
+            #endif
         }
         finally
         {
@@ -165,9 +175,11 @@ public sealed class FileLogService : ILogService, IDisposable
             var logLine = entry.ToLogString() + Environment.NewLine;
             await File.AppendAllTextAsync(_currentLogFile, logLine, Encoding.UTF8);
         }
-        catch
+        catch (Exception ex)
         {
-            // 写入文件失败，静默忽略（避免日志系统本身引发异常）
+            // 写入文件失败，输出到调试控制台
+            System.Diagnostics.Debug.WriteLine($"日志写入文件失败: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"日志内容: [{entry.Level}] {entry.Message}");
         }
     }
 
@@ -216,6 +228,9 @@ public sealed class FileLogService : ILogService, IDisposable
         try
         {
             Info("FileLogService", "日志服务正在关闭");
+            
+            // 等待一小段时间确保最后的日志被写入
+            System.Threading.Thread.Sleep(100);
         }
         catch
         {

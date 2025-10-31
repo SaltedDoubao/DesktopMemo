@@ -63,9 +63,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private bool _isInTodoListMode;
 
     [ObservableProperty]
-    private string _statusText = "就绪";
-
-    [ObservableProperty]
     private string _appInfo = string.Empty;
 
     [ObservableProperty]
@@ -237,7 +234,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // 恢复待办事项输入区域的显示状态
         _todoListViewModel.IsInputVisible = settings.TodoInputVisible;
 
-        SetStatus("就绪");
+        _logService.Info("App", "应用程序初始化完成");
+        _trayService.UpdateText("DesktopMemo");
         _trayService.UpdateTopmostState(SelectedTopmostMode);
         _trayService.UpdateClickThroughState(IsClickThroughEnabled);
 
@@ -930,12 +928,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(MemoCount));
     }
 
+    /// <summary>
+    /// 记录操作状态到日志系统
+    /// </summary>
     public void SetStatus(string status, LogLevel logLevel = LogLevel.Info)
     {
-        StatusText = status;
-        _trayService.UpdateText($"DesktopMemo - {status}");
-        
-        // 同时记录到日志系统
+        // 记录到日志系统
         switch (logLevel)
         {
             case LogLevel.Debug:
@@ -950,6 +948,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             case LogLevel.Error:
                 _logService.Error("UI", status);
                 break;
+        }
+        
+        // 更新托盘图标文本（仅显示重要信息）
+        if (logLevel >= LogLevel.Info)
+        {
+            _trayService.UpdateText($"DesktopMemo - {status}");
         }
     }
 
