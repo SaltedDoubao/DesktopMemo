@@ -97,11 +97,14 @@ dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration 
 On first run, `/.memodata` will be generated in the executable directory:
 
 ```
-.memodata
+.memodata/
 ├── content/
-│   ├── index.json           # Memo index
+│   ├── index.json           # (before v2.3.0) Memo index
 │   └── {memoId}.md          # YAML Front Matter + content
-└── settings.json            # Window and global settings
+├── .logs/                   # (v2.3.0 and later) Log files directory
+├── settings.json            # Window and global settings
+├── memos.db                 # (v2.3.0 and later) Local SQLite database for memos and notes data
+└── todos.db                 # (v2.3.0 and later) Local SQLite database for todo items data
 ```
 
 <details>

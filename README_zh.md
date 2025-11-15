@@ -97,11 +97,14 @@ dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration 
 首次运行会在可执行文件目录生成 `/.memodata`：
 
 ```
-.memodata
+.memodata/
 ├── content/
-│   ├── index.json           # 备忘录索引
+│   ├── index.json           # （v2.3.0之前）备忘录索引
 │   └── {memoId}.md          # YAML Front Matter + 正文
-└── settings.json            # 窗口与全局设置
+├── .logs/                   # （v2.3.0及以后）日志文件目录
+├── settings.json            # 窗口与全局设置
+├── memos.db                 # （v2.3.0及以后）备忘录与笔记数据的本地SQLite数据库
+└── todos.db                 # （v2.3.0及以后）待办事项数据的本地SQLite数据库
 ```
 
 <details>
