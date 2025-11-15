@@ -1,7 +1,7 @@
 <p align="center">
   <img src="src/images/logo.ico" />
 </p>
-<h1 align="center">SaltedDoubao's DesktopMemo</h1>
+<h1 align="center">SaltedDoubao 的桌面便签</h1>
 
 <div align="center">
 
@@ -9,193 +9,193 @@
 <img src="https://img.shields.io/badge/Platform-Windows-blue" />
 <img src="https://img.shields.io/badge/License-MIT-green" />
 
-[中文 README](README_zh.md) | English README
+中文 README | [English README](README_en.md)
 
 </div>
 
-## 📋 Project Overview
+## 📋 项目简介
 
-DesktopMemo is a desktop memo application based on .NET 9.0 + WPF + CommunityToolkit.Mvvm, providing rich window management features and memo management capabilities. Whether it's daily notes, work memos, or inspiration records, it provides you with a convenient solution.
+DesktopMemo 是一个基于 .NET 9.0 + WPF + CommunityToolkit.Mvvm 的桌面便签应用，提供了丰富的窗口管理功能和便签管理能力。无论是日常记事、工作备忘还是灵感记录，都能为您提供便捷的解决方案。
 
-## ✨ Key Features
+## ✨ 主要功能
 
-### 📝 Memo Management
-- Quickly create and edit Markdown-formatted memos
-- Auto-save, never lose your notes
-- List view for quick preview
+### 📝 备忘录管理
+- 快速创建和编辑 Markdown 格式的备忘录
+- 自动保存，永不丢失
+- 列表视图快速预览
 
-### ✅ Todo List
-- Lightweight todo list management
-- Quick add, check, and delete todo items
-- Completed items shown with strikethrough, can undo or clear
-- Click "Memo/Todo List" text in the title bar to switch modes
+### ✅ 待办事项
+- 轻量级待办事项列表
+- 快速添加、勾选、删除待办项
+- 已完成项目带删除线显示，可撤销或清除
+- 点击标题栏"备忘录/待办事项"文字即可切换
 
-### 🪟 Window Management
-- Three stay-on-top modes (Normal, Desktop, Always on Top)
-- Adjustable transparency and click-through mode
-- Flexible window position presets
+### 🪟 窗口管理
+- 三种置顶方式（普通、桌面置顶、总是置顶）
+- 可调节透明度和穿透模式
+- 灵活的窗口位置预设
 
-## 🖥️ System Requirements
+## 🖥️ 系统要求
 
-- **Operating System**: Windows 10 version 1903 and above (WPF dependency)
-- **Architecture**: x86_64
-- **.NET SDK**: 9.0 (for development/debugging)
-- **.NET runtime**: Built into the release package, no additional installation required
+- **操作系统**：Windows 10 版本 1903 及以上（WPF 依赖）
+- **架构**：x86_64
+- **.NET SDK**：9.0（开发/调试）
+- **.NET runtime**：发布包内置，无需额外安装
 
-## 🛠️ Tech Stack
+## 🛠️ 技术栈
 
-- **Framework**: .NET 9.0, WPF
-- **Pattern**: MVVM (based on CommunityToolkit.Mvvm)
-- **Dependency Injection**: Microsoft.Extensions.DependencyInjection
-- **Persistence**: Markdown + YAML Front Matter; Window settings use JSON
-- **Toolchain**: PowerShell build scripts, GitHub Actions (planned)
+- **框架**：.NET 9.0、WPF
+- **模式**：MVVM（基于 CommunityToolkit.Mvvm）
+- **依赖注入**：Microsoft.Extensions.DependencyInjection
+- **持久化**：Markdown + YAML Front Matter；窗口设置使用 JSON
+- **工具链**：PowerShell 构建脚本、GitHub Actions（规划中）
 
-## 🚀 Quick Start
+## 🚀 快速开始
 
-If you are a regular user, you can go to [Releases](../../releases) to get the application and run it directly
+如果您是普通用户，可以前往 [Releases](../../releases) 获取应用程序直接运行
 
-### Shortcuts
+### 快捷键
 
-> Global
-- `Ctrl+N` - Quickly create new memo
-> Only available on edit page
-- `Tab` - Insert indentation (4 spaces)
-- `Shift + Tab` - Decrease indentation
-- `Ctrl + S` - Save current memo (seems unnecessary)
-- `Ctrl + Tab` / `Ctrl + Shift + Tab` - Switch memos
-- `Ctrl + F` / `Ctrl + H` - Find/Replace
-- `F3` / `Shift + F3` - Find next/previous
-- `Ctrl + ]` / `Ctrl + [` - Increase/decrease indentation
-- `Ctrl + D` - Duplicate current line downward
+> 全局
+- `Ctrl+N` - 快速新建备忘录
+> 仅在编辑页面可用
+- `Tab` - 插入缩进（4个空格）
+- `Shift + Tab` - 减少缩进
+- `Ctrl + S` - 保存当前备忘录（似乎没有必要）
+- `Ctrl + Tab` / `Ctrl + Shift + Tab` - 切换备忘录
+- `Ctrl + F` / `Ctrl + H` - 查找/替换
+- `F3` / `Shift + F3` - 查找下一个/上一个
+- `Ctrl + ]` / `Ctrl + [` - 增加/减少缩进
+- `Ctrl + D` - 向下复制当前行
 
-### Manual Build
-If you need to debug the project or participate in development, you can follow the steps below
+### 手动构建项目
+如果您需要调试项目或参与开发，可以参照下面步骤
 
-#### Get Source Code
+#### 获取源码
 
 ```bash
-# Clone repository
+# 克隆仓库
 git clone https://github.com/SaltedDoubao/DesktopMemo.git
 cd DesktopMemo
 ```
 
-#### Build and Run
+#### 构建与运行
 
 ```powershell
-# Restore dependencies
+# 还原依赖
 dotnet restore DesktopMemo.sln
 
-# Debug build
+# 调试构建
 dotnet build DesktopMemo.sln --configuration Debug
 
-# Run application
+# 运行应用
 dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration Debug
 ```
 
-> To build an executable file, you can use `build_exe.bat` in the repository root. Build artifacts are output to `artifacts/v<version>/bin` by default. You can customize the version number by setting the environment variable `ArtifactsVersion`.
+> 若需要构建exe可执行文件，可使用仓库根目录下的 `build_exe.bat`。构建产物默认输出到 `artifacts/v<版本号>/bin`，可通过设置环境变量 `ArtifactsVersion` 自定义版本号。
 
-On first run, `/.memodata` will be generated in the executable directory:
+首次运行会在可执行文件目录生成 `/.memodata`：
 
 ```
 .memodata/
 ├── content/
-│   ├── index.json           # (before v2.3.0) Memo index
-│   └── {memoId}.md          # YAML Front Matter + content
-├── .logs/                   # (v2.3.0 and later) Log files directory
-├── settings.json            # Window and global settings
-├── memos.db                 # (v2.3.0 and later) Local SQLite database for memos and notes data
-└── todos.db                 # (v2.3.0 and later) Local SQLite database for todo items data
+│   ├── index.json           # （v2.3.0之前）备忘录索引
+│   └── {memoId}.md          # YAML Front Matter + 正文
+├── .logs/                   # （v2.3.0及以后）日志文件目录
+├── settings.json            # 窗口与全局设置
+├── memos.db                 # （v2.3.0及以后）备忘录与笔记数据的本地SQLite数据库
+└── todos.db                 # （v2.3.0及以后）待办事项数据的本地SQLite数据库
 ```
 
 <details>
-<summary>Importing Old Data (for users before v2.0.0)</summary>
+<summary>导入旧数据 (针对v2.0.0之前的用户)</summary>
 
-Data from versions before v2.0.0 is not compatible with the new version and can be imported as follows:
+v2.0.0之前的数据与新版本不兼容，可通过以下方式导入：
 
-**Automatic Import** (Recommended):
-1. Ensure the old application data directory (`Data/content/`) is in the application directory
-2. The program will automatically import old data on first run
-3. Manually delete the Data directory after import is complete
-4. Done!
+**自动导入**（推荐）：
+1. 确保旧版应用数据目录(`Data/content/`)在应用程序目录下
+2. 初次运行程序会自动导入旧数据
+3. 导入完成后手动删除Data目录
+4. 完成！
 
-**Manual Import**
-* You can also choose to manually copy the previous text and paste it into the new version memo
+**手动导入**
+* 您也可以选择手动复制先前的文本，并粘贴到新版备忘录中
 
 </details>
 
-## 🧭 Project Structure
+## 🧭 项目结构概览
 
 ```
 DesktopMemo_rebuild/
 ├── DesktopMemo.sln
-├── build_exe.bat                   # Build executable script
-├── docs/                           # Project documentation
-├── src/                            # Project main directory
-├── artifacts/                      # Build output directory
-└── publish/                        # Release artifacts
+├── build_exe.bat                   # 构建可执行文件脚本
+├── docs/                           # 项目文档
+├── src/                            # 项目主目录
+├── artifacts/                      # 构建输出目录
+└── publish/                        # 发布产物
 ```
 
-## 🤝 Contributing
+## 🤝 贡献指南
 
-Welcome to collaborate through Issues or PRs:
+欢迎通过 Issue 或 PR 协作：
 
-1. Fork this repository
-2. Create feature branch: `git checkout -b your-feature`
-3. Commit changes: `git commit -m "commit message"`
-4. Push branch: `git push origin your-feature`
-5. Create Pull Request with requirements background, change summary and verification results
+1. Fork 本仓库
+2. 创建功能分支：`git checkout -b your-feature`
+3. 提交更改：`git commit -m "commit message"`
+4. 推送分支：`git push origin your-feature`
+5. 创建 Pull Request，并附上需求背景、变更摘要与验证结果
 
-If you haven't changed the version number, you **must** clear the `artifacts/vX.X.X (corresponding version number)` directory before building the project using `dotnet build`.
+如果未更改版本号，使用`dotnet build`构建项目前**必须**清空 `artifacts/vX.X.X(对应版本号)` 目录
 
-It's recommended to run `dotnet build` / `dotnet run` before submitting to ensure basic validation passes.
+提交前建议执行 `dotnet build` / `dotnet run`，确保基本验证通过。
 
-For other development considerations, see [Development Guidelines](docs/Development-Guidelines.md)
+其他开发注意事项详见 [CONTRIBUTING.md](docs/CONTRIBUTING.md)
 
-## 📝 Changelog
+## 📝 更新日志
 
 ### v2.3.0 (Latest)
-- Added SQLite-based data storage and migration support
-  - Memo index migration (JSON → SQLite)
-  - Todo list migration (JSON → SQLite)
-  - Automatic migration on first run
-- Optimized settings panel UI
-  - Added theme switching functionality (Light/Dark)
-  - Improved font size hierarchy and spacing
-  - Enhanced ComboBox and CheckBox styles
-  - Removed redundant quick position buttons
-- Completed multi-language support for status information
+- 添加基于 SQLite 的数据存储和迁移支持
+  - 备忘录索引迁移（JSON → SQLite）
+  - 待办事项迁移（JSON → SQLite）
+  - 首次运行自动迁移
+- 优化设置面板 UI
+  - 新增主题切换功能（浅色/深色）
+  - 改进字体大小层级和间距
+  - 增强 ComboBox 和 CheckBox 样式
+  - 移除冗余的快速定位按钮
+- 完善状态信息多语言支持
 
-For more history, see [Releases](../../releases)
+更多历史版本详见 [Releases](../../releases)
 
-## 🚧 Roadmap
+## 🚧 施工规划
 
-### Updates that may be implemented soon
-- [ ] Add preset window size schemes
+### 近期可能实现的更新
+- [ ] 添加预设窗口大小方案
 
-### Future update trends
-- To be added...
+### 未来更新趋势
+- 待补充...
 
-## 📄 License
+## 📄 许可证
 
-This project is licensed under the [MIT License](LICENSE).
+本项目使用 [MIT License](LICENSE)。
 
 ---
 
-## 🤝 Contributors
+## 🤝 贡献者
 
 <a href="https://github.com/SaltedDoubao/DesktopMemo/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=SaltedDoubao/DesktopMemo" />
 </a>
 
-## 🌟 Star History
+## 🌟 星标历史
 
 [![Star History Chart](https://api.star-history.com/svg?repos=SaltedDoubao/DesktopMemo&type=Date)](https://star-history.com/#SaltedDoubao/DesktopMemo&Date)
 
 <div align="center">
 
-**If this project is helpful to you, please consider giving it a ⭐!**\
-**Your ⭐ is the greatest motivation for my updates!**
+**如果这个项目对您有帮助，请考虑给它一个 ⭐！**\
+**您的⭐就是我更新的最大动力！**
 
-[Report Bug](../../issues) • [Request Feature](../../issues) • [Contribute Code](../../pulls)
+[报告 Bug](../../issues) • [请求功能](../../issues) • [贡献代码](../../pulls)
 
 </div>
