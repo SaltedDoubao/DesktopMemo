@@ -99,10 +99,10 @@ DesktopMemo_rebuild/
 ├── README_zh.md                     # 项目说明（中文）
 ├── CLAUDE.md                        # Claude AI 开发指南
 ├── docs/                            # 项目文档
-│   ├── 应用开发规范.md             # 应用开发规范（本文档）
-│   ├── Development-Guidelines.md   # 开发指南（英文）
-│   ├── MySQL-集成规范.md           # MySQL 集成规范（中文）
-│   └── MySQL-Integration-Specification.md # MySQL 集成规范（英文）
+│   ├── Api/                         # Api文档
+│   ├── ProjectStructure/            # 项目结构文档
+│   ├── CONTRIBUTING.md              # 贡献指南
+│   └── MySQL-集成规范.md             # MySQL 集成规范（中文）
 ├── src/                             # 源代码目录
 │   ├── DesktopMemo.App/            # WPF 前端应用
 │   │   ├── App.xaml(.cs)           # 应用启动与 DI 注册
@@ -219,14 +219,14 @@ git checkout -b fix/bug-description
 
 ### 3. 开发和测试
 
-- 遵循[代码规范](#代码规范)
+- 遵循[代码规范](#-代码规范)
 - 添加必要的注释和文档
 - 确保代码能够正常编译运行
 - 在 Visual Studio 输出窗口检查调试信息
 
 ### 4. 提交更改
 
-遵循[提交规范](#提交规范)编写提交信息：
+遵循[提交规范](#-提交规范)编写提交信息：
 
 ```bash
 git add .
@@ -241,7 +241,7 @@ git push origin feature/your-feature-name
 
 ### 6. 创建 Pull Request
 
-参考 [Pull Request 流程](#pull-request-流程)。
+参考 [Pull Request 流程](#-pull-request-流程)。
 
 ---
 
@@ -655,4 +655,4 @@ A:
 
 ---
 
-**最后更新**：2025-11-15
+**最后更新**：2025-11-17
