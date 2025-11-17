@@ -86,23 +86,103 @@ dotnet run --project src/DesktopMemo.App/DesktopMemo.App.csproj --configuration 
 
 DesktopMemo 采用三层架构设计：
 
+<details>
+<summary><b>展开</b></summary>
+
 ```
-src/
-├── DesktopMemo.App/              # 表示层（WPF）
-│   ├── ViewModels/               # MVVM 视图模型
-│   ├── Views/                    # 视图组件
-│   ├── Converters/               # 值转换器
-│   ├── Localization/             # 多语言支持
-│   └── Resources/                # UI 资源和主题
-├── DesktopMemo.Core/             # 领域层（纯 .NET 库）
-│   ├── Contracts/                # 接口定义
-│   ├── Models/                   # 领域模型
-│   ├── Constants/                # 常量定义
-│   └── Helpers/                  # 辅助工具类
-└── DesktopMemo.Infrastructure/   # 基础设施层
-    ├── Repositories/             # 数据仓储实现
-    └── Services/                 # 服务实现
+DesktopMemo_rebuild/
+├── DesktopMemo.sln                 # Visual Studio 解决方案文件
+├── Directory.Build.props            # 统一的构建属性配置
+├── build_exe.bat                    # 构建可执行文件脚本
+├── LICENSE                          # 开源许可证
+├── README.md                        # 项目说明（英文）
+├── README_zh.md                     # 项目说明（中文）
+├── CLAUDE.md                        # Claude AI 开发指南
+├── docs/                            # 项目文档
+│   ├── 应用开发规范.md             # 应用开发规范（本文档）
+│   ├── Development-Guidelines.md   # 开发指南（英文）
+│   ├── MySQL-集成规范.md           # MySQL 集成规范（中文）
+│   └── MySQL-Integration-Specification.md # MySQL 集成规范（英文）
+├── src/                             # 源代码目录
+│   ├── DesktopMemo.App/            # WPF 前端应用
+│   │   ├── App.xaml(.cs)           # 应用启动与 DI 注册
+│   │   ├── MainWindow.xaml(.cs)    # 主窗口
+│   │   ├── AssemblyInfo.cs         # 程序集信息
+│   │   ├── DesktopMemo.App.csproj  # 项目文件
+│   │   ├── ViewModels/             # MVVM 视图模型
+│   │   │   ├── MainViewModel.cs    # 主视图模型（核心逻辑）
+│   │   │   ├── MemoListViewModel.cs # 备忘录列表视图模型
+│   │   │   └── TodoListViewModel.cs # 待办事项视图模型
+│   │   ├── Views/                  # 视图组件
+│   │   │   ├── ConfirmationDialog.xaml(.cs)      # 通用确认对话框
+│   │   │   └── ExitConfirmationDialog.xaml(.cs)  # 退出确认对话框
+│   │   ├── Converters/             # WPF 值转换器
+│   │   │   ├── EnumToBooleanConverter.cs         # 枚举到布尔值转换
+│   │   │   ├── InverseBooleanToVisibilityConverter.cs # 反向布尔可见性转换
+│   │   │   └── CountToVisibilityConverter.cs     # 数字到可见性转换
+│   │   ├── Localization/           # 多语言本地化
+│   │   │   ├── LocalizationService.cs # 本地化服务
+│   │   │   ├── LocalizeExtension.cs   # XAML 本地化扩展
+│   │   │   └── Resources/             # 资源文件
+│   │   │       ├── Strings.resx       # 简体中文（默认）
+│   │   │       ├── Strings.en-US.resx # 英文
+│   │   │       ├── Strings.zh-TW.resx # 繁体中文
+│   │   │       ├── Strings.ja-JP.resx # 日文
+│   │   │       └── Strings.ko-KR.resx # 韩文
+│   │   ├── Resources/              # UI 资源
+│   │   │   ├── Styles.xaml         # 全局样式
+│   │   │   ├── GlassResources.xaml # 玻璃效果资源
+│   │   │   └── Themes/             # 主题
+│   │   │       ├── Light.xaml      # 浅色主题
+│   │   │       └── Dark.xaml       # 深色主题
+│   │   └── Services/               # 应用层服务（预留）
+│   ├── DesktopMemo.Core/           # 核心领域层（纯 .NET 库）
+│   │   ├── DesktopMemo.Core.csproj # 项目文件
+│   │   ├── Constants/              # 常量定义
+│   │   │   └── WindowConstants.cs  # 窗口相关常量
+│   │   ├── Contracts/              # 契约接口
+│   │   │   ├── IMemoRepository.cs       # 备忘录仓储接口
+│   │   │   ├── ITodoRepository.cs       # 待办事项仓储接口
+│   │   │   ├── ISettingsService.cs      # 设置服务接口
+│   │   │   ├── IWindowService.cs        # 窗口服务接口
+│   │   │   ├── IWindowSettingsService.cs # 窗口设置服务接口
+│   │   │   ├── ITrayService.cs          # 系统托盘服务接口
+│   │   │   ├── ILocalizationService.cs  # 本地化服务接口
+│   │   │   └── IMemoSearchService.cs    # 备忘录搜索服务接口
+│   │   ├── Models/                 # 领域模型
+│   │   │   ├── Memo.cs             # 备忘录模型
+│   │   │   ├── TodoItem.cs         # 待办事项模型
+│   │   │   ├── WindowSettings.cs   # 窗口设置模型
+│   │   │   ├── AppTheme.cs         # 应用主题枚举
+│   │   │   └── SyncStatus.cs       # 同步状态枚举
+│   │   └── Helpers/                # 辅助工具类
+│   │       ├── TransparencyHelper.cs # 透明度计算辅助类
+│   │       └── DebounceHelper.cs     # 防抖动辅助类
+│   ├── DesktopMemo.Infrastructure/ # 基础设施层（实现层）
+│   │   ├── DesktopMemo.Infrastructure.csproj # 项目文件
+│   │   ├── Repositories/           # 数据仓储实现
+│   │   │   ├── FileMemoRepository.cs          # 基于文件的备忘录存储
+│   │   │   ├── SqliteIndexedMemoRepository.cs # SQLite 备忘录存储（v2.3.0+）
+│   │   │   ├── JsonTodoRepository.cs          # JSON 待办事项存储
+│   │   │   └── SqliteTodoRepository.cs        # SQLite 待办事项存储（v2.3.0+）
+│   │   └── Services/               # 服务实现
+│   │       ├── JsonSettingsService.cs         # JSON 设置服务
+│   │       ├── MemoSearchService.cs           # 备忘录搜索服务
+│   │       ├── WindowService.cs               # 窗口服务（Win32 API）
+│   │       ├── TrayService.cs                 # 系统托盘服务
+│   │       ├── MemoMigrationService.cs        # 备忘录迁移服务
+│   │       ├── MemoMetadataMigrationService.cs # 备忘录元数据迁移
+│   │       └── TodoMigrationService.cs        # 待办事项迁移服务
+│   └── images/                     # 应用图标资源
+│       └── logo.ico                # 应用图标
+├── artifacts/                      # 构建输出目录（按版本组织）
+│   └── v<版本号>/
+│       ├── bin/                    # 二进制输出
+│       └── obj/                    # 中间文件
+└── publish/                        # 发布产物目录
 ```
+
+</details>
 
 详细的架构说明请参阅 [项目架构文档](ProjectStructure/README.md)。
 
