@@ -22,9 +22,11 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel;
     private readonly IWindowService _windowService;
     private readonly ITrayService _trayService;
+    private readonly ILogService _logService;
     private DispatcherTimer? _autoSaveTimer;
+    private bool _isClosing = false;
 
-    public MainWindow(MainViewModel viewModel, IWindowService windowService, ITrayService trayService)
+    public MainWindow(MainViewModel viewModel, IWindowService windowService, ITrayService trayService, ILogService logService)
     {
         try
         {
@@ -33,6 +35,7 @@ public partial class MainWindow : Window
             _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             _windowService = windowService ?? throw new ArgumentNullException(nameof(windowService));
             _trayService = trayService ?? throw new ArgumentNullException(nameof(trayService));
+            _logService = logService ?? throw new ArgumentNullException(nameof(logService));
 
             DataContext = _viewModel;
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
@@ -350,43 +353,47 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    private async void CloseButton_Click(object sender, RoutedEventArgs e)
     {
-        // 避免async void死锁，使用fire-and-forget方式
-        _ = Task.Run(async () =>
+        // 防止并发调用
+        if (_isClosing)
         {
+            return;
+        }
+
+        _isClosing = true;
+        try
+        {
+            await HandleCloseButtonClickAsync();
+        }
+        catch (Exception ex)
+        {
+            // 记录异常到日志服务
+            _logService.Error("MainWindow", $"处理关闭按钮异常: {ex.Message}", ex);
+
+            // 如果异步处理失败，回退到UI线程执行默认关闭行为
             try
             {
-                await HandleCloseButtonClickAsync();
-            }
-            catch (Exception ex)
-            {
-                // 在后台线程中捕获异常，记录到调试输出
-                System.Diagnostics.Debug.WriteLine($"处理关闭按钮异常: {ex}");
-
-                // 如果异步处理失败，回退到UI线程执行默认关闭行为
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                if (_viewModel.WindowSettings.DefaultExitToTray)
                 {
-                    try
-                    {
-                        if (_viewModel.WindowSettings.DefaultExitToTray)
-                        {
-                            _viewModel.TrayHideWindowCommand.Execute(null);
-                        }
-                        else
-                        {
-                            WpfApp.Current.Shutdown();
-                        }
-                    }
-                    catch (Exception fallbackEx)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"回退关闭失败: {fallbackEx}");
-                        // 最后的安全措施
-                        Environment.Exit(0);
-                    }
-                });
+                    _viewModel.TrayHideWindowCommand.Execute(null);
+                }
+                else
+                {
+                    WpfApp.Current.Shutdown();
+                }
             }
-        });
+            catch (Exception fallbackEx)
+            {
+                _logService.Error("MainWindow", $"回退关闭失败: {fallbackEx.Message}", fallbackEx);
+                // 最后的安全措施
+                Environment.Exit(0);
+            }
+        }
+        finally
+        {
+            _isClosing = false;
+        }
     }
 
     private async Task HandleCloseButtonClickAsync()
@@ -736,9 +743,11 @@ public partial class MainWindow : Window
                 await _viewModel.SaveMemoCommand.ExecuteAsync(null);
                 _viewModel.SetStatus("自动保存");
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore
+                // 记录异常到日志服务
+                _logService.Warning("MainWindow", $"自动保存失败: {ex.Message}");
+                _viewModel.SetStatus($"自动保存失败: {ex.Message}");
             }
         }
     }
@@ -773,5 +782,34 @@ public partial class MainWindow : Window
 
             MainContainer.Background = new SolidColorBrush(backgroundColor);
         }
+    }
+
+    // ==================== Todo 编辑事件处理 ====================
+
+    /// <summary>
+    /// 当编辑 TextBox 加载时，自动聚焦并选择所有文本
+    /// </summary>
+    private void EditTodoTextBox_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.TextBox textBox)
+        {
+            textBox.Focus();
+            textBox.SelectAll();
+        }
+    }
+
+    /// <summary>
+    /// 当编辑 TextBox 失去焦点时，取消编辑
+    /// </summary>
+    private void EditTodoTextBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // 延迟执行以避免与保存命令冲突
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (_viewModel?.TodoListViewModel?.EditingTodoId != null)
+            {
+                _viewModel.TodoListViewModel.CancelEditTodoCommand.Execute(null);
+            }
+        }), DispatcherPriority.Background);
     }
 }

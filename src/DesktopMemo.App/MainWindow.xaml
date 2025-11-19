@@ -6,7 +6,7 @@
         xmlns:conv="clr-namespace:DesktopMemo.App.Converters"
         xmlns:loc="clr-namespace:DesktopMemo.App.Localization"
         mc:Ignorable="d"
-        Title="备忘录"
+        Title="{loc:Localize MainWindow_Title_Memo}"
         Width="380"
         Height="300"
         WindowStyle="None"
@@ -25,6 +25,8 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
         <conv:CountToVisibilityConverter x:Key="CountToVisibilityConverter" />
+        <conv:EqualityToVisibilityConverter x:Key="EqualityToVisibilityConverter" />
+        <conv:InverseEqualityToVisibilityConverter x:Key="InverseEqualityToVisibilityConverter" />
         <!-- 玻璃拟态样式资源 -->
         <Style x:Key="GlassmorphismBorder" TargetType="Border">
             <Setter Property="Background">
@@ -844,44 +846,86 @@
                                     <ItemsControl ItemsSource="{Binding TodoListViewModel.IncompleteTodos}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Background="#0DFFFFFF" 
-                                                        CornerRadius="10" 
-                                                        Padding="10" 
+                                                <Border Background="#0DFFFFFF"
+                                                        CornerRadius="10"
+                                                        Padding="10"
                                                         Margin="0,0,0,6"
                                                         BorderBrush="#10FFFFFF"
                                                         BorderThickness="1">
+                                                    <Border.InputBindings>
+                                                        <MouseBinding MouseAction="LeftDoubleClick"
+                                                                      Command="{Binding DataContext.TodoListViewModel.BeginEditTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                      CommandParameter="{Binding}" />
+                                                    </Border.InputBindings>
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="Auto" />
                                                         </Grid.ColumnDefinitions>
-                                                        
-                                                        <CheckBox Grid.Column="0" 
-                                                                  IsChecked="{Binding IsCompleted, Mode=OneWay}" 
+
+                                                        <CheckBox Grid.Column="0"
+                                                                  IsChecked="{Binding IsCompleted, Mode=OneWay}"
                                                                   Command="{Binding DataContext.TodoListViewModel.ToggleTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                   CommandParameter="{Binding}"
                                                                   VerticalAlignment="Center"
                                                                   Margin="0,0,10,0"
                                                                   Style="{StaticResource RoundCheckBox}" />
-                                                        
-                                                        <TextBlock Grid.Column="1" 
-                                                                   Text="{Binding Content}" 
-                                                                   Foreground="#F0FFFFFF" 
+
+                                                        <!-- 只读模式：显示 TextBlock -->
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding Content}"
+                                                                   Foreground="#F0FFFFFF"
                                                                    FontSize="13"
                                                                    TextWrapping="Wrap"
-                                                                   VerticalAlignment="Center" />
-                                                        
-                                                        <Button Grid.Column="2" 
+                                                                   VerticalAlignment="Center">
+                                                            <TextBlock.Visibility>
+                                                                <MultiBinding Converter="{StaticResource EqualityToVisibilityConverter}">
+                                                                    <Binding Path="Id" />
+                                                                    <Binding Path="DataContext.TodoListViewModel.EditingTodoId" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                                </MultiBinding>
+                                                            </TextBlock.Visibility>
+                                                        </TextBlock>
+
+                                                        <!-- 编辑模式：显示 TextBox -->
+                                                        <TextBox Grid.Column="1"
+                                                                 x:Name="EditTodoTextBox"
+                                                                 Text="{Binding DataContext.TodoListViewModel.EditingContent, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                 Foreground="#F0FFFFFF"
+                                                                 FontSize="13"
+                                                                 Background="#20FFFFFF"
+                                                                 BorderBrush="#40FFFFFF"
+                                                                 BorderThickness="1"
+                                                                 Padding="4"
+                                                                 TextWrapping="Wrap"
+                                                                 AcceptsReturn="False"
+                                                                 VerticalAlignment="Center"
+                                                                 Loaded="EditTodoTextBox_Loaded"
+                                                                 LostFocus="EditTodoTextBox_LostFocus">
+                                                            <TextBox.Visibility>
+                                                                <MultiBinding Converter="{StaticResource InverseEqualityToVisibilityConverter}">
+                                                                    <Binding Path="Id" />
+                                                                    <Binding Path="DataContext.TodoListViewModel.EditingTodoId" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                                </MultiBinding>
+                                                            </TextBox.Visibility>
+                                                            <TextBox.InputBindings>
+                                                                <KeyBinding Key="Enter"
+                                                                            Command="{Binding DataContext.TodoListViewModel.SaveEditTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                                                <KeyBinding Key="Escape"
+                                                                            Command="{Binding DataContext.TodoListViewModel.CancelEditTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                                            </TextBox.InputBindings>
+                                                        </TextBox>
+
+                                                        <Button Grid.Column="2"
                                                                 Width="24" Height="24"
                                                                 Command="{Binding DataContext.TodoListViewModel.DeleteTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                 CommandParameter="{Binding}"
                                                                 Style="{StaticResource GlassButton}"
                                                                 ToolTip="{Binding DataContext.LocalizationService[Tooltip_DeleteTodo], RelativeSource={RelativeSource AncestorType=Window}}"
                                                                 Margin="8,0,0,0">
-                                                            <Path Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" 
-                                                                  Fill="#FFE57373" 
-                                                                  Width="12" Height="12" 
+                                                            <Path Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
+                                                                  Fill="#FFE57373"
+                                                                  Width="12" Height="12"
                                                                   Stretch="Uniform" />
                                                         </Button>
                                                     </Grid>
@@ -914,45 +958,87 @@
                                         <ItemsControl ItemsSource="{Binding TodoListViewModel.CompletedTodos}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="#08FFFFFF" 
-                                                            CornerRadius="10" 
-                                                            Padding="10" 
+                                                    <Border Background="#08FFFFFF"
+                                                            CornerRadius="10"
+                                                            Padding="10"
                                                             Margin="0,0,0,6"
                                                             BorderBrush="#08FFFFFF"
                                                             BorderThickness="1">
+                                                        <Border.InputBindings>
+                                                            <MouseBinding MouseAction="LeftDoubleClick"
+                                                                          Command="{Binding DataContext.TodoListViewModel.BeginEditTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                          CommandParameter="{Binding}" />
+                                                        </Border.InputBindings>
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="Auto" />
                                                                 <ColumnDefinition Width="*" />
                                                                 <ColumnDefinition Width="Auto" />
                                                             </Grid.ColumnDefinitions>
-                                                            
-                                                            <CheckBox Grid.Column="0" 
-                                                                      IsChecked="{Binding IsCompleted, Mode=OneWay}" 
+
+                                                            <CheckBox Grid.Column="0"
+                                                                      IsChecked="{Binding IsCompleted, Mode=OneWay}"
                                                                       Command="{Binding DataContext.TodoListViewModel.ToggleTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                       CommandParameter="{Binding}"
                                                                       VerticalAlignment="Center"
                                                                       Margin="0,0,10,0"
                                                                       Style="{StaticResource RoundCheckBox}" />
-                                                            
-                                                            <TextBlock Grid.Column="1" 
-                                                                       Text="{Binding Content}" 
-                                                                       Foreground="#60FFFFFF" 
+
+                                                            <!-- 只读模式：显示 TextBlock -->
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding Content}"
+                                                                       Foreground="#60FFFFFF"
                                                                        FontSize="13"
                                                                        TextWrapping="Wrap"
                                                                        TextDecorations="Strikethrough"
-                                                                       VerticalAlignment="Center" />
-                                                            
-                                                            <Button Grid.Column="2" 
+                                                                       VerticalAlignment="Center">
+                                                                <TextBlock.Visibility>
+                                                                    <MultiBinding Converter="{StaticResource EqualityToVisibilityConverter}">
+                                                                        <Binding Path="Id" />
+                                                                        <Binding Path="DataContext.TodoListViewModel.EditingTodoId" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                                    </MultiBinding>
+                                                                </TextBlock.Visibility>
+                                                            </TextBlock>
+
+                                                            <!-- 编辑模式：显示 TextBox -->
+                                                            <TextBox Grid.Column="1"
+                                                                     x:Name="EditCompletedTodoTextBox"
+                                                                     Text="{Binding DataContext.TodoListViewModel.EditingContent, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                     Foreground="#F0FFFFFF"
+                                                                     FontSize="13"
+                                                                     Background="#20FFFFFF"
+                                                                     BorderBrush="#40FFFFFF"
+                                                                     BorderThickness="1"
+                                                                     Padding="4"
+                                                                     TextWrapping="Wrap"
+                                                                     AcceptsReturn="False"
+                                                                     VerticalAlignment="Center"
+                                                                     Loaded="EditTodoTextBox_Loaded"
+                                                                     LostFocus="EditTodoTextBox_LostFocus">
+                                                                <TextBox.Visibility>
+                                                                    <MultiBinding Converter="{StaticResource InverseEqualityToVisibilityConverter}">
+                                                                        <Binding Path="Id" />
+                                                                        <Binding Path="DataContext.TodoListViewModel.EditingTodoId" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                                    </MultiBinding>
+                                                                </TextBox.Visibility>
+                                                                <TextBox.InputBindings>
+                                                                    <KeyBinding Key="Enter"
+                                                                                Command="{Binding DataContext.TodoListViewModel.SaveEditTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                                                    <KeyBinding Key="Escape"
+                                                                                Command="{Binding DataContext.TodoListViewModel.CancelEditTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                                                </TextBox.InputBindings>
+                                                            </TextBox>
+
+                                                            <Button Grid.Column="2"
                                                                     Width="24" Height="24"
                                                                     Command="{Binding DataContext.TodoListViewModel.DeleteTodoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                     CommandParameter="{Binding}"
                                                                     Style="{StaticResource GlassButton}"
                                                                     ToolTip="删除"
                                                                     Margin="8,0,0,0">
-                                                                <Path Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" 
-                                                                      Fill="#FFE57373" 
-                                                                      Width="12" Height="12" 
+                                                                <Path Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
+                                                                      Fill="#FFE57373"
+                                                                      Width="12" Height="12"
                                                                       Stretch="Uniform" />
                                                             </Button>
                                                         </Grid>
@@ -1693,64 +1779,91 @@
                     </Border>
 
                     <!-- 日志列表 -->
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{StaticResource GlassScrollViewer}" Margin="20,0,20,16">
-                        <ItemsControl ItemsSource="{Binding LogViewModel.Logs}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="8" Padding="8,6" Margin="0,0,0,6">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding LogViewModel.Logs}"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.VirtualizationMode="Recycling"
+                             VirtualizingPanel.CacheLength="10,10"
+                             VirtualizingPanel.CacheLengthUnit="Item"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             Margin="20,0,20,16"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             SelectionMode="Single">
+                        <ListBox.Template>
+                            <ControlTemplate TargetType="ListBox">
+                                <ScrollViewer Style="{StaticResource GlassScrollViewer}">
+                                    <ItemsPresenter />
+                                </ScrollViewer>
+                            </ControlTemplate>
+                        </ListBox.Template>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter />
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource CardBackgroundColor}" CornerRadius="8" Padding="8,6" Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
 
-                                            <!-- 日志头部 -->
-                                            <Grid Grid.Row="0" Margin="0,0,0,3">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
+                                        <!-- 日志头部 -->
+                                        <Grid Grid.Row="0" Margin="0,0,0,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
 
-                                                <!-- 日志级别标签 -->
-                                                <Border Grid.Column="0" CornerRadius="3" Padding="5,2" Margin="0,0,6,0">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#808080"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Level}" Value="Debug">
-                                                                    <Setter Property="Background" Value="#808080"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Level}" Value="Info">
-                                                                    <Setter Property="Background" Value="#2196F3"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Level}" Value="Warning">
-                                                                    <Setter Property="Background" Value="#FF9800"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Level}" Value="Error">
-                                                                    <Setter Property="Background" Value="#F44336"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <TextBlock Text="{Binding LevelName}" FontSize="9" Foreground="White" FontWeight="Bold" />
-                                                </Border>
+                                            <!-- 日志级别标签 -->
+                                            <Border Grid.Column="0" CornerRadius="3" Padding="5,2" Margin="0,0,6,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#808080"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Level}" Value="Debug">
+                                                                <Setter Property="Background" Value="#808080"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Level}" Value="Info">
+                                                                <Setter Property="Background" Value="#2196F3"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Level}" Value="Warning">
+                                                                <Setter Property="Background" Value="#FF9800"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Level}" Value="Error">
+                                                                <Setter Property="Background" Value="#F44336"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding LevelName}" FontSize="9" Foreground="White" FontWeight="Bold" />
+                                            </Border>
 
-                                                <!-- 来源 -->
-                                                <TextBlock Grid.Column="1" Text="{Binding Source}" FontSize="10" Foreground="{DynamicResource SecondaryTextColor}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                            <!-- 来源 -->
+                                            <TextBlock Grid.Column="1" Text="{Binding Source}" FontSize="10" Foreground="{DynamicResource SecondaryTextColor}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
 
-                                                <!-- 时间戳 -->
-                                                <TextBlock Grid.Column="2" Text="{Binding Timestamp, StringFormat='HH:mm:ss'}" FontSize="9" Foreground="{DynamicResource SecondaryTextColor}" VerticalAlignment="Center" />
-                                            </Grid>
-
-                                            <!-- 日志消息 -->
-                                            <TextBlock Grid.Row="1" Text="{Binding Message}" FontSize="10" Foreground="{DynamicResource PrimaryTextColor}" TextWrapping="Wrap" LineHeight="15" />
+                                            <!-- 时间戳 -->
+                                            <TextBlock Grid.Column="2" Text="{Binding Timestamp, StringFormat='HH:mm:ss'}" FontSize="9" Foreground="{DynamicResource SecondaryTextColor}" VerticalAlignment="Center" />
                                         </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+
+                                        <!-- 日志消息 -->
+                                        <TextBlock Grid.Row="1" Text="{Binding Message}" FontSize="10" Foreground="{DynamicResource PrimaryTextColor}" TextWrapping="Wrap" LineHeight="15" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
             </Border>
         </Grid>

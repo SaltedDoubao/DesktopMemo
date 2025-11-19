@@ -33,6 +33,13 @@ public partial class TodoListViewModel : ObservableObject
     [ObservableProperty]
     private bool _isInputVisible = true;
 
+    // 编辑状态
+    [ObservableProperty]
+    private Guid? _editingTodoId;
+
+    [ObservableProperty]
+    private string _editingContent = string.Empty;
+
     public int IncompleteTodoCount => IncompleteTodos.Count;
     public int CompletedTodoCount => CompletedTodos.Count;
 
@@ -232,6 +239,57 @@ public partial class TodoListViewModel : ObservableObject
     {
         IsInputVisible = !IsInputVisible;
         SetStatus(IsInputVisible ? "显示输入区域" : "隐藏输入区域");
+    }
+
+    /// <summary>
+    /// 开始编辑待办事项。
+    /// </summary>
+    [RelayCommand]
+    private void BeginEditTodo(TodoItem todoItem)
+    {
+        if (todoItem is null)
+        {
+            return;
+        }
+
+        EditingTodoId = todoItem.Id;
+        EditingContent = todoItem.Content;
+    }
+
+    /// <summary>
+    /// 保存编辑的待办事项。
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveEditTodoAsync()
+    {
+        if (EditingTodoId == null || string.IsNullOrWhiteSpace(EditingContent))
+        {
+            CancelEditTodo();
+            return;
+        }
+
+        // 查找正在编辑的项
+        var todoItem = IncompleteTodos.FirstOrDefault(t => t.Id == EditingTodoId)
+                      ?? CompletedTodos.FirstOrDefault(t => t.Id == EditingTodoId);
+
+        if (todoItem != null)
+        {
+            await UpdateTodoContentAsync((todoItem, EditingContent));
+        }
+
+        // 清除编辑状态
+        EditingTodoId = null;
+        EditingContent = string.Empty;
+    }
+
+    /// <summary>
+    /// 取消编辑待办事项。
+    /// </summary>
+    [RelayCommand]
+    private void CancelEditTodo()
+    {
+        EditingTodoId = null;
+        EditingContent = string.Empty;
     }
 
     partial void OnIsInputVisibleChanged(bool value)
