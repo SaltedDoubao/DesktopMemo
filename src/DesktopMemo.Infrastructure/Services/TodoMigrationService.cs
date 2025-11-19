@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using DesktopMemo.Infrastructure.Repositories;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
 namespace DesktopMemo.Infrastructure.Services;
@@ -33,11 +34,57 @@ public sealed class TodoMigrationService
         var sqliteDb = Path.Combine(dataDirectory, "todos.db");
         var backupFile = Path.Combine(dataDirectory, $"todos_backup_{DateTime.Now:yyyyMMddHHmmss}.json");
 
-        // 如果 SQLite 数据库已存在，则认为已经迁移过
+        // 如果 SQLite 数据库已存在且包含数据，则认为已经迁移过
         if (File.Exists(sqliteDb))
         {
-            _logger?.LogInformation("SQLite 数据库已存在，跳过迁移");
-            return new MigrationResult(false, 0, "SQLite 数据库已存在");
+            try
+            {
+                using var connection = new SqliteConnection($"Data Source={sqliteDb}");
+                connection.Open();
+
+                // 确保表存在（可能是空数据库）
+                using var initCmd = connection.CreateCommand();
+                initCmd.CommandText = @"
+                    CREATE TABLE IF NOT EXISTS todos (
+                        id TEXT PRIMARY KEY,
+                        content TEXT NOT NULL,
+                        is_completed INTEGER NOT NULL,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT,
+                        completed_at TEXT,
+                        priority INTEGER NOT NULL DEFAULT 0,
+                        category TEXT,
+                        tags TEXT,
+                        due_date TEXT,
+                        reminder_time TEXT,
+                        notes TEXT,
+                        order_index INTEGER NOT NULL DEFAULT 0,
+                        sync_status TEXT,
+                        deleted_at TEXT
+                    );";
+                initCmd.ExecuteNonQuery();
+
+                // 检查记录数
+                using var countCmd = connection.CreateCommand();
+                countCmd.CommandText = "SELECT COUNT(1) FROM todos";
+                var count = Convert.ToInt32(countCmd.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    _logger?.LogInformation("✓ SQLite 数据库已存在且包含 {Count} 条记录，跳过迁移", count);
+                    return new MigrationResult(false, 0, $"SQLite 数据库已存在且包含 {count} 条记录");
+                }
+                else
+                {
+                    _logger?.LogInformation("⚠ 检测到 SQLite 数据库存在但为空，将尝试从 JSON 进行迁移");
+                    // 继续执行迁移逻辑（不 return）
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "检查现有 SQLite 数据库失败，尝试重新执行迁移");
+                // 继续执行迁移逻辑
+            }
         }
 
         // 如果 JSON 文件不存在，则没有数据需要迁移

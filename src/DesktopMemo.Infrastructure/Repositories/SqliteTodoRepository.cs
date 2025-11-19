@@ -172,10 +172,18 @@ public sealed class SqliteTodoRepository : ITodoRepository, IDisposable
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            // 物理删除（本地模式）
-            // 云端可改为软删除：UPDATE todos SET deleted_at = @Now WHERE id = @Id
-            const string sql = "DELETE FROM todos WHERE id = @Id";
-            await connection.ExecuteAsync(sql, new { Id = id.ToString() }).ConfigureAwait(false);
+            // 软删除（标记为已删除，支持云同步）
+            const string sql = @"
+                UPDATE todos
+                SET deleted_at = @DeletedAt,
+                    sync_status = 1
+                WHERE id = @Id AND deleted_at IS NULL";
+
+            await connection.ExecuteAsync(sql, new
+            {
+                Id = id.ToString(),
+                DeletedAt = DateTimeOffset.UtcNow.ToString("o")
+            }).ConfigureAwait(false);
         }
         finally
         {

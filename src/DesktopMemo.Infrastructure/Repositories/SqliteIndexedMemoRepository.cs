@@ -10,6 +10,7 @@ using Dapper;
 using DesktopMemo.Core.Contracts;
 using DesktopMemo.Core.Models;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Logging;
 
 namespace DesktopMemo.Infrastructure.Repositories;
 
@@ -23,14 +24,16 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
     private readonly string _connectionString;
     private readonly string _contentDirectory;
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly ILogger<SqliteIndexedMemoRepository>? _logger;
 
-    public SqliteIndexedMemoRepository(string dataDirectory)
+    public SqliteIndexedMemoRepository(string dataDirectory, ILogger<SqliteIndexedMemoRepository>? logger = null)
     {
         _contentDirectory = Path.Combine(dataDirectory, "content");
         Directory.CreateDirectory(_contentDirectory);
 
         var dbPath = Path.Combine(dataDirectory, "memos.db");
         _connectionString = $"Data Source={dbPath}";
+        _logger = logger;
 
         InitializeDatabase();
     }
@@ -39,6 +42,13 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
+
+        // 启用外键约束（Microsoft.Data.Sqlite 默认关闭）
+        using (var pragmaCommand = connection.CreateCommand())
+        {
+            pragmaCommand.CommandText = "PRAGMA foreign_keys = ON";
+            pragmaCommand.ExecuteNonQuery();
+        }
 
         var command = connection.CreateCommand();
         command.CommandText = @"
@@ -50,12 +60,12 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 file_path TEXT NOT NULL,
-                
+
                 -- 云同步扩展字段
                 version INTEGER NOT NULL DEFAULT 1,
                 sync_status INTEGER NOT NULL DEFAULT 0,
                 deleted_at TEXT,
-                
+
                 CHECK (is_pinned IN (0, 1))
             );
 
@@ -67,13 +77,13 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
             );
 
             -- 性能索引
-            CREATE INDEX IF NOT EXISTS idx_memos_updated 
+            CREATE INDEX IF NOT EXISTS idx_memos_updated
                 ON memos(updated_at DESC);
-            CREATE INDEX IF NOT EXISTS idx_memos_pinned 
+            CREATE INDEX IF NOT EXISTS idx_memos_pinned
                 ON memos(is_pinned DESC, updated_at DESC);
-            CREATE INDEX IF NOT EXISTS idx_tags_tag 
+            CREATE INDEX IF NOT EXISTS idx_tags_tag
                 ON memo_tags(tag);
-            CREATE INDEX IF NOT EXISTS idx_memos_sync_status 
+            CREATE INDEX IF NOT EXISTS idx_memos_sync_status
                 ON memos(sync_status);
         ";
         command.ExecuteNonQuery();
@@ -210,9 +220,11 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            // 1. 保存 Markdown 文件
             var filePath = GetMemoPath(memo.Id);
-            await SaveContentToFileAsync(filePath, memo, cancellationToken).ConfigureAwait(false);
+            var tempFilePath = filePath + ".tmp";
+
+            // 1. 先写入临时文件
+            await SaveContentToFileAsync(tempFilePath, memo, cancellationToken).ConfigureAwait(false);
 
             // 2. 保存元数据到 SQLite
             using var connection = new SqliteConnection(_connectionString);
@@ -225,7 +237,7 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
                 // 插入备忘录元数据
                 const string insertMemoSql = @"
                     INSERT INTO memos (
-                        id, title, preview, is_pinned, created_at, updated_at, 
+                        id, title, preview, is_pinned, created_at, updated_at,
                         file_path, version, sync_status
                     ) VALUES (
                         @Id, @Title, @Preview, @IsPinned, @CreatedAt, @UpdatedAt,
@@ -260,10 +272,20 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
                 }
 
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+                // 3. 事务成功后，将临时文件重命名为正式文件
+                File.Move(tempFilePath, filePath, overwrite: true);
             }
             catch
             {
                 await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                // 事务失败，删除临时文件
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+
                 throw;
             }
         }
@@ -278,9 +300,11 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            // 1. 更新 Markdown 文件
             var filePath = GetMemoPath(memo.Id);
-            await SaveContentToFileAsync(filePath, memo, cancellationToken).ConfigureAwait(false);
+            var tempFilePath = filePath + ".tmp";
+
+            // 1. 先写入临时文件
+            await SaveContentToFileAsync(tempFilePath, memo, cancellationToken).ConfigureAwait(false);
 
             // 2. 更新 SQLite 元数据
             using var connection = new SqliteConnection(_connectionString);
@@ -336,10 +360,20 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
                 }
 
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+                // 3. 事务成功后，将临时文件重命名为正式文件
+                File.Move(tempFilePath, filePath, overwrite: true);
             }
             catch
             {
                 await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                // 事务失败，删除临时文件
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+
                 throw;
             }
         }
@@ -357,19 +391,21 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            // 物理删除（本地模式）
-            const string deleteMemoSql = "DELETE FROM memos WHERE id = @Id";
-            const string deleteTagsSql = "DELETE FROM memo_tags WHERE memo_id = @Id";
+            // 软删除（标记为已删除，支持云同步和数据恢复）
+            const string updateMemoSql = @"
+                UPDATE memos
+                SET deleted_at = @DeletedAt,
+                    sync_status = 1
+                WHERE id = @Id AND deleted_at IS NULL";
 
-            await connection.ExecuteAsync(deleteTagsSql, new { Id = id.ToString() }).ConfigureAwait(false);
-            await connection.ExecuteAsync(deleteMemoSql, new { Id = id.ToString() }).ConfigureAwait(false);
-
-            // 删除 Markdown 文件
-            var filePath = GetMemoPath(id);
-            if (File.Exists(filePath))
+            await connection.ExecuteAsync(updateMemoSql, new
             {
-                File.Delete(filePath);
-            }
+                Id = id.ToString(),
+                DeletedAt = DateTimeOffset.UtcNow.ToString("o")
+            }).ConfigureAwait(false);
+
+            // 注意：软删除时保留 Markdown 文件和标签数据，便于后续恢复
+            // 如需物理删除文件，可以添加单独的"永久删除"功能
         }
         finally
         {
@@ -410,8 +446,19 @@ public sealed class SqliteIndexedMemoRepository : IMemoRepository, IDisposable
             // 读取内容
             return await reader.ReadToEndAsync().ConfigureAwait(false);
         }
-        catch
+        catch (UnauthorizedAccessException ex)
         {
+            _logger?.LogError(ex, "无权访问备忘录文件：{FilePath}", filePath);
+            return null;
+        }
+        catch (IOException ex)
+        {
+            _logger?.LogError(ex, "读取备忘录文件时发生 I/O 错误：{FilePath}", filePath);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "读取备忘录文件时发生未知错误：{FilePath}", filePath);
             return null;
         }
     }
