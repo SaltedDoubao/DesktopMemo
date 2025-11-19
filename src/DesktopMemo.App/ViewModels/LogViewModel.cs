@@ -17,6 +17,7 @@ public partial class LogViewModel : ObservableObject
 {
     private readonly ILogService _logService;
     private readonly object _logsLock = new();
+    private const int MaxDisplayedLogs = 1000; // 最多显示 1000 条日志
 
     [ObservableProperty]
     private ObservableCollection<LogEntry> _logs = new();
@@ -59,7 +60,9 @@ public partial class LogViewModel : ObservableObject
         lock (_logsLock)
         {
             Logs.Clear();
-            foreach (var log in filteredLogs)
+            // 只保留最近的 MaxDisplayedLogs 条日志
+            var logsToDisplay = filteredLogs.Skip(Math.Max(0, filteredLogs.Count - MaxDisplayedLogs)).ToList();
+            foreach (var log in logsToDisplay)
             {
                 Logs.Add(log);
             }
@@ -81,7 +84,9 @@ public partial class LogViewModel : ObservableObject
             lock (_logsLock)
             {
                 Logs.Clear();
-                foreach (var log in filteredLogs)
+                // 只保留最近的 MaxDisplayedLogs 条日志
+                var logsToDisplay = filteredLogs.Skip(Math.Max(0, filteredLogs.Count - MaxDisplayedLogs)).ToList();
+                foreach (var log in logsToDisplay)
                 {
                     Logs.Add(log);
                 }
@@ -136,6 +141,13 @@ public partial class LogViewModel : ObservableObject
             lock (_logsLock)
             {
                 Logs.Add(entry);
+
+                // 如果超过最大数量，移除最旧的日志
+                while (Logs.Count > MaxDisplayedLogs)
+                {
+                    Logs.RemoveAt(0);
+                }
+
                 DisplayedLogCount = Logs.Count;
             }
 

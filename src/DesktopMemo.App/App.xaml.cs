@@ -117,7 +117,7 @@ public partial class App : WpfApp
             var windowService = Services.GetRequiredService<IWindowService>();
             var trayService = Services.GetRequiredService<ITrayService>();
 
-            var window = new MainWindow(viewModel, windowService, trayService);
+            var window = new MainWindow(viewModel, windowService, trayService, logService);
 
             if (windowService is WindowService ws)
             {
