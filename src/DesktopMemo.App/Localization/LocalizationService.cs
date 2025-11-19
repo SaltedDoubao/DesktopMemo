@@ -16,9 +16,9 @@ public class LocalizationService : ILocalizationService, INotifyPropertyChanged
     // 支持的语言列表
     private static readonly CultureInfo[] SupportedCultures = new[]
     {
-        new CultureInfo("zh-CN"), // 简体中文（默认）
+        new CultureInfo("zh-CN"), // 简体中文
         new CultureInfo("en-US"), // 英语（美国）
-        new CultureInfo("zh-TW"), // 繁体中文（台湾）
+        new CultureInfo("zh-TW"), // 繁体中文
         new CultureInfo("ja-JP"), // 日语
         new CultureInfo("ko-KR"), // 韩语
     };
