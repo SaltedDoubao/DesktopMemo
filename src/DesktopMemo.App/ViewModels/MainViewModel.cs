@@ -109,6 +109,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private bool _isDisposing;
     private bool _isInitializing;
+    private string? _originalContent;
+
+    [ObservableProperty]
+    private bool _isContentModified;
 
     public int MemoCount => Memos.Count;
 
@@ -332,6 +336,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             SelectedMemo = updated;
         }
 
+        _originalContent = EditorContent;
+        IsContentModified = false;
+
         OnPropertyChanged(nameof(MemoCount));
         _logService.Info("Memo", $"保存备忘录: {updated.Title}");
         SetStatus("已保存");
@@ -533,6 +540,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsEditMode = true;
         EditorTitle = memo.Title;
         EditorContent = memo.Content;
+        _originalContent = memo.Content;
+        IsContentModified = false;
         SetStatus("编辑中...");
     }
 
@@ -545,9 +554,58 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void BackToList()
+    private async Task BackToListAsync()
     {
+        if (IsContentModified)
+        {
+            Views.UnsavedChangesDialog? dialog = null;
+            bool? result = null;
+
+            try
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    dialog = new Views.UnsavedChangesDialog(_localizationService);
+
+                    if (System.Windows.Application.Current.MainWindow != null &&
+                        System.Windows.Application.Current.MainWindow.IsLoaded)
+                    {
+                        dialog.Owner = System.Windows.Application.Current.MainWindow;
+                    }
+
+                    result = dialog.ShowDialog();
+                });
+            }
+            catch (Exception ex)
+            {
+                _logService.Error("UI", "无法显示未保存确认对话框", ex);
+                System.Diagnostics.Debug.WriteLine($"UnsavedChangesDialog异常: {ex}");
+            }
+
+            if (result != true || dialog == null)
+            {
+                SetStatus("已取消返回");
+                return;
+            }
+
+            switch (dialog.Action)
+            {
+                case Views.UnsavedChangesAction.Save:
+                    await SaveMemoAsync();
+                    break;
+                case Views.UnsavedChangesAction.Cancel:
+                    SetStatus("已取消返回");
+                    return;
+                case Views.UnsavedChangesAction.Discard:
+                    // 恢复编辑内容为原始值，防止自动保存将修改保存
+                    EditorContent = _originalContent ?? string.Empty;
+                    break;
+            }
+        }
+
         IsEditMode = false;
+        IsContentModified = false;
+        _originalContent = null;
         SetStatus("返回列表");
     }
 
@@ -888,6 +946,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         EditorTitle = newValue.Title;
         EditorContent = newValue.Content;
+    }
+
+    partial void OnEditorContentChanged(string value)
+    {
+        if (IsEditMode && _originalContent != null)
+        {
+            IsContentModified = !string.Equals(value, _originalContent, StringComparison.Ordinal);
+        }
     }
 
     partial void OnMemosChanging(ObservableCollection<Memo> value)

@@ -288,7 +288,25 @@
     <value>取消</value>
     <comment>取消按钮</comment>
   </data>
-  
+
+  <!-- 对话框 - 未保存确认 -->
+  <data name="Dialog_UnsavedChanges_Title" xml:space="preserve">
+    <value>未保存的修改</value>
+    <comment>未保存确认对话框标题</comment>
+  </data>
+  <data name="Dialog_UnsavedChanges_Message" xml:space="preserve">
+    <value>您有未保存的修改，是否保存？</value>
+    <comment>未保存确认对话框消息</comment>
+  </data>
+  <data name="Dialog_UnsavedChanges_Save" xml:space="preserve">
+    <value>保存</value>
+    <comment>保存按钮</comment>
+  </data>
+  <data name="Dialog_UnsavedChanges_Discard" xml:space="preserve">
+    <value>放弃</value>
+    <comment>放弃按钮</comment>
+  </data>
+
   <!-- 工具提示 -->
   <data name="Tooltip_ToggleMode" xml:space="preserve">
     <value>点击切换到待办事项/备忘录</value>

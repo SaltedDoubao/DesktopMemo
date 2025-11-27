@@ -235,7 +235,21 @@
   <data name="Dialog_Exit_Cancel" xml:space="preserve">
     <value>キャンセル</value>
   </data>
-  
+
+  <!-- ダイアログ - 未保存確認 -->
+  <data name="Dialog_UnsavedChanges_Title" xml:space="preserve">
+    <value>未保存の変更</value>
+  </data>
+  <data name="Dialog_UnsavedChanges_Message" xml:space="preserve">
+    <value>未保存の変更があります。保存しますか？</value>
+  </data>
+  <data name="Dialog_UnsavedChanges_Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Dialog_UnsavedChanges_Discard" xml:space="preserve">
+    <value>破棄</value>
+  </data>
+
   <!-- ツールチップ -->
   <data name="Tooltip_ToggleMode" xml:space="preserve">
     <value>クリックでToDo/メモモードを切り替え</value>

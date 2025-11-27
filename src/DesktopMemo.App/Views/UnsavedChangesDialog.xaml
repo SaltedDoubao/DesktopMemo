@@ -1,0 +1,58 @@
+<Window x:Class="DesktopMemo.App.Views.UnsavedChangesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="未保存的修改"
+        Height="180"
+        Width="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent">
+    <Border Background="#FF2D2D30" CornerRadius="8" BorderBrush="#FF3E3E42" BorderThickness="1">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="{Binding LocalizationService[Dialog_UnsavedChanges_Title]}"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="#F0FFFFFF"
+                       Margin="0,0,0,15"/>
+
+            <TextBlock Grid.Row="1"
+                       Text="{Binding LocalizationService[Dialog_UnsavedChanges_Message]}"
+                       FontSize="13"
+                       Foreground="#E0FFFFFF"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"/>
+
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Margin="0,15,0,0">
+                <Button Content="{Binding LocalizationService[Dialog_UnsavedChanges_Save]}"
+                        Width="80"
+                        Height="32"
+                        Margin="0,0,10,0"
+                        Click="SaveButton_Click"
+                        Style="{StaticResource AccentButton}"/>
+                <Button Content="{Binding LocalizationService[Dialog_UnsavedChanges_Discard]}"
+                        Width="80"
+                        Height="32"
+                        Margin="0,0,10,0"
+                        Click="DiscardButton_Click"
+                        Style="{StaticResource SecondaryButton}"/>
+                <Button Content="{Binding LocalizationService[Dialog_Exit_Cancel]}"
+                        Width="80"
+                        Height="32"
+                        Click="CancelButton_Click"
+                        Style="{StaticResource SecondaryButton}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

@@ -235,7 +235,21 @@
   <data name="Dialog_Exit_Cancel" xml:space="preserve">
     <value>取消</value>
   </data>
-  
+
+  <!-- 對話方塊 - 未儲存確認 -->
+  <data name="Dialog_UnsavedChanges_Title" xml:space="preserve">
+    <value>未儲存的修改</value>
+  </data>
+  <data name="Dialog_UnsavedChanges_Message" xml:space="preserve">
+    <value>您有未儲存的修改，是否儲存？</value>
+  </data>
+  <data name="Dialog_UnsavedChanges_Save" xml:space="preserve">
+    <value>儲存</value>
+  </data>
+  <data name="Dialog_UnsavedChanges_Discard" xml:space="preserve">
+    <value>放棄</value>
+  </data>
+
   <!-- 工具提示 -->
   <data name="Tooltip_ToggleMode" xml:space="preserve">
     <value>點擊切換到待辦事項/備忘錄</value>

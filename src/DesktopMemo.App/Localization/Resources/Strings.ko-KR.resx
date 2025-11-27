@@ -235,7 +235,21 @@
   <data name="Dialog_Exit_Cancel" xml:space="preserve">
     <value>취소</value>
   </data>
-  
+
+  <!-- 대화 상자 - 저장되지 않은 변경 사항 -->
+  <data name="Dialog_UnsavedChanges_Title" xml:space="preserve">
+    <value>저장되지 않은 변경 사항</value>
+  </data>
+  <data name="Dialog_UnsavedChanges_Message" xml:space="preserve">
+    <value>저장되지 않은 변경 사항이 있습니다. 저장하시겠습니까?</value>
+  </data>
+  <data name="Dialog_UnsavedChanges_Save" xml:space="preserve">
+    <value>저장</value>
+  </data>
+  <data name="Dialog_UnsavedChanges_Discard" xml:space="preserve">
+    <value>버리기</value>
+  </data>
+
   <!-- 툴팁 -->
   <data name="Tooltip_ToggleMode" xml:space="preserve">
     <value>클릭하여 할 일/메모 모드 전환</value>

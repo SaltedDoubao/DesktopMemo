@@ -23,7 +23,6 @@ public partial class MainWindow : Window
     private readonly IWindowService _windowService;
     private readonly ITrayService _trayService;
     private readonly ILogService _logService;
-    private DispatcherTimer? _autoSaveTimer;
     private bool _isClosing = false;
 
     public MainWindow(MainViewModel viewModel, IWindowService windowService, ITrayService trayService, ILogService logService)
@@ -43,7 +42,6 @@ public partial class MainWindow : Window
 
             ConfigureWindow();
             ConfigureTrayService();
-            InitializeAutoSaveTimer();
 
             Loaded += OnLoaded;
             Closing += OnClosing;
@@ -107,15 +105,6 @@ public partial class MainWindow : Window
         };
         _trayService.TopmostModeChangeClick += (s, mode) => _viewModel.SelectedTopmostMode = mode;
         _trayService.ExitClick += (s, e) => WpfApp.Current.Shutdown();
-    }
-
-    private void InitializeAutoSaveTimer()
-    {
-        _autoSaveTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(2)
-        };
-        _autoSaveTimer.Tick += AutoSave_Tick;
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -303,7 +292,6 @@ public partial class MainWindow : Window
 
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
-        _autoSaveTimer?.Stop();
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel.ThemeChanged -= OnThemeChanged;
     }
@@ -398,6 +386,49 @@ public partial class MainWindow : Window
 
     private async Task HandleCloseButtonClickAsync()
     {
+        // 首先检查是否有未保存的编辑
+        if (_viewModel.IsEditMode && _viewModel.IsContentModified)
+        {
+            Views.UnsavedChangesDialog? unsavedDialog = null;
+            bool? unsavedResult = null;
+
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                try
+                {
+                    unsavedDialog = new Views.UnsavedChangesDialog(_viewModel.LocalizationService)
+                    {
+                        Owner = this
+                    };
+                    unsavedResult = unsavedDialog.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    _viewModel.SetStatus($"无法显示未保存确认对话框: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"UnsavedChangesDialog异常: {ex}");
+                }
+            });
+
+            if (unsavedResult != true || unsavedDialog == null)
+            {
+                // 对话框创建失败或关闭，取消关闭操作
+                return;
+            }
+
+            switch (unsavedDialog.Action)
+            {
+                case Views.UnsavedChangesAction.Save:
+                    await _viewModel.SaveMemoCommand.ExecuteAsync(null);
+                    break;
+                case Views.UnsavedChangesAction.Cancel:
+                    return; // 取消关闭
+                case Views.UnsavedChangesAction.Discard:
+                    // 恢复编辑内容，防止后续操作保存修改
+                    _viewModel.EditorContent = _viewModel.SelectedMemo?.Content ?? string.Empty;
+                    break; // 继续关闭流程
+            }
+        }
+
         // 检查是否需要显示退出确认
         if (_viewModel.WindowSettings.ShowExitConfirmation)
         {
@@ -491,8 +522,6 @@ public partial class MainWindow : Window
                         {
                             disposableWindowService.Dispose();
                         }
-                        _autoSaveTimer?.Stop();
-                        _autoSaveTimer = null;
                         WpfApp.Current.Shutdown();
                         break;
                 }
@@ -515,8 +544,6 @@ public partial class MainWindow : Window
                     {
                         disposableWindowService.Dispose();
                     }
-                    _autoSaveTimer?.Stop();
-                    _autoSaveTimer = null;
                     WpfApp.Current.Shutdown();
                 }
             });
@@ -525,8 +552,8 @@ public partial class MainWindow : Window
 
     private void NoteTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        _autoSaveTimer?.Stop();
-        _autoSaveTimer?.Start();
+        // 仅标记编辑状态，不触发自动保存
+        // 用户需要手动保存（Ctrl+S 或点击保存按钮）
         _viewModel.MarkEditing();
     }
 
@@ -730,25 +757,6 @@ public partial class MainWindow : Window
         {
             e.Handled = true;
             _ = _viewModel.CreateMemoCommand.ExecuteAsync(null);
-        }
-    }
-
-    private async void AutoSave_Tick(object? sender, EventArgs e)
-    {
-        _autoSaveTimer?.Stop();
-        if (_viewModel.SelectedMemo != null)
-        {
-            try
-            {
-                await _viewModel.SaveMemoCommand.ExecuteAsync(null);
-                _viewModel.SetStatus("自动保存");
-            }
-            catch (Exception ex)
-            {
-                // 记录异常到日志服务
-                _logService.Warning("MainWindow", $"自动保存失败: {ex.Message}");
-                _viewModel.SetStatus($"自动保存失败: {ex.Message}");
-            }
         }
     }
 
