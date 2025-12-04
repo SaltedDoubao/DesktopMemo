@@ -153,17 +153,18 @@ For other development considerations, see [CONTRIBUTING.md](docs/CONTRIBUTING.md
 
 ## 📝 Changelog
 
-### v2.3.0 (Latest)
-- Added SQLite-based data storage and migration support
-  - Memo index migration (JSON → SQLite)
-  - Todo list migration (JSON → SQLite)
-  - Automatic migration on first run
-- Optimized settings panel UI
-  - Added theme switching functionality (Light/Dark)
-  - Improved font size hierarchy and spacing
-  - Enhanced ComboBox and CheckBox styles
-  - Removed redundant quick position buttons
-- Completed multi-language support for status information
+### v2.4.0 (Latest)
+- Feature Enhancements
+  - Implemented unsaved edit prompt and removed auto-save mechanism
+  - Added inline editing for Todo items
+  - Integrated log viewer UI
+- Performance Optimizations
+  - Improved log display performance and error handling
+  - Enhanced database operation security and data integrity
+- Bug Fixes
+  - Fixed memo timestamp handling logic
+- Documentation Updates
+  - Improved project documentation system (Contributing guide, API docs, Architecture docs, etc.)
 
 For more history, see [Releases](../../releases)
 
