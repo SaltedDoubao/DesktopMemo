@@ -121,8 +121,12 @@ body {
 }
 
 .header-logo::before {
-    content: "📝";
-    font-size: 1.25rem;
+    content: "";
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 auto;
+    display: inline-block;
+    background: url("src/images/logo.ico") center / contain no-repeat;
 }
 
 .header-right {
@@ -270,8 +274,12 @@ body {
 }
 
 .sidebar-logo::before {
-    content: "📝";
-    font-size: 1.5rem;
+    content: "";
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 auto;
+    display: inline-block;
+    background: url("src/images/logo.ico") center / contain no-repeat;
 }
 
 /* Sidebar Section Headers */
