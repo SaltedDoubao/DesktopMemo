@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 文档概览 - DesktopMemo Docs</title>
+
+    <script src="../theme-preload.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="sidebar-logo">DesktopMemo</div>
+
+            <h3>概览</h3>
+            <ul>
+                <li><a href="../index.html">首页</a></li>
+                <li><a href="../contributing.html">贡献指南</a></li>
+                <li><a href="../mysql_integration.html">MySQL 集成规范</a></li>
+            </ul>
+
+            <h3>项目架构</h3>
+            <ul>
+                <li><a href="../project_structure/index.html">架构首页</a></li>
+                <li><a href="../project_structure/architecture.html">01 架构图</a></li>
+                <li><a href="../project_structure/modules.html">02 模块划分</a></li>
+                <li><a href="../project_structure/tech_stack.html">03 技术栈和依赖</a></li>
+                <li><a href="../project_structure/data_flow.html">04 数据流和通信</a></li>
+            </ul>
+
+            <h3>API 文档</h3>
+            <ul>
+                <li><a href="index.html" class="active">API 概览</a></li>
+                <li><a href="repositories.html">1. 仓储接口</a></li>
+                <li><a href="services.html">2. 服务接口</a></li>
+                <li><a href="models.html">3. 领域模型</a></li>
+                <li><a href="enums.html">4. 枚举类型</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="content-inner">
+                <h1>DesktopMemo API 文档</h1>
+
+                <h2>📚 文档目录</h2>
+
+                <h3><a href="repositories.html">1. 仓储接口 (Repositories)</a></h3>
+                <p>提供数据持久化访问的核心接口：</p>
+                <ul>
+                    <li><strong>IMemoRepository</strong> - 备忘录数据访问</li>
+                    <li><strong>ITodoRepository</strong> - 待办事项数据访问</li>
+                </ul>
+
+                <h3><a href="services.html">2. 服务接口 (Services)</a></h3>
+                <p>提供业务逻辑和系统功能的服务接口：</p>
+                <ul>
+                    <li><strong>ISettingsService</strong> - 应用设置管理</li>
+                    <li><strong>IMemoSearchService</strong> - 备忘录搜索</li>
+                    <li><strong>IWindowService</strong> - 窗口管理</li>
+                    <li><strong>ITrayService</strong> - 系统托盘服务</li>
+                    <li><strong>ILocalizationService</strong> - 多语言服务</li>
+                    <li><strong>ILogService</strong> - 日志服务</li>
+                </ul>
+
+                <h3><a href="models.html">3. 领域模型 (Models)</a></h3>
+                <p>定义应用核心数据结构：</p>
+                <ul>
+                    <li><strong>Memo</strong>, <strong>TodoItem</strong>, <strong>WindowSettings</strong>,
+                        <strong>LogEntry</strong>
+                    </li>
+                </ul>
+
+                <h3><a href="enums.html">4. 枚举类型 (Enums)</a></h3>
+                <ul>
+                    <li><strong>TopmostMode</strong>, <strong>AppTheme</strong>, <strong>SyncStatus</strong>,
+                        <strong>LogLevel</strong>
+                    </li>
+                </ul>
+
+                <h2>🎯 快速开始</h2>
+
+                <h3>依赖注入配置</h3>
+                <pre><code class="language-csharp">// App.xaml.cs
+private void ConfigureServices(IServiceCollection services)
+{
+    services.AddSingleton&lt;IMemoRepository, SqliteIndexedMemoRepository&gt;();
+    services.AddSingleton&lt;ISettingsService, JsonSettingsService&gt;();
+    // ...
+}</code></pre>
+
+                <h3>在 ViewModel 中使用</h3>
+                <pre><code class="language-csharp">public class MainViewModel : ObservableObject
+{
+    private readonly IMemoRepository _memoRepository;
+
+    public MainViewModel(IMemoRepository memoRepository)
+    {
+        _memoRepository = memoRepository;
+    }
+}</code></pre>
+
+                <h2>🏗️ 架构设计</h2>
+                <h3>三层架构</h3>
+                <pre><code>
+┌─────────────────────────────────────────┐
+│  表示层 (DesktopMemo.App)               │
+├─────────────────────────────────────────┤
+│  领域层 (DesktopMemo.Core)              │
+├─────────────────────────────────────────┤
+│  基础设施层 (DesktopMemo.Infrastructure)│
+└─────────────────────────────────────────┘
+                </code></pre>
+
+                <h2>🔄 数据流程</h2>
+                <h3>备忘录 CRUD 流程</h3>
+                <div class="mermaid">
+                    graph TB
+                    User[用户操作] --> Command[命令触发]
+                    Command --> Interface[IMemoRepository]
+                    Interface --> Impl[Implementation]
+                    Impl --> Storage[SQLite + Markdown]
+                    Storage --> VM[ViewModel Update]
+                    VM --> UI[UI Update]
+                </div>
+
+                <h2>🧩 关键设计模式</h2>
+                <ol>
+                    <li><strong>Repository 模式</strong>: 隔离数据访问。</li>
+                    <li><strong>Service 模式</strong>: 封装业务逻辑。</li>
+                    <li><strong>Immutable Record</strong>: 确保数据不可变性。</li>
+                </ol>
+
+                <h2>📝 命名约定</h2>
+                <ul>
+                    <li>接口: <code>I...Repository</code>, <code>I...Service</code></li>
+                    <li>异步方法: <code>...Async</code></li>
+                    <li>模型: 名词, PascalCase</li>
+                </ul>
+
+                <h2>⚡ 异步编程规范</h2>
+                <p>所有 I/O 操作必须异步，支持取消令牌。</p>
+
+                <h2>🔒 错误处理</h2>
+                <p>异常分层处理：无效操作、权限、IO、未知异常。</p>
+
+                <hr>
+                <p><strong>最后更新</strong>: 2025-11-15</p>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="../main.js"></script>
+</body>
+
+</html>

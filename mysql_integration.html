@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySQL 云存储集成规范 - DesktopMemo Docs</title>
+
+    <script src="theme-preload.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="sidebar-logo">DesktopMemo</div>
+
+            <h3>概览</h3>
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="contributing.html">贡献指南</a></li>
+                <li><a href="mysql_integration.html" class="active">MySQL 集成规范</a></li>
+            </ul>
+
+            <h3>项目架构</h3>
+            <ul>
+                <li><a href="project_structure/index.html">架构首页</a></li>
+                <li><a href="project_structure/architecture.html">01 架构图</a></li>
+                <li><a href="project_structure/modules.html">02 模块划分</a></li>
+                <li><a href="project_structure/tech_stack.html">03 技术栈和依赖</a></li>
+                <li><a href="project_structure/data_flow.html">04 数据流和通信</a></li>
+            </ul>
+
+            <h3>API 文档</h3>
+            <ul>
+                <li><a href="api/index.html">API 概览</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="content-inner">
+                <h1>MySQL 云存储集成规范</h1>
+
+                <blockquote>
+                    <p><strong>状态</strong>: 计划功能（尚未实现）<br>
+                        <strong>版本</strong>: 1.0<br>
+                        <strong>最后更新</strong>: 2025-01-27
+                    </p>
+                </blockquote>
+
+                <h2>1. 概述</h2>
+                <p>本文档定义了将 MySQL 云存储功能集成到 DesktopMemo 的技术规范和最佳实践。MySQL 集成将作为可选的云同步功能，与现有的本地 SQLite 存储并行工作。</p>
+
+                <h3>1.1 设计原则</h3>
+                <ul>
+                    <li><strong>本地优先</strong>: 本地 SQLite 仍然是主要数据源</li>
+                    <li><strong>可选同步</strong>: MySQL 云同步是可选功能</li>
+                    <li><strong>冲突解决</strong>: 明确的冲突解决策略</li>
+                    <li><strong>隐私保护</strong>: 用户数据加密和隐私保护</li>
+                    <li><strong>性能优化</strong>: 对本地操作的影响最小化</li>
+                </ul>
+
+                <h3>1.2 架构概览</h3>
+                <pre><code>
+┌─────────────────────────────────────────────┐
+│           应用层                            │
+│  (ViewModels, Commands, UI Logic)           │
+└─────────────────┬───────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────┐
+│         仓储层                              │
+│  ┌──────────────┐      ┌─────────────────┐ │
+│  │   本地       │      │   云端同步      │ │
+│  │   SQLite     │◄────►│   管理器        │ │
+│  └──────────────┘      └────────┬────────┘ │
+└─────────────────────────────────┼──────────┘
+                                  │
+                    ┌─────────────▼──────────────┐
+                    │   MySQL 云存储              │
+                    │   (远程数据库)              │
+                    └────────────────────────────┘
+                </code></pre>
+
+                <h2>2. 数据模型设计</h2>
+
+                <h3>2.1 数据库架构</h3>
+
+                <h4>备忘录表（Memos Table）</h4>
+                <pre><code class="language-sql">CREATE TABLE memos (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content LONGTEXT,
+    created_at DATETIME(3) NOT NULL,
+    updated_at DATETIME(3) NOT NULL,
+    is_pinned TINYINT(1) DEFAULT 0,
+    is_deleted TINYINT(1) DEFAULT 0,
+    deleted_at DATETIME(3) NULL,
+    sync_status ENUM('synced', 'modified', 'conflict') DEFAULT 'synced',
+    local_version INT DEFAULT 1,
+    server_version INT DEFAULT 1,
+    INDEX idx_user_updated (user_id, updated_at),
+    INDEX idx_user_deleted (user_id, is_deleted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+</code></pre>
+
+                <h4>待办事项表（Todos Table）</h4>
+                <pre><code class="language-sql">CREATE TABLE todos (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    content VARCHAR(1000) NOT NULL,
+    is_completed TINYINT(1) DEFAULT 0,
+    created_at DATETIME(3) NOT NULL,
+    updated_at DATETIME(3) NOT NULL,
+    completed_at DATETIME(3) NULL,
+    is_deleted TINYINT(1) DEFAULT 0,
+    deleted_at DATETIME(3) NULL,
+    sync_status ENUM('synced', 'modified', 'conflict') DEFAULT 'synced',
+    local_version INT DEFAULT 1,
+    server_version INT DEFAULT 1,
+    INDEX idx_user_updated (user_id, updated_at),
+    INDEX idx_user_completed (user_id, is_completed)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+</code></pre>
+
+                <h4>同步日志表（Sync Log Table）</h4>
+                <pre><code class="language-sql">CREATE TABLE sync_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    entity_type ENUM('memo', 'todo') NOT NULL,
+    entity_id VARCHAR(36) NOT NULL,
+    action ENUM('create', 'update', 'delete') NOT NULL,
+    sync_direction ENUM('upload', 'download') NOT NULL,
+    status ENUM('success', 'failed', 'conflict') NOT NULL,
+    error_message TEXT NULL,
+    synced_at DATETIME(3) NOT NULL,
+    INDEX idx_user_synced (user_id, synced_at),
+    INDEX idx_entity (entity_type, entity_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+</code></pre>
+
+                <h3>2.2 本地 SQLite 架构扩展</h3>
+                <p>为现有表添加同步相关字段：</p>
+                <pre><code class="language-sql">-- 添加到 memos 表
+ALTER TABLE memos ADD COLUMN sync_status TEXT DEFAULT 'local_only';
+ALTER TABLE memos ADD COLUMN local_version INTEGER DEFAULT 1;
+ALTER TABLE memos ADD COLUMN server_version INTEGER DEFAULT 0;
+ALTER TABLE memos ADD COLUMN last_synced_at TEXT NULL;
+
+-- 添加到 todos 表
+ALTER TABLE todos ADD COLUMN sync_status TEXT DEFAULT 'local_only';
+ALTER TABLE todos ADD COLUMN local_version INTEGER DEFAULT 1;
+ALTER TABLE todos ADD COLUMN server_version INTEGER DEFAULT 0;
+ALTER TABLE todos ADD COLUMN last_synced_at TEXT NULL;
+</code></pre>
+
+                <h2>3. 同步策略</h2>
+
+                <h3>3.1 同步模式</h3>
+                <ol>
+                    <li><strong>手动同步</strong>: 用户通过 UI 按钮触发同步</li>
+                    <li><strong>自动同步</strong>: 定期后台同步（可配置间隔）</li>
+                    <li><strong>启动同步</strong>: 应用启动时同步</li>
+                </ol>
+
+                <h3>3.2 冲突解决</h3>
+                <p><strong>最后写入优先（LWW）策略</strong>:</p>
+                <ul>
+                    <li>比较 <code>updated_at</code> 时间戳</li>
+                    <li>保留时间戳较新的版本</li>
+                    <li>将冲突版本存储在本地历史中</li>
+                </ul>
+                <p><strong>用户提示解决</strong>:</p>
+                <ul>
+                    <li>对于重大冲突，提示用户选择：
+                        <ul>
+                            <li>保留本地版本</li>
+                            <li>使用服务器版本</li>
+                            <li>手动合并</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>3.3 同步流程</h3>
+                <pre><code>
+1. 检测本地更改
+   ├─ 查询 sync_status != 'synced' 的项目
+   └─ 收集已更改的项目
+
+2. 拉取远程更改
+   ├─ 请求自 last_synced_at 以来的更新
+   ├─ 检测冲突 (local_version != server_version)
+   └─ 应用更改到本地数据库
+
+3. 解决冲突
+   ├─ 应用解决策略
+   └─ 标记冲突项目
+
+4. 推送本地更改
+   ├─ 上传新增/修改的项目
+   ├─ 更新 server_version
+   └─ 标记为 'synced'
+
+5. 更新同步状态
+   ├─ 更新 last_synced_at
+   └─ 记录同步结果
+                </code></pre>
+
+                <h2>4. API 设计</h2>
+
+                <h3>4.1 RESTful API 端点</h3>
+
+                <h4>身份认证</h4>
+                <pre><code>POST   /api/auth/login
+POST   /api/auth/register
+POST   /api/auth/refresh
+POST   /api/auth/logout</code></pre>
+
+                <h4>备忘录</h4>
+                <pre><code>GET    /api/memos?since={timestamp}&limit={n}
+GET    /api/memos/{id}
+POST   /api/memos
+PUT    /api/memos/{id}
+DELETE /api/memos/{id}
+POST   /api/memos/batch-sync</code></pre>
+
+                <h4>待办事项</h4>
+                <pre><code>GET    /api/todos?since={timestamp}&limit={n}
+GET    /api/todos/{id}
+POST   /api/todos
+PUT    /api/todos/{id}
+DELETE /api/todos/{id}
+POST   /api/todos/batch-sync</code></pre>
+
+                <h4>同步</h4>
+                <pre><code>GET    /api/sync/status
+POST   /api/sync/pull
+POST   /api/sync/push
+POST   /api/sync/full</code></pre>
+
+                <h3>4.2 请求/响应格式</h3>
+                <p><strong>批量同步请求</strong>:</p>
+                <pre><code class="language-json">{
+  "user_id": "uuid",
+  "last_synced_at": "2025-01-27T12:00:00.000Z",
+  "changes": [
+    {
+      "id": "memo-uuid",
+      "action": "update",
+      "data": { /* memo 对象 */ },
+      "local_version": 5
+    }
+  ]
+}</code></pre>
+
+                <p><strong>批量同步响应</strong>:</p>
+                <pre><code class="language-json">{
+  "success": true,
+  "server_changes": [
+    {
+      "id": "memo-uuid",
+      "action": "update",
+      "data": { /* memo 对象 */ },
+      "server_version": 6,
+      "is_conflict": false
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "memo-uuid",
+      "local_data": { /* 本地版本 */ },
+      "server_data": { /* 服务器版本 */ },
+      "resolution_required": true
+    }
+  ],
+  "sync_timestamp": "2025-01-27T12:05:00.000Z"
+}</code></pre>
+
+                <h2>5. 实现指南</h2>
+
+                <h3>5.1 仓储层</h3>
+                <p>创建新的接口和实现：</p>
+                <pre><code class="language-csharp">// 接口
+public interface ICloudSyncService
+{
+    Task&lt;SyncResult&gt; PullChangesAsync(DateTime? since = null);
+    Task&lt;SyncResult&gt; PushChangesAsync();
+    Task&lt;SyncResult&gt; FullSyncAsync();
+    Task&lt;bool&gt; IsConnectedAsync();
+    Task&lt;SyncStatus&gt; GetSyncStatusAsync();
+}
+
+// 配置
+public class CloudSyncSettings
+{
+    public bool IsEnabled { get; set; }
+    public string ServerUrl { get; set; }
+    public string UserId { get; set; }
+    public TimeSpan AutoSyncInterval { get; set; }
+    public bool SyncOnStartup { get; set; }
+    public ConflictResolutionStrategy ConflictStrategy { get; set; }
+}</code></pre>
+
+                <h3>5.2 数据传输对象</h3>
+                <pre><code class="language-csharp">public class SyncResult
+{
+    public bool Success { get; set; }
+    public int ItemsSynced { get; set; }
+    public int Conflicts { get; set; }
+    public List&lt;ConflictItem&gt; ConflictItems { get; set; }
+    public string ErrorMessage { get; set; }
+    public DateTime SyncTimestamp { get; set; }
+}
+
+public class ConflictItem
+{
+    public string Id { get; set; }
+    public string Type { get; set; } // "memo" 或 "todo"
+    public object LocalVersion { get; set; }
+    public object ServerVersion { get; set; }
+    public DateTime LocalUpdatedAt { get; set; }
+    public DateTime ServerUpdatedAt { get; set; }
+}</code></pre>
+
+                <h3>5.3 安全考虑</h3>
+                <ol>
+                    <li><strong>身份认证</strong>:
+                        <ul>
+                            <li>使用 JWT 令牌进行 API 认证</li>
+                            <li>实现令牌刷新机制</li>
+                            <li>在本地设置中安全存储令牌</li>
+                        </ul>
+                    </li>
+                    <li><strong>数据加密</strong>:
+                        <ul>
+                            <li>所有网络通信使用 HTTPS/TLS</li>
+                            <li>敏感内容可选端到端加密</li>
+                            <li>加密存储的凭据</li>
+                        </ul>
+                    </li>
+                    <li><strong>隐私保护</strong>:
+                        <ul>
+                            <li>用户同意云同步</li>
+                            <li>明确的数据保留策略</li>
+                            <li>选项删除所有云数据</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h3>5.4 错误处理</h3>
+                <pre><code class="language-csharp">public enum SyncErrorType
+{
+    NetworkError,
+    AuthenticationError,
+    ServerError,
+    ConflictError,
+    LocalDatabaseError,
+    UnknownError
+}
+
+public class SyncException : Exception
+{
+    public SyncErrorType ErrorType { get; }
+    public string UserMessage { get; }
+    public bool IsRetryable { get; }
+}</code></pre>
+
+                <h2>6. UI/UX 指南</h2>
+                <h3>6.1 设置面板</h3>
+                <p>添加新的“云同步”部分：</p>
+                <ul>
+                    <li>启用/禁用云同步开关</li>
+                    <li>服务器连接状态指示器</li>
+                    <li>最后同步时间戳显示</li>
+                    <li>手动同步按钮</li>
+                    <li>冲突解决偏好设置</li>
+                </ul>
+
+                <h3>6.2 同步状态指示器</h3>
+                <ul>
+                    <li>系统托盘图标显示同步状态：
+                        <ul>
+                            <li>✅ 已同步</li>
+                            <li>🔄 同步中</li>
+                            <li>⚠️ 冲突</li>
+                            <li>❌ 错误</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>6.3 冲突解决 UI</h3>
+                <p>当发生冲突时：</p>
+                <ol>
+                    <li>显示通知</li>
+                    <li>打开冲突解决对话框</li>
+                    <li>并排显示两个版本</li>
+                    <li>允许用户选择或合并</li>
+                </ol>
+
+                <h2>7. 测试要求</h2>
+                <h3>7.1 单元测试</h3>
+                <ul>
+                    <li>仓储层方法</li>
+                    <li>冲突解决逻辑</li>
+                    <li>数据序列化/反序列化</li>
+                    <li>同步状态管理</li>
+                </ul>
+                <h3>7.2 集成测试</h3>
+                <ul>
+                    <li>端到端同步流程</li>
+                    <li>网络故障场景</li>
+                    <li>并发修改处理</li>
+                    <li>大数据集同步性能</li>
+                </ul>
+                <h3>7.3 测试场景</h3>
+                <ol>
+                    <li>首次同步现有本地数据</li>
+                    <li>多设备同步同一账户</li>
+                    <li>离线更改在线后同步</li>
+                    <li>同步期间网络中断</li>
+                    <li>服务器停机恢复</li>
+                </ol>
+
+                <h2>8. 性能优化</h2>
+                <h3>8.1 优化策略</h3>
+                <ul>
+                    <li><strong>增量同步</strong>: 只同步更改的项目</li>
+                    <li><strong>批量操作</strong>: 对多个项目使用批量 API</li>
+                    <li><strong>连接池</strong>: 重用 HTTP 连接</li>
+                    <li><strong>压缩</strong>: 传输前压缩大内容</li>
+                    <li><strong>后台同步</strong>: 同步期间不阻塞 UI</li>
+                </ul>
+
+                <h2>9. 迁移路径</h2>
+                <h3>阶段 1: 准备（当前）</h3>
+                <ul>
+                    <li>✅ 实现本地 SQLite 存储</li>
+                    <li>✅ 为数据模型添加同步状态字段</li>
+                    <li>📝 定义云同步规范</li>
+                </ul>
+                <h3>阶段 2: 后端开发</h3>
+                <ul>
+                    <li>开发 MySQL 架构</li>
+                    <li>实现 REST API</li>
+                    <li>建立认证系统</li>
+                    <li>部署后端基础设施</li>
+                </ul>
+                <h3>阶段 3: 客户端集成</h3>
+                <ul>
+                    <li>实现 <code>ICloudSyncService</code></li>
+                    <li>添加同步 UI 组件</li>
+                    <li>实现冲突解决</li>
+                    <li>添加全面的错误处理</li>
+                </ul>
+                <h3>阶段 4: 测试与发布</h3>
+                <ul>
+                    <li>内部测试</li>
+                    <li>志愿者 Beta 测试</li>
+                    <li>逐步向用户推出</li>
+                    <li>监控和迭代</li>
+                </ul>
+
+                <h2>10. 未来增强</h2>
+                <ul>
+                    <li><strong>选择性同步</strong>: 选择要同步的项目</li>
+                    <li><strong>共享备忘录</strong>: 与其他用户协作</li>
+                    <li><strong>版本历史</strong>: 查看和恢复以前的版本</li>
+                    <li><strong>附件同步</strong>: 同步图片和文件</li>
+                    <li><strong>实时同步</strong>: 基于 WebSocket 的即时同步</li>
+                </ul>
+
+                <h2>11. 参考资料</h2>
+                <ul>
+                    <li><a href="https://dev.mysql.com/doc/">MySQL 8.0 文档</a></li>
+                    <li><a href="https://docs.microsoft.com/zh-cn/aspnet/core/web-api/">ASP.NET Core Web API</a></li>
+                    <li><a href="https://jwt.io/">JWT 认证</a></li>
+                    <li><a href="https://restfulapi.net/">RESTful API 设计最佳实践</a></li>
+                </ul>
+
+                <hr>
+                <p><strong>文档版本</strong>: 1.0<br>
+                    <strong>最后更新</strong>: 2025-01-27<br>
+                    <strong>下次审阅</strong>: 实现开始前
+                </p>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>

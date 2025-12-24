@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模块划分详解 - DesktopMemo Docs</title>
+
+    <script src="../theme-preload.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="sidebar-logo">DesktopMemo</div>
+
+            <h3>概览</h3>
+            <ul>
+                <li><a href="../index.html">首页</a></li>
+                <li><a href="../contributing.html">贡献指南</a></li>
+                <li><a href="../mysql_integration.html">MySQL 集成规范</a></li>
+            </ul>
+
+            <h3>项目架构</h3>
+            <ul>
+                <li><a href="index.html">架构首页</a></li>
+                <li><a href="architecture.html">01 架构图</a></li>
+                <li><a href="modules.html" class="active">02 模块划分</a></li>
+                <li><a href="tech_stack.html">03 技术栈和依赖</a></li>
+                <li><a href="data_flow.html">04 数据流和通信</a></li>
+            </ul>
+
+            <h3>API 文档</h3>
+            <ul>
+                <li><a href="../api/index.html">API 概览</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="content-inner">
+                <h1>DesktopMemo 模块划分详解</h1>
+
+                <h2>1. 模块总览</h2>
+                <p>本项目按照<strong>三层架构</strong>和<strong>领域驱动设计 (DDD)</strong> 思想进行模块划分：</p>
+                <div class="mermaid">
+                    graph TB
+                    subgraph "DesktopMemo.App (表示层)"
+                    A1[Views 模块]
+                    A2[ViewModels 模块]
+                    A3[Localization 模块]
+                    A4[Converters 模块]
+                    A5[Resources 模块]
+                    end
+
+                    subgraph "DesktopMemo.Core (领域层)"
+                    C1[Models 模块]
+                    C2[Contracts 模块]
+                    C3[Helpers 模块]
+                    C4[Constants 模块]
+                    end
+
+                    subgraph "DesktopMemo.Infrastructure (基础设施层)"
+                    I1[Repositories 模块]
+                    I2[Services 模块]
+                    end
+
+                    A2 --> C2
+                    A2 --> C1
+                    I1 --> C2
+                    I1 --> C1
+                    I2 --> C2
+                    I2 --> C1
+
+                    style A1 fill:#e3f2fd
+                    style A2 fill:#e3f2fd
+                    style C1 fill:#fff3e0
+                    style C2 fill:#fff3e0
+                    style I1 fill:#e8f5e9
+                    style I2 fill:#e8f5e9
+                </div>
+
+                <h2>2. 表示层 (DesktopMemo.App)</h2>
+
+                <h3>2.1 Views 模块</h3>
+                <p><strong>职责</strong>: 定义用户界面</p>
+                <p><strong>特点</strong>: 使用 WPF XAML，数据绑定，无业务逻辑。</p>
+
+                <h3>2.2 ViewModels 模块</h3>
+                <p><strong>职责</strong>: 实现表示逻辑，连接 View 和 Model</p>
+
+                <h4>MainViewModel</h4>
+                <ul>
+                    <li>备忘录列表管理、编辑状态、设置、窗口控制</li>
+                </ul>
+
+                <h4>TodoListViewModel</h4>
+                <ul>
+                    <li>TodoList 功能管理</li>
+                </ul>
+
+                <h4>LogViewModel</h4>
+                <ul>
+                    <li>日志查看和过滤</li>
+                </ul>
+
+                <p><strong>技术特点</strong>: 继承 <code>ObservableObject</code>, 使用 <code>[RelayCommand]</code>。</p>
+
+                <h3>2.3 Localization 模块</h3>
+                <p><strong>职责</strong>: 多语言支持 (zh-CN, en-US)。</p>
+
+                <h3>2.4 Converters 模块</h3>
+                <p><strong>职责</strong>: 值转换器 (BooleanToVisibilityConverter 等)。</p>
+
+                <h3>2.5 Resources 模块</h3>
+                <p><strong>职责</strong>: 主题、样式、图标资源。</p>
+
+                <h2>3. 领域层 (DesktopMemo.Core)</h2>
+
+                <h3>3.1 Models 模块</h3>
+                <ul>
+                    <li><strong>Memo</strong>: 不可变记录，备忘录实体</li>
+                    <li><strong>TodoItem</strong>: 待办任务</li>
+                    <li><strong>WindowSettings</strong>: 窗口设置</li>
+                    <li><strong>LogEntry</strong>: 日志条目</li>
+                </ul>
+
+                <h3>3.2 Contracts 模块</h3>
+                <p><strong>职责</strong>: 定义接口契约</p>
+                <ul>
+                    <li><code>IMemoRepository</code>, <code>ITodoRepository</code></li>
+                    <li><code>ISettingsService</code></li>
+                    <li><code>IMemoSearchService</code></li>
+                    <li><code>ILogService</code></li>
+                    <li><code>IWindowService</code>, <code>ITrayService</code>, <code>ILocalizationService</code></li>
+                </ul>
+
+                <h3>3.3 Helpers 模块</h3>
+                <ul>
+                    <li><code>DebounceHelper</code> (防抖)</li>
+                    <li><code>TransparencyHelper</code> (透明度计算)</li>
+                </ul>
+
+                <h3>3.4 Constants 模块</h3>
+                <p>定义系统常量。</p>
+
+                <h2>4. 基础设施层 (DesktopMemo.Infrastructure)</h2>
+
+                <h3>4.1 Repositories 模块</h3>
+                <ul>
+                    <li><strong>SqliteIndexedMemoRepository</strong>: Markdown 文件 + SQLite 索引</li>
+                    <li><strong>SqliteTodoRepository</strong>: 纯 SQLite 存储</li>
+                    <li><strong>JsonSettingsService</strong>: JSON 文件存储</li>
+                </ul>
+
+                <h3>4.2 Services 模块</h3>
+                <ul>
+                    <li><strong>MemoSearchService</strong>: 全文搜索</li>
+                    <li><strong>FileLogService</strong>: 文件日志</li>
+                    <li><strong>WindowService</strong>: Win32 API 窗口控制</li>
+                    <li><strong>TrayService</strong>: 系统托盘</li>
+                    <li><strong>Migration Services</strong>: 数据迁移</li>
+                </ul>
+
+                <h2>5. 模块间通信</h2>
+                <div class="mermaid">
+                    sequenceDiagram
+                    participant UI as MainWindow (View)
+                    participant VM as MainViewModel
+                    participant Repo as SqliteIndexedMemoRepository
+                    participant FS as File System
+                    participant DB as SQLite Database
+
+                    UI->>VM: 用户点击 "保存"
+                    VM->>VM: 执行 SaveMemoCommand
+                    VM->>Repo: UpdateAsync(memo)
+                    Repo->>FS: 写入 Markdown 文件
+                    Repo->>DB: 更新 SQLite 索引
+                    DB-->>Repo: 成功
+                    Repo-->>VM: 成功
+                    VM->>VM: 更新 Memos 集合
+                    VM-->>UI: 属性通知 (INotifyPropertyChanged)
+                    UI->>UI: 刷新 UI
+                </div>
+
+                <h2>6. 模块依赖关系</h2>
+                <p><strong>规则</strong>: 表示层 -> 领域层/基础设施层; 基础设施层 -> 领域层; 领域层独立。</p>
+                <div class="mermaid">
+                    graph LR
+                    App[DesktopMemo.App] --> Core[DesktopMemo.Core]
+                    App --> Infra[DesktopMemo.Infrastructure]
+                    Infra --> Core
+
+                    style Core fill:#fff3e0
+                    style Infra fill:#e8f5e9
+                    style App fill:#e3f2fd
+                </div>
+
+                <h2>7. 模块职责矩阵</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>模块</th>
+                            <th>创建</th>
+                            <th>读取</th>
+                            <th>更新</th>
+                            <th>删除</th>
+                            <th>搜索</th>
+                            <th>渲染</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ViewModels</strong></td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>❌</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Views</strong></td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Repositories</strong></td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>✅</td>
+                            <td>❌</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Services</strong></td>
+                            <td>❌</td>
+                            <td>✅</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>✅</td>
+                            <td>❌</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Models</strong></td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                            <td>❌</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>8. 模块扩展指南</h2>
+                <p>参考文档中的示例：添加"备忘录分类"功能。</p>
+
+                <h2>9. 模块维护建议</h2>
+                <h3>最核心模块 ⭐</h3>
+                <ul>
+                    <li>MainViewModel</li>
+                    <li>SqliteIndexedMemoRepository</li>
+                    <li>App.xaml.cs</li>
+                </ul>
+
+                <h3>需重点测试的模块 🧪</h3>
+                <ul>
+                    <li>Repositories</li>
+                    <li>Migration Services</li>
+                    <li>WindowService</li>
+                </ul>
+
+                <h3>性能敏感模块 ⚡</h3>
+                <ul>
+                    <li>MemoSearchService</li>
+                    <li>FileLogService</li>
+                    <li>MainViewModel (防抖)</li>
+                </ul>
+
+                <hr>
+                <p><strong>最后更新</strong>: 2025-11-15</p>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="../main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DesktopMemo 项目文档中心 - 技术文档、架构设计和开发指南">
+    <title>DesktopMemo 文档</title>
+    
+    <script src="theme-preload.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="sidebar-logo">DesktopMemo</div>
+
+            <h3>概览</h3>
+            <ul>
+                <li><a href="index.html" class="active">首页</a></li>
+                <li><a href="contributing.html">贡献指南</a></li>
+                <li><a href="mysql_integration.html">MySQL 集成规范</a></li>
+            </ul>
+
+            <h3>项目架构</h3>
+            <ul>
+                <li><a href="project_structure/index.html">架构首页</a></li>
+                <li><a href="project_structure/architecture.html">01 架构图</a></li>
+                <li><a href="project_structure/modules.html">02 模块划分</a></li>
+                <li><a href="project_structure/tech_stack.html">03 技术栈和依赖</a></li>
+                <li><a href="project_structure/data_flow.html">04 数据流和通信</a></li>
+            </ul>
+
+            <h3>API 文档</h3>
+            <ul>
+                <li><a href="api/index.html">API 概览</a></li>
+                <li><a href="api/repositories.html">仓储接口</a></li>
+                <li><a href="api/services.html">服务接口</a></li>
+                <li><a href="api/models.html">领域模型</a></li>
+                <li><a href="api/enums.html">枚举类型</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="content-inner">
+                <h1>DesktopMemo 文档中心</h1>
+
+                <p>欢迎来到 DesktopMemo 项目文档中心。这里包含了项目的所有技术文档、架构设计和开发指南。</p>
+
+                <h2>文档索引</h2>
+
+                <h3>基础文档</h3>
+                <ul>
+                    <li><a href="contributing.html"><strong>贡献指南</strong></a>: 了解如何参与项目开发，提交 PR 和汇报 Issues。</li>
+                    <li><a href="mysql_integration.html"><strong>MySQL 集成规范</strong></a>: 关于云同步功能的数据库设计和 API 规范。</li>
+                </ul>
+
+                <h3>项目架构</h3>
+                <p>深入了解 DesktopMemo 的内部设计：</p>
+                <ul>
+                    <li><a href="project_structure/architecture.html"><strong>架构图</strong></a>: 系统的整体分层架构。</li>
+                    <li><a href="project_structure/modules.html"><strong>模块划分</strong></a>: 各个模块的详细职责说明。</li>
+                    <li><a href="project_structure/tech_stack.html"><strong>技术栈</strong></a>: 项目使用的技术和第三方库。</li>
+                    <li><a href="project_structure/data_flow.html"><strong>数据流</strong></a>: 核心业务流程的数据流转。</li>
+                </ul>
+
+                <h3>API 参考</h3>
+                <ul>
+                    <li><a href="api/index.html"><strong>API 文档</strong></a>: 仓储接口、服务接口、领域模型和枚举类型。</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>

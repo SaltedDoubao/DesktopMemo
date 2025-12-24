@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="DesktopMemo 服务接口 API 文档 - ISettingsService, IWindowService, ITrayService, ILocalizationService">
+    <title>服务接口 - DesktopMemo Docs</title>
+    
+    <script src="../theme-preload.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="sidebar-logo">DesktopMemo</div>
+
+            <h3>概览</h3>
+            <ul>
+                <li><a href="../index.html">首页</a></li>
+                <li><a href="../contributing.html">贡献指南</a></li>
+                <li><a href="../mysql_integration.html">MySQL 集成规范</a></li>
+            </ul>
+
+            <h3>项目架构</h3>
+            <ul>
+                <li><a href="../project_structure/index.html">架构首页</a></li>
+                <li><a href="../project_structure/architecture.html">01 架构图</a></li>
+                <li><a href="../project_structure/modules.html">02 模块划分</a></li>
+                <li><a href="../project_structure/tech_stack.html">03 技术栈和依赖</a></li>
+                <li><a href="../project_structure/data_flow.html">04 数据流和通信</a></li>
+            </ul>
+
+            <h3>API 文档</h3>
+            <ul>
+                <li><a href="index.html">API 概览</a></li>
+                <li><a href="repositories.html">仓储接口</a></li>
+                <li><a href="services.html" class="active">服务接口</a></li>
+                <li><a href="models.html">领域模型</a></li>
+                <li><a href="enums.html">枚举类型</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="content-inner">
+                <h1>服务接口文档</h1>
+                <p>服务接口提供业务逻辑和系统功能，包括设置管理、搜索、窗口管理、托盘服务和本地化等。</p>
+
+                <!-- ISettingsService -->
+                <h2 id="isettingsservice">ISettingsService</h2>
+                <p>应用设置管理服务，提供设置的加载和保存功能。</p>
+
+                <h3>接口定义</h3>
+                <pre><code class="language-csharp">namespace DesktopMemo.Core.Contracts;
+
+/// &lt;summary&gt;
+/// 提供应用设置的加载与保存接口。
+/// &lt;/summary&gt;
+public interface ISettingsService
+{
+    Task&lt;WindowSettings&gt; LoadAsync(CancellationToken cancellationToken = default);
+    Task SaveAsync(WindowSettings settings, CancellationToken cancellationToken = default);
+}</code></pre>
+
+                <h3>方法详情</h3>
+
+                <h4>LoadAsync</h4>
+                <p>加载应用设置。</p>
+                <pre><code class="language-csharp">Task&lt;WindowSettings&gt; LoadAsync(CancellationToken cancellationToken = default)</code></pre>
+
+                <p><strong>返回值</strong>：加载的设置对象，如果文件不存在则返回 <code>WindowSettings.Default</code></p>
+
+                <pre><code class="language-csharp">var settings = await _settingsService.LoadAsync();
+Console.WriteLine($"窗口大小: {settings.Width}x{settings.Height}");
+Console.WriteLine($"透明度: {settings.Transparency}");</code></pre>
+
+                <blockquote>
+                    <p><strong>💡 注意</strong>：如果设置文件损坏，会尝试从备份恢复。加载失败时记录错误日志并返回默认设置。</p>
+                </blockquote>
+
+                <h4>SaveAsync</h4>
+                <p>保存应用设置。</p>
+                <pre><code class="language-csharp">Task SaveAsync(WindowSettings settings, CancellationToken cancellationToken = default)</code></pre>
+
+                <pre><code class="language-csharp">var newSettings = currentSettings.WithSize(1200, 800);
+await _settingsService.SaveAsync(newSettings);</code></pre>
+
+                <p><strong>特性</strong>：</p>
+                <ul>
+                    <li>采用原子性保存：先写入临时文件，成功后替换原文件</li>
+                    <li>保存前会创建备份文件</li>
+                    <li>使用 JSON 格式存储</li>
+                </ul>
+
+                <p><strong>保存位置</strong>：</p>
+                <ul>
+                    <li>主文件：<code>.memodata/settings.json</code></li>
+                    <li>备份文件：<code>.memodata/settings.json.backup</code></li>
+                </ul>
+
+                <h3>最佳实践：原子性更新</h3>
+                <pre><code class="language-csharp">// ✅ 正确 - 原子性保存
+try
+{
+    var newSettings = currentSettings with { Transparency = 0.2 };
+    await _settingsService.SaveAsync(newSettings); // 先保存到文件
+    CurrentSettings = newSettings; // 保存成功后才更新内存
+}
+catch (Exception ex)
+{
+    // 保存失败，内存状态保持不变
+    Debug.WriteLine($"设置保存失败: {ex}");
+}
+
+// ❌ 错误 - 先更新内存，可能导致不一致
+CurrentSettings = newSettings;
+await _settingsService.SaveAsync(newSettings);</code></pre>
+
+                <!-- IMemoSearchService -->
+                <h2 id="imemosearchservice">IMemoSearchService</h2>
+                <p>备忘录搜索服务，提供文本搜索和替换功能。</p>
+
+                <h3>接口定义</h3>
+                <pre><code class="language-csharp">public interface IMemoSearchService
+{
+    IEnumerable&lt;SearchMatch&gt; FindMatches(string text, string keyword,
+        bool caseSensitive = false, bool useRegex = false);
+
+    string Replace(string text, string keyword, string replacement,
+        bool caseSensitive = false, bool useRegex = false);
+}
+
+public sealed record SearchMatch(int Index, int Length);</code></pre>
+
+                <h3>方法详情</h3>
+
+                <h4>FindMatches</h4>
+                <p>在文本中查找所有匹配项。</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>参数</th>
+                            <th>类型</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>text</td>
+                            <td><code>string</code></td>
+                            <td>要搜索的文本</td>
+                        </tr>
+                        <tr>
+                            <td>keyword</td>
+                            <td><code>string</code></td>
+                            <td>搜索关键词或正则表达式</td>
+                        </tr>
+                        <tr>
+                            <td>caseSensitive</td>
+                            <td><code>bool</code></td>
+                            <td>是否区分大小写（默认：false）</td>
+                        </tr>
+                        <tr>
+                            <td>useRegex</td>
+                            <td><code>bool</code></td>
+                            <td>是否使用正则表达式（默认：false）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code class="language-csharp">var text = "Hello World, hello universe";
+var matches = _searchService.FindMatches(text, "hello", caseSensitive: false);
+
+foreach (var match in matches)
+{
+    Console.WriteLine($"找到匹配: 位置={match.Index}, 长度={match.Length}");
+}
+// 输出:
+// 找到匹配: 位置=0, 长度=5
+// 找到匹配: 位置=13, 长度=5</code></pre>
+
+                <h4>正则表达式示例</h4>
+                <pre><code class="language-csharp">// 查找所有邮箱地址
+var matches = _searchService.FindMatches(
+    text,
+    @"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+    useRegex: true
+);</code></pre>
+
+                <h4>Replace</h4>
+                <p>替换文本中的所有匹配项。</p>
+                <pre><code class="language-csharp">var text = "Hello World, hello universe";
+var result = _searchService.Replace(text, "hello", "Hi", caseSensitive: false);
+Console.WriteLine(result);
+// 输出: Hi World, Hi universe
+
+// 正则表达式替换
+var result = _searchService.Replace(
+    "版本 2.3.0 发布于 2025-11-15",
+    @"\d+",
+    "[NUM]",
+    useRegex: true
+);
+// 结果: 版本 [NUM].[NUM].[NUM] 发布于 [NUM]-[NUM]-[NUM]</code></pre>
+
+                <!-- IWindowService -->
+                <h2 id="iwindowservice">IWindowService</h2>
+                <p>窗口管理服务，提供窗口置顶、透明度、穿透模式等功能。</p>
+
+                <h3>接口定义</h3>
+                <pre><code class="language-csharp">public interface IWindowService
+{
+    void SetTopmostMode(TopmostMode mode);
+    TopmostMode GetCurrentTopmostMode();
+    void SetClickThrough(bool enabled);
+    bool IsClickThroughEnabled { get; }
+    void SetWindowPosition(double x, double y);
+    (double X, double Y) GetWindowPosition();
+    void MoveToPresetPosition(string position);
+    void SetWindowOpacity(double opacity);
+    double GetWindowOpacity();
+    void MinimizeToTray();
+    void RestoreFromTray();
+}</code></pre>
+
+                <h3>方法详情</h3>
+
+                <h4>SetTopmostMode</h4>
+                <p>设置窗口置顶模式。</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>模式</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Normal</code></td>
+                            <td>普通模式，不置顶</td>
+                        </tr>
+                        <tr>
+                            <td><code>Desktop</code></td>
+                            <td>桌面层面置顶（低于其他应用）</td>
+                        </tr>
+                        <tr>
+                            <td><code>Always</code></td>
+                            <td>总是置顶（高于所有窗口）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code class="language-csharp">// 设置为总是置顶
+_windowService.SetTopmostMode(TopmostMode.Always);
+
+// 取消置顶
+_windowService.SetTopmostMode(TopmostMode.Normal);</code></pre>
+
+                <h4>SetClickThrough</h4>
+                <p>启用或禁用穿透模式。</p>
+                <pre><code class="language-csharp">// 启用穿透模式
+_windowService.SetClickThrough(true);
+
+// 禁用穿透模式
+_windowService.SetClickThrough(false);</code></pre>
+
+                <blockquote>
+                    <p><strong>💡 提示</strong>：穿透模式下，鼠标点击会穿透窗口到下层应用。通过 Win32 API 设置窗口扩展样式 <code>WS_EX_TRANSPARENT</code>。
+                    </p>
+                </blockquote>
+
+                <h4>MoveToPresetPosition</h4>
+                <p>移动到预设位置。</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>参数值</th>
+                            <th>位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>"top-left"</code></td>
+                            <td>左上角</td>
+                        </tr>
+                        <tr>
+                            <td><code>"top-right"</code></td>
+                            <td>右上角</td>
+                        </tr>
+                        <tr>
+                            <td><code>"bottom-left"</code></td>
+                            <td>左下角</td>
+                        </tr>
+                        <tr>
+                            <td><code>"bottom-right"</code></td>
+                            <td>右下角</td>
+                        </tr>
+                        <tr>
+                            <td><code>"center"</code></td>
+                            <td>屏幕中心</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code class="language-csharp">// 移动到右下角
+_windowService.MoveToPresetPosition("bottom-right");</code></pre>
+
+                <h4>SetWindowOpacity</h4>
+                <p>设置窗口透明度（0.0 - 1.0，应用限制 0.05 - 0.4）。</p>
+                <pre><code class="language-csharp">// 设置为 20% 透明度
+_windowService.SetWindowOpacity(0.2);</code></pre>
+
+                <!-- ITrayService -->
+                <h2 id="itrayservice">ITrayService</h2>
+                <p>系统托盘服务，管理托盘图标和菜单。</p>
+
+                <h3>接口定义</h3>
+                <pre><code class="language-csharp">public interface ITrayService : IDisposable
+{
+    // 事件
+    event EventHandler? TrayIconDoubleClick;
+    event EventHandler? ShowHideWindowClick;
+    event EventHandler? NewMemoClick;
+    event EventHandler? ExitClick;
+    event EventHandler&lt;TopmostMode&gt;? TopmostModeChangeClick;
+
+    // 方法
+    void Initialize();
+    void Show();
+    void Hide();
+    void ShowBalloonTip(string title, string text, int timeout = 2000);
+    void UpdateTopmostState(TopmostMode mode);
+    void UpdateMenuTexts(Func&lt;string, string&gt; getLocalizedString);
+}</code></pre>
+
+                <h3>方法详情</h3>
+
+                <h4>ShowBalloonTip</h4>
+                <p>显示气泡提示。</p>
+                <pre><code class="language-csharp">_trayService.ShowBalloonTip("保存成功", "备忘录已保存", 3000);</code></pre>
+
+                <h4>UpdateMenuTexts</h4>
+                <p>更新托盘菜单文本（用于多语言切换）。</p>
+                <pre><code class="language-csharp">_trayService.UpdateMenuTexts(key => _localizationService[key]);</code></pre>
+
+                <!-- ILocalizationService -->
+                <h2 id="ilocalizationservice">ILocalizationService</h2>
+                <p>多语言本地化服务。</p>
+
+                <h3>接口定义</h3>
+                <pre><code class="language-csharp">public interface ILocalizationService
+{
+    string this[string key] { get; }
+    CultureInfo CurrentCulture { get; }
+    void ChangeLanguage(string cultureName);
+    IEnumerable&lt;CultureInfo&gt; GetSupportedLanguages();
+    event EventHandler&lt;LanguageChangedEventArgs&gt;? LanguageChanged;
+}</code></pre>
+
+                <h3>方法详情</h3>
+
+                <h4>获取本地化字符串</h4>
+                <pre><code class="language-csharp">var saveText = _localizationService["Save"];
+var cancelText = _localizationService["Cancel"];</code></pre>
+
+                <h4>ChangeLanguage</h4>
+                <p>切换语言。</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>cultureName</th>
+                            <th>语言</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>"zh-CN"</code></td>
+                            <td>简体中文</td>
+                        </tr>
+                        <tr>
+                            <td><code>"en-US"</code></td>
+                            <td>英语</td>
+                        </tr>
+                        <tr>
+                            <td><code>"zh-TW"</code></td>
+                            <td>繁体中文</td>
+                        </tr>
+                        <tr>
+                            <td><code>"ja-JP"</code></td>
+                            <td>日语</td>
+                        </tr>
+                        <tr>
+                            <td><code>"ko-KR"</code></td>
+                            <td>韩语</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code class="language-csharp">// 切换到英语
+_localizationService.ChangeLanguage("en-US");
+
+// 订阅语言切换事件
+_localizationService.LanguageChanged += (s, e) =>
+{
+    Console.WriteLine($"语言已切换: {e.OldCulture} -> {e.NewCulture}");
+    _trayService.UpdateMenuTexts(key => _localizationService[key]);
+};</code></pre>
+
+                <!-- ILogService -->
+                <h2 id="ilogservice">ILogService</h2>
+                <p>日志记录服务。</p>
+
+                <h3>接口定义</h3>
+                <pre><code class="language-csharp">public interface ILogService
+{
+    void Log(string message, LogLevel level = LogLevel.Info);
+    Task&lt;IEnumerable&lt;LogEntry&gt;&gt; GetLogsAsync(int count = 100);
+    Task ClearLogsAsync();
+}</code></pre>
+
+                <h3>方法详情</h3>
+                <pre><code class="language-csharp">_logService.Log("应用启动", LogLevel.Info);
+_logService.Log("保存失败", LogLevel.Error);</code></pre>
+
+                <!-- 实现类 -->
+                <h2 id="implementations">实现类</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>服务</th>
+                            <th>实现类</th>
+                            <th>位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ISettingsService</td>
+                            <td>JsonSettingsService</td>
+                            <td><code>DesktopMemo.Infrastructure.Services</code></td>
+                        </tr>
+                        <tr>
+                            <td>IMemoSearchService</td>
+                            <td>MemoSearchService</td>
+                            <td><code>DesktopMemo.Infrastructure.Services</code></td>
+                        </tr>
+                        <tr>
+                            <td>IWindowService</td>
+                            <td>WindowService</td>
+                            <td><code>DesktopMemo.Infrastructure.Services</code></td>
+                        </tr>
+                        <tr>
+                            <td>ITrayService</td>
+                            <td>TrayService</td>
+                            <td><code>DesktopMemo.Infrastructure.Services</code></td>
+                        </tr>
+                        <tr>
+                            <td>ILocalizationService</td>
+                            <td>LocalizationService</td>
+                            <td><code>DesktopMemo.App.Localization</code></td>
+                        </tr>
+                        <tr>
+                            <td>ILogService</td>
+                            <td>FileLogService</td>
+                            <td><code>DesktopMemo.Infrastructure.Services</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr>
+                <h2>相关文档</h2>
+                <ul>
+                    <li><a href="repositories.html">仓储接口文档</a></li>
+                    <li><a href="models.html">领域模型文档</a></li>
+                    <li><a href="enums.html">枚举类型文档</a></li>
+                </ul>
+
+                <hr>
+                <p><strong>最后更新</strong>: 2025-12-24</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../main.js"></script>
+</body>
+
+</html>

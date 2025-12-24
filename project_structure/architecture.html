@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目架构图 - DesktopMemo Docs</title>
+
+    <script src="../theme-preload.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="sidebar-logo">DesktopMemo</div>
+
+            <h3>概览</h3>
+            <ul>
+                <li><a href="../index.html">首页</a></li>
+                <li><a href="../contributing.html">贡献指南</a></li>
+                <li><a href="../mysql_integration.html">MySQL 集成规范</a></li>
+            </ul>
+
+            <h3>项目架构</h3>
+            <ul>
+                <li><a href="index.html">架构首页</a></li>
+                <li><a href="architecture.html" class="active">01 架构图</a></li>
+                <li><a href="modules.html">02 模块划分</a></li>
+                <li><a href="tech_stack.html">03 技术栈和依赖</a></li>
+                <li><a href="data_flow.html">04 数据流和通信</a></li>
+            </ul>
+
+            <h3>API 文档</h3>
+            <ul>
+                <li><a href="../api/index.html">API 概览</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="content-inner">
+                <h1>DesktopMemo 项目架构图</h1>
+
+                <h2>1. 整体系统架构</h2>
+                <p>本项目采用<strong>三层架构</strong>设计，遵循<strong>MVVM 模式</strong>和<strong>依赖倒置原则 (DIP)</strong>。</p>
+
+                <div class="mermaid">
+                    graph TB
+                    subgraph "表示层 Presentation Layer"
+                    UI[WPF UI Views]
+                    VM[ViewModels]
+                    Conv[Converters]
+                    Res[Resources & Themes]
+                    end
+
+                    subgraph "领域层 Domain Layer"
+                    Models[Domain Models]
+                    Contracts[Contracts/Interfaces]
+                    Helpers[Helpers & Constants]
+                    end
+
+                    subgraph "基础设施层 Infrastructure Layer"
+                    Repos[Repositories]
+                    Services[Services]
+                    Migration[Migration Services]
+                    end
+
+                    subgraph "外部依赖 External Dependencies"
+                    FS[File System<br />Markdown + YAML]
+                    DB[SQLite Database<br />索引和 TodoList]
+                    WinAPI[Windows API<br />托盘、窗口置顶]
+                    end
+
+                    UI --> VM
+                    VM --> Contracts
+                    Contracts <-.实现.-> Repos
+                        Contracts <-.实现.-> Services
+                            Repos --> FS
+                            Repos --> DB
+                            Services --> DB
+                            Services --> FS
+                            Services --> WinAPI
+                            VM --> Models
+                            Repos --> Models
+                            Services --> Models
+                            Migration --> FS
+                            Migration --> DB
+
+                            style UI fill:#e1f5ff
+                            style VM fill:#e1f5ff
+                            style Models fill:#fff4e1
+                            style Contracts fill:#fff4e1
+                            style Repos fill:#e8f5e9
+                            style Services fill:#e8f5e9
+                            style FS fill:#f3e5f5
+                            style DB fill:#f3e5f5
+                            style WinAPI fill:#f3e5f5
+                </div>
+
+                <h2>2. 项目结构</h2>
+                <pre><code>
+DesktopMemo_rebuild/
+├── src/
+│   ├── DesktopMemo.App/          # 表示层 (WPF 应用)
+│   ├── DesktopMemo.Core/         # 领域层 (纯 .NET 库)
+│   └── DesktopMemo.Infrastructure/ # 基础设施层
+├── docs/                         # 文档
+├── artifacts/                    # 构建输出
+└── .memodata/                    # 运行时数据目录
+    ├── memos/                    # Markdown 文件存储
+    ├── settings.json             # 应用设置
+    ├── memos.db                  # SQLite 备忘录索引
+    ├── todos.db                  # SQLite TodoList
+    └── logs/                     # 日志文件
+                </code></pre>
+
+                <h2>3. 三层架构详解</h2>
+
+                <h3>3.1 表示层 (DesktopMemo.App)</h3>
+                <p><strong>职责</strong>：UI 呈现和用户交互</p>
+                <p><strong>主要组件</strong>：</p>
+                <ul>
+                    <li><strong>Views/</strong>: WPF 窗口和用户控件 (MainWindow.xaml)</li>
+                    <li><strong>ViewModels/</strong>: MVVM 视图模型 (MainViewModel, TodoListViewModel, LogViewModel)</li>
+                    <li><strong>Converters/</strong>: 值转换器 (布尔转可见性等)</li>
+                    <li><strong>Resources/</strong>: 主题、样式、本地化资源</li>
+                    <li><strong>Services/</strong>: UI 层特定服务 (TrayService, WindowService)</li>
+                    <li><strong>Localization/</strong>: 多语言支持</li>
+                </ul>
+                <p><strong>依赖</strong>：DesktopMemo.Core, DesktopMemo.Infrastructure, CommunityToolkit.Mvvm,
+                    Microsoft.Extensions.DependencyInjection</p>
+
+                <h3>3.2 领域层 (DesktopMemo.Core)</h3>
+                <p><strong>职责</strong>：定义业务模型和契约接口，不包含具体实现</p>
+                <p><strong>主要组件</strong>：</p>
+                <ul>
+                    <li><strong>Models/</strong>: 领域模型</li>
+                    <li><strong>Contracts/</strong>: 接口定义</li>
+                    <li><strong>Helpers/</strong>: 辅助类</li>
+                    <li><strong>Constants/</strong>: 常量定义</li>
+                </ul>
+                <p><strong>特点</strong>：纯 .NET 库，不依赖其他项目，使用 CommunityToolkit.Mvvm。</p>
+
+                <h3>3.3 基础设施层 (DesktopMemo.Infrastructure)</h3>
+                <p><strong>职责</strong>：实现领域层定义的接口，处理数据持久化和系统服务</p>
+
+                <h4>Repositories (数据访问)</h4>
+                <ul>
+                    <li><strong>SqliteIndexedMemoRepository</strong>: 备忘录存储 (Markdown + SQLite 索引)</li>
+                    <li><strong>SqliteTodoRepository</strong>: TodoList 存储 (SQLite)</li>
+                    <li><strong>JsonSettingsService</strong>: 设置存储 (JSON)</li>
+                </ul>
+
+                <h4>Services (业务服务)</h4>
+                <ul>
+                    <li><strong>MemoSearchService</strong>: 备忘录全文搜索</li>
+                    <li><strong>FileLogService</strong>: 文件日志记录</li>
+                    <li><strong>WindowService</strong>: 窗口管理</li>
+                    <li><strong>TrayService</strong>: 系统托盘</li>
+                </ul>
+
+                <h4>Migration Services (数据迁移)</h4>
+                <ul>
+                    <li><strong>MemoMigrationService</strong></li>
+                    <li><strong>TodoMigrationService</strong></li>
+                    <li><strong>MemoMetadataMigrationService</strong></li>
+                </ul>
+
+                <h2>4. 依赖注入配置</h2>
+                <p>在 <code>App.xaml.cs</code> 中配置的服务：</p>
+                <pre><code class="language-csharp">// 核心数据服务
+services.AddSingleton&lt;ILogService, FileLogService&gt;()
+services.AddSingleton&lt;IMemoRepository, SqliteIndexedMemoRepository&gt;()
+services.AddSingleton&lt;ITodoRepository, SqliteTodoRepository&gt;()
+services.AddSingleton&lt;ISettingsService, JsonSettingsService&gt;()
+services.AddSingleton&lt;IMemoSearchService, MemoSearchService&gt;()
+
+// 数据迁移服务
+services.AddSingleton&lt;MemoMigrationService&gt;()
+services.AddSingleton&lt;TodoMigrationService&gt;()
+services.AddSingleton&lt;MemoMetadataMigrationService&gt;()
+
+// UI 服务
+services.AddSingleton&lt;IWindowService, WindowService&gt;()
+services.AddSingleton&lt;ITrayService, TrayService&gt;()
+services.AddSingleton&lt;ILocalizationService, LocalizationService&gt;()
+
+// ViewModels
+services.AddSingleton&lt;MainViewModel&gt;()
+services.AddSingleton&lt;TodoListViewModel&gt;()
+services.AddSingleton&lt;LogViewModel&gt;()</code></pre>
+
+                <h2>5. 数据存储架构</h2>
+                <div class="mermaid">
+                    graph LR
+                    subgraph "应用层"
+                    VM[ViewModels]
+                    end
+
+                    subgraph "Repository 层"
+                    MemoRepo[SqliteIndexedMemoRepository]
+                    TodoRepo[SqliteTodoRepository]
+                    SettingsService[JsonSettingsService]
+                    end
+
+                    subgraph "存储层"
+                    MD[Markdown 文件<br />.memodata/memos/]
+                    MemoDB[(SQLite: memos.db<br />元数据索引)]
+                    TodoDB[(SQLite: todos.db<br />TodoList)]
+                    JSON[JSON 文件<br />settings.json]
+                    end
+
+                    VM -->|读写备忘录| MemoRepo
+                    VM -->|读写 Todo| TodoRepo
+                    VM -->|读写设置| SettingsService
+
+                    MemoRepo -->|内容存储| MD
+                    MemoRepo -->|元数据索引| MemoDB
+                    TodoRepo --> TodoDB
+                    SettingsService --> JSON
+
+                    style MD fill:#ffe0b2
+                    style MemoDB fill:#c8e6c9
+                    style TodoDB fill:#c8e6c9
+                    style JSON fill:#fff9c4
+                </div>
+
+                <h3>存储设计特点</h3>
+                <ol>
+                    <li><strong>备忘录</strong>：双存储设计 (Markdown 内容 + SQLite 索引)</li>
+                    <li><strong>TodoList</strong>：完全使用 SQLite (支持复杂查询和事务)</li>
+                    <li><strong>设置</strong>：JSON 文件 (人类可读，易于编辑)</li>
+                </ol>
+
+                <h2>6. 关键设计模式</h2>
+                <ul>
+                    <li><strong>MVVM</strong>: View (XAML), ViewModel (ObservableObject), Model (Core)</li>
+                    <li><strong>Repository</strong>: 抽象数据访问，接口在 Core，实现在 Infrastructure</li>
+                    <li><strong>依赖注入 (DI)</strong>: Microsoft.Extensions.DependencyInjection</li>
+                    <li><strong>异步编程</strong>: fire-and-forget 模式，后台线程 IO</li>
+                </ul>
+
+                <h2>7. 架构优势</h2>
+                <ol>
+                    <li><strong>分层清晰</strong></li>
+                    <li><strong>依赖倒置</strong></li>
+                    <li><strong>可测试性</strong></li>
+                    <li><strong>可扩展性</strong></li>
+                    <li><strong>数据安全</strong></li>
+                </ol>
+
+                <h2>8. 核心模块</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>模块</th>
+                            <th>职责</th>
+                            <th>关键类</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>备忘录管理</strong></td>
+                            <td>创建、编辑、删除备忘录</td>
+                            <td>MainViewModel, SqliteIndexedMemoRepository</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TodoList</strong></td>
+                            <td>任务管理</td>
+                            <td>TodoListViewModel, SqliteTodoRepository</td>
+                        </tr>
+                        <tr>
+                            <td><strong>搜索功能</strong></td>
+                            <td>全文搜索、标签筛选</td>
+                            <td>MemoSearchService</td>
+                        </tr>
+                        <tr>
+                            <td><strong>设置管理</strong></td>
+                            <td>配置管理</td>
+                            <td>JsonSettingsService, WindowService</td>
+                        </tr>
+                        <tr>
+                            <td><strong>日志系统</strong></td>
+                            <td>日志记录</td>
+                            <td>FileLogService, LogViewModel</td>
+                        </tr>
+                        <tr>
+                            <td><strong>系统托盘</strong></td>
+                            <td>后台运行</td>
+                            <td>TrayService</td>
+                        </tr>
+                        <tr>
+                            <td><strong>数据迁移</strong></td>
+                            <td>版本升级</td>
+                            <td>*MigrationService</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>9. 外部依赖说明</h2>
+                <ul>
+                    <li><strong>.NET 9.0</strong>, <strong>WPF</strong>, <strong>SQLite</strong></li>
+                    <li><strong>CommunityToolkit.Mvvm</strong>, <strong>Markdig</strong>, <strong>Dapper</strong>,
+                        <strong>System.Text.Json</strong>
+                    </li>
+                    <li><strong>Win32 API</strong> (SetWindowPos), <strong>System.Windows.Forms</strong> (NotifyIcon)
+                    </li>
+                </ul>
+
+                <h2>10. 容易出问题的模块</h2>
+                <ol>
+                    <li><strong>数据迁移服务</strong> ⚠️ - 涉及文件和DB，易丢失数据</li>
+                    <li><strong>异步操作</strong> ⚠️ - <code>async void</code> 风险</li>
+                    <li><strong>SQLite 并发</strong> ⚠️ - 锁冲突</li>
+                    <li><strong>设置保存</strong> ⚠️ - 性能与防抖</li>
+                    <li><strong>托盘服务初始化</strong> ⚠️ - 系统兼容性</li>
+                </ol>
+
+                <hr>
+                <p><strong>最后更新</strong>: 2025-11-15</p>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="../main.js"></script>
+</body>
+
+</html>

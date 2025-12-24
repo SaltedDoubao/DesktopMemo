@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DesktopMemo 枚举类型 API 文档 - TopmostMode, AppTheme, SyncStatus, LogLevel">
+    <title>枚举类型 - DesktopMemo Docs</title>
+    
+    <script src="../theme-preload.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="sidebar-logo">DesktopMemo</div>
+
+            <h3>概览</h3>
+            <ul>
+                <li><a href="../index.html">首页</a></li>
+                <li><a href="../contributing.html">贡献指南</a></li>
+                <li><a href="../mysql_integration.html">MySQL 集成规范</a></li>
+            </ul>
+
+            <h3>项目架构</h3>
+            <ul>
+                <li><a href="../project_structure/index.html">架构首页</a></li>
+                <li><a href="../project_structure/architecture.html">01 架构图</a></li>
+                <li><a href="../project_structure/modules.html">02 模块划分</a></li>
+                <li><a href="../project_structure/tech_stack.html">03 技术栈和依赖</a></li>
+                <li><a href="../project_structure/data_flow.html">04 数据流和通信</a></li>
+            </ul>
+
+            <h3>API 文档</h3>
+            <ul>
+                <li><a href="index.html">API 概览</a></li>
+                <li><a href="repositories.html">仓储接口</a></li>
+                <li><a href="services.html">服务接口</a></li>
+                <li><a href="models.html">领域模型</a></li>
+                <li><a href="enums.html" class="active">枚举类型</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="content-inner">
+                <h1>枚举类型文档</h1>
+                <p>本文档描述 DesktopMemo 应用中使用的所有枚举类型，包含定义、使用示例和最佳实践。</p>
+
+                <!-- TopmostMode -->
+                <h2 id="topmostmode">TopmostMode</h2>
+                <p>窗口置顶模式枚举，控制便签窗口在 Z 轴上的显示层级。</p>
+
+                <h3>定义</h3>
+                <pre><code class="language-csharp">namespace DesktopMemo.Core.Contracts;
+
+/// &lt;summary&gt;
+/// 窗口置顶模式
+/// &lt;/summary&gt;
+public enum TopmostMode
+{
+    /// &lt;summary&gt;
+    /// 普通模式，不置顶
+    /// &lt;/summary&gt;
+    Normal = 0,
+
+    /// &lt;summary&gt;
+    /// 桌面层面置顶（在桌面图标之上，其他窗口之下）
+    /// &lt;/summary&gt;
+    Desktop = 1,
+
+    /// &lt;summary&gt;
+    /// 总是置顶（在所有窗口之上）
+    /// &lt;/summary&gt;
+    Always = 2
+}</code></pre>
+
+                <h3>值说明</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>值</th>
+                            <th>名称</th>
+                            <th>描述</th>
+                            <th>使用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td>
+                            <td><strong>Normal</strong></td>
+                            <td>普通窗口，不置顶</td>
+                            <td>与其他窗口平等，可以被其他窗口遮挡</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td><strong>Desktop</strong></td>
+                            <td>桌面层置顶</td>
+                            <td>显示在桌面图标之上，但在其他应用窗口之下（<strong>默认模式</strong>）</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><strong>Always</strong></td>
+                            <td>总是置顶</td>
+                            <td>始终显示在所有窗口最上层，即使切换到其他应用</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>使用示例</h3>
+                <h4>设置置顶模式</h4>
+                <pre><code class="language-csharp">// 设置为普通模式
+_windowService.SetTopmostMode(TopmostMode.Normal);
+
+// 设置为桌面置顶（推荐）
+_windowService.SetTopmostMode(TopmostMode.Desktop);
+
+// 设置为总是置顶
+_windowService.SetTopmostMode(TopmostMode.Always);</code></pre>
+
+                <h4>在托盘菜单中切换</h4>
+                <pre><code class="language-csharp">_trayService.TopmostModeChangeClick += (sender, mode) =>
+{
+    _windowService.SetTopmostMode(mode);
+    _trayService.UpdateTopmostState(mode);
+};</code></pre>
+
+                <h4>从设置恢复</h4>
+                <pre><code class="language-csharp">public void ApplySettings(WindowSettings settings)
+{
+    TopmostMode mode;
+
+    if (settings.IsTopMost)
+    {
+        mode = TopmostMode.Always;
+    }
+    else if (settings.IsDesktopMode)
+    {
+        mode = TopmostMode.Desktop;
+    }
+    else
+    {
+        mode = TopmostMode.Normal;
+    }
+
+    _windowService.SetTopmostMode(mode);
+}</code></pre>
+
+                <h3>实现细节</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>模式</th>
+                            <th>WPF API</th>
+                            <th>Win32 API</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Normal</td>
+                            <td><code>window.Topmost = false</code></td>
+                            <td>不调用特殊 API</td>
+                        </tr>
+                        <tr>
+                            <td>Desktop</td>
+                            <td>-</td>
+                            <td><code>SetWindowPos(hwnd, HWND_BOTTOM, ...)</code></td>
+                        </tr>
+                        <tr>
+                            <td>Always</td>
+                            <td><code>window.Topmost = true</code></td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <blockquote>
+                    <p><strong>💡 提示</strong>：Desktop 模式是默认推荐模式，既能保持便签可见，又不干扰其他应用。</p>
+                </blockquote>
+
+                <!-- AppTheme -->
+                <h2 id="apptheme">AppTheme</h2>
+                <p>应用主题枚举，支持亮色、暗色和跟随系统三种模式。</p>
+
+                <h3>定义</h3>
+                <pre><code class="language-csharp">namespace DesktopMemo.Core.Models;
+
+/// &lt;summary&gt;
+/// 应用主题类型
+/// &lt;/summary&gt;
+public enum AppTheme
+{
+    /// &lt;summary&gt;
+    /// 亮色主题
+    /// &lt;/summary&gt;
+    Light = 0,
+
+    /// &lt;summary&gt;
+    /// 暗色主题
+    /// &lt;/summary&gt;
+    Dark = 1,
+
+    /// &lt;summary&gt;
+    /// 跟随系统主题
+    /// &lt;/summary&gt;
+    System = 2
+}</code></pre>
+
+                <h3>值说明</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>值</th>
+                            <th>名称</th>
+                            <th>描述</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td>
+                            <td><strong>Light</strong></td>
+                            <td>亮色主题，白色背景</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td><strong>Dark</strong></td>
+                            <td>暗色主题，深色背景</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><strong>System</strong></td>
+                            <td>跟随系统主题设置（Windows 10/11）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>使用示例</h3>
+                <h4>切换主题</h4>
+                <pre><code class="language-csharp">// 切换到暗色主题
+var newSettings = settings with { Theme = AppTheme.Dark };
+await _settingsService.SaveAsync(newSettings);
+ApplyTheme(AppTheme.Dark);</code></pre>
+
+                <h4>应用主题到 UI</h4>
+                <pre><code class="language-csharp">private void ApplyTheme(AppTheme theme)
+{
+    var lightTheme = new Uri("pack://application:,,,/Resources/Themes/Light.xaml");
+    var darkTheme = new Uri("pack://application:,,,/Resources/Themes/Dark.xaml");
+
+    var resources = Application.Current.Resources.MergedDictionaries;
+
+    // 移除现有主题
+    var existingTheme = resources.FirstOrDefault(d =>
+        d.Source == lightTheme || d.Source == darkTheme);
+    if (existingTheme != null)
+    {
+        resources.Remove(existingTheme);
+    }
+
+    // 应用新主题
+    Uri themeUri = theme == AppTheme.Dark ? darkTheme : lightTheme;
+    resources.Add(new ResourceDictionary { Source = themeUri });
+}</code></pre>
+
+                <h4>检测系统主题</h4>
+                <pre><code class="language-csharp">private string GetSystemTheme()
+{
+    try
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(
+            @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+        var value = key?.GetValue("AppsUseLightTheme");
+
+        return value is int intValue && intValue == 0 ? "Dark" : "Light";
+    }
+    catch
+    {
+        return "Light"; // 默认亮色
+    }
+}</code></pre>
+
+                <!-- SyncStatus -->
+                <h2 id="syncstatus">SyncStatus</h2>
+                <p>数据同步状态枚举，用于云同步功能（计划中）。</p>
+
+                <h3>定义</h3>
+                <pre><code class="language-csharp">namespace DesktopMemo.Core.Models;
+
+/// &lt;summary&gt;
+/// 数据同步状态枚举
+/// &lt;/summary&gt;
+public enum SyncStatus
+{
+    /// &lt;summary&gt;
+    /// 已同步到云端
+    /// &lt;/summary&gt;
+    Synced = 0,
+
+    /// &lt;summary&gt;
+    /// 等待同步到云端
+    /// &lt;/summary&gt;
+    PendingSync = 1,
+
+    /// &lt;summary&gt;
+    /// 存在同步冲突
+    /// &lt;/summary&gt;
+    Conflict = 2
+}</code></pre>
+
+                <h3>值说明</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>值</th>
+                            <th>名称</th>
+                            <th>描述</th>
+                            <th>UI 显示</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td>
+                            <td><strong>Synced</strong></td>
+                            <td>本地数据与云端一致</td>
+                            <td>✓ 绿色勾选</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td><strong>PendingSync</strong></td>
+                            <td>本地有修改，等待上传</td>
+                            <td>⏱ 等待图标</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><strong>Conflict</strong></td>
+                            <td>本地和云端都有修改，需要解决冲突</td>
+                            <td>⚠ 警告图标</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>状态转换流程</h3>
+                <pre><code>CreateNew
+   ↓
+Synced (初始状态)
+   ↓ (本地修改)
+PendingSync
+   ↓ (上传成功)
+Synced
+   ↓ (检测到冲突)
+Conflict
+   ↓ (解决冲突)
+Synced</code></pre>
+
+                <h3>使用示例</h3>
+                <pre><code class="language-csharp">public async Task SyncMemoAsync(Memo memo)
+{
+    if (memo.SyncStatus == SyncStatus.Synced)
+    {
+        return; // 已同步，无需操作
+    }
+
+    if (memo.SyncStatus == SyncStatus.Conflict)
+    {
+        await ResolveConflictAsync(memo);
+        return;
+    }
+
+    // 上传到云端
+    try
+    {
+        var remoteVersion = await _cloudService.UploadMemoAsync(memo);
+        var synced = memo.MarkAsSynced(remoteVersion);
+        await _repository.UpdateAsync(synced);
+    }
+    catch (ConflictException)
+    {
+        var conflicted = memo.MarkAsConflict();
+        await _repository.UpdateAsync(conflicted);
+    }
+}</code></pre>
+
+                <blockquote>
+                    <p><strong>⚠️ 注意</strong>：当前版本（v2.3.0）云同步功能尚未实现，但数据模型已准备就绪。</p>
+                </blockquote>
+
+                <!-- LogLevel -->
+                <h2 id="loglevel">LogLevel</h2>
+                <p>日志级别枚举，用于分类和过滤日志信息。</p>
+
+                <h3>定义</h3>
+                <pre><code class="language-csharp">namespace DesktopMemo.Core.Models;
+
+/// &lt;summary&gt;
+/// 日志级别
+/// &lt;/summary&gt;
+public enum LogLevel
+{
+    Debug = 0,   // 调试信息
+    Info = 1,    // 一般信息
+    Warning = 2, // 警告信息
+    Error = 3,   // 错误信息
+    Fatal = 4    // 致命错误
+}</code></pre>
+
+                <h3>值说明</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>值</th>
+                            <th>名称</th>
+                            <th>描述</th>
+                            <th>使用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td>
+                            <td><strong>Debug</strong></td>
+                            <td>调试信息</td>
+                            <td>开发时的详细追踪信息</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td><strong>Info</strong></td>
+                            <td>一般信息</td>
+                            <td>正常操作流程记录</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><strong>Warning</strong></td>
+                            <td>警告信息</td>
+                            <td>潜在问题，不影响功能</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><strong>Error</strong></td>
+                            <td>错误信息</td>
+                            <td>操作失败，需要关注</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td><strong>Fatal</strong></td>
+                            <td>致命错误</td>
+                            <td>严重错误，可能导致崩溃</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>使用示例</h3>
+                <pre><code class="language-csharp">// 调试信息
+_logService.Log("开始加载备忘录", LogLevel.Debug);
+
+// 一般信息
+_logService.Log("应用启动成功", LogLevel.Info);
+
+// 警告
+_logService.Log("设置文件损坏，使用备份恢复", LogLevel.Warning);
+
+// 错误
+_logService.Log("保存备忘录失败: 权限不足", LogLevel.Error);
+
+// 致命错误
+_logService.Log("数据库连接失败，应用无法继续", LogLevel.Fatal);</code></pre>
+
+                <h4>根据级别过滤日志</h4>
+                <pre><code class="language-csharp">public async Task&lt;IEnumerable&lt;LogEntry&gt;&gt; GetErrorLogsAsync()
+{
+    var allLogs = await _logService.GetLogsAsync();
+    return allLogs.Where(log => log.Level >= LogLevel.Error);
+}</code></pre>
+
+                <h4>根据级别设置颜色</h4>
+                <pre><code class="language-csharp">public Brush GetLogLevelBrush(LogLevel level)
+{
+    return level switch
+    {
+        LogLevel.Debug => Brushes.Gray,
+        LogLevel.Info => Brushes.Black,
+        LogLevel.Warning => Brushes.Orange,
+        LogLevel.Error => Brushes.Red,
+        LogLevel.Fatal => Brushes.DarkRed,
+        _ => Brushes.Black
+    };
+}</code></pre>
+
+                <!-- 扩展方法 -->
+                <h2 id="extensions">枚举转换工具</h2>
+
+                <h3>TopmostMode 扩展方法</h3>
+                <pre><code class="language-csharp">public static class TopmostModeExtensions
+{
+    public static (bool IsTopMost, bool IsDesktopMode) ToSettings(this TopmostMode mode)
+    {
+        return mode switch
+        {
+            TopmostMode.Normal => (false, false),
+            TopmostMode.Desktop => (false, true),
+            TopmostMode.Always => (true, false),
+            _ => (false, true)
+        };
+    }
+
+    public static TopmostMode FromSettings(bool isTopMost, bool isDesktopMode)
+    {
+        if (isTopMost) return TopmostMode.Always;
+        if (isDesktopMode) return TopmostMode.Desktop;
+        return TopmostMode.Normal;
+    }
+}</code></pre>
+
+                <h3>AppTheme 本地化扩展</h3>
+                <pre><code class="language-csharp">public static class AppThemeExtensions
+{
+    public static string GetDisplayName(this AppTheme theme, ILocalizationService localization)
+    {
+        return theme switch
+        {
+            AppTheme.Light => localization["Theme_Light"],
+            AppTheme.Dark => localization["Theme_Dark"],
+            AppTheme.System => localization["Theme_System"],
+            _ => theme.ToString()
+        };
+    }
+}</code></pre>
+
+                <!-- 最佳实践 -->
+                <h2 id="best-practices">最佳实践</h2>
+
+                <h3>1. 使用明确的枚举值</h3>
+                <pre><code class="language-csharp">// ✅ 正确 - 使用枚举名称
+_windowService.SetTopmostMode(TopmostMode.Desktop);
+
+// ❌ 错误 - 使用魔法数字
+_windowService.SetTopmostMode((TopmostMode)1);</code></pre>
+
+                <h3>2. 处理未知枚举值</h3>
+                <pre><code class="language-csharp">// ✅ 正确 - 使用 switch 表达式并提供默认值
+var text = status switch
+{
+    SyncStatus.Synced => "已同步",
+    SyncStatus.PendingSync => "等待同步",
+    SyncStatus.Conflict => "冲突",
+    _ => "未知状态" // 处理未来可能添加的值
+};</code></pre>
+
+                <h3>3. 枚举序列化</h3>
+                <pre><code class="language-csharp">// JSON 序列化为字符串（推荐）
+var options = new JsonSerializerOptions
+{
+    Converters = { new JsonStringEnumConverter() }
+};
+
+var json = JsonSerializer.Serialize(settings, options);
+// 结果: { "Theme": "Dark" } 而不是 { "Theme": 1 }</code></pre>
+
+                <hr>
+                <h2>相关文档</h2>
+                <ul>
+                    <li><a href="models.html">领域模型文档</a></li>
+                    <li><a href="services.html">服务接口文档</a></li>
+                    <li><a href="repositories.html">仓储接口文档</a></li>
+                </ul>
+
+                <hr>
+                <p><strong>最后更新</strong>: 2025-12-24</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../main.js"></script>
+</body>
+
+</html>
