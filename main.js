@@ -5,10 +5,364 @@
 (function () {
     'use strict';
 
+    const SUPPORTED_LANGS = ['zh-CN', 'en', 'ja', 'ko'];
+
+    const I18N_STRINGS = {
+        'zh-CN': {
+            'header.logo': 'DesktopMemo Docs',
+            'header.themeTitle': '切换主题',
+            'header.langTitle': '切换语言',
+
+            'theme.light': '浅色',
+            'theme.dark': '深色',
+
+            'lang.short.zh-CN': '中文',
+            'lang.short.en': 'EN',
+            'lang.short.ja': '日本語',
+            'lang.short.ko': '한국어',
+            'lang.option.zh-CN': '简体中文',
+            'lang.option.en': 'English',
+            'lang.option.ja': '日本語',
+            'lang.option.ko': '한국어',
+
+            'sidebar.section.overview': '概览',
+            'sidebar.section.arch': '项目架构',
+            'sidebar.section.api': 'API 文档',
+
+            'nav.home': '首页',
+            'nav.contributing': '贡献指南',
+            'nav.mysql': 'MySQL 集成规范',
+
+            'nav.arch.index': '架构首页',
+            'nav.arch.diagram': '架构图',
+            'nav.arch.modules': '模块划分',
+            'nav.arch.tech': '技术栈和依赖',
+            'nav.arch.dataflow': '数据流和通信',
+
+            'nav.api.index': 'API 概览',
+            'nav.api.repositories': '仓储接口',
+            'nav.api.services': '服务接口',
+            'nav.api.models': '领域模型',
+            'nav.api.enums': '枚举类型',
+
+            'ui.backToTop.title': '返回顶部',
+            'ui.backToTop.aria': '返回顶部',
+            'ui.copy': '复制',
+            'ui.copied': '已复制 ✓',
+            'ui.copyFailed': '失败',
+            'ui.mermaid.close': '关闭 (Esc)',
+            'ui.mermaid.hint': '按 Esc 键或点击背景关闭 · 滚动可缩放查看',
+        },
+        en: {
+            'header.logo': 'DesktopMemo Docs',
+            'header.themeTitle': 'Toggle theme',
+            'header.langTitle': 'Change language',
+
+            'theme.light': 'Light',
+            'theme.dark': 'Dark',
+
+            'lang.short.zh-CN': '中文',
+            'lang.short.en': 'EN',
+            'lang.short.ja': '日本語',
+            'lang.short.ko': '한국어',
+            'lang.option.zh-CN': '简体中文',
+            'lang.option.en': 'English',
+            'lang.option.ja': '日本語',
+            'lang.option.ko': '한국어',
+
+            'sidebar.section.overview': 'Overview',
+            'sidebar.section.arch': 'Project Structure',
+            'sidebar.section.api': 'API Docs',
+
+            'nav.home': 'Home',
+            'nav.contributing': 'Contributing',
+            'nav.mysql': 'MySQL Integration',
+
+            'nav.arch.index': 'Architecture',
+            'nav.arch.diagram': 'Diagram',
+            'nav.arch.modules': 'Modules',
+            'nav.arch.tech': 'Tech Stack',
+            'nav.arch.dataflow': 'Data Flow',
+
+            'nav.api.index': 'API Overview',
+            'nav.api.repositories': 'Repositories',
+            'nav.api.services': 'Services',
+            'nav.api.models': 'Models',
+            'nav.api.enums': 'Enums',
+
+            'ui.backToTop.title': 'Back to top',
+            'ui.backToTop.aria': 'Back to top',
+            'ui.copy': 'Copy',
+            'ui.copied': 'Copied ✓',
+            'ui.copyFailed': 'Failed',
+            'ui.mermaid.close': 'Close (Esc)',
+            'ui.mermaid.hint': 'Press Esc or click the background to close · Scroll to zoom',
+        },
+        ja: {
+            'header.logo': 'DesktopMemo Docs',
+            'header.themeTitle': 'テーマを切り替え',
+            'header.langTitle': '言語を切り替え',
+
+            'theme.light': 'ライト',
+            'theme.dark': 'ダーク',
+
+            'lang.short.zh-CN': '中文',
+            'lang.short.en': 'EN',
+            'lang.short.ja': '日本語',
+            'lang.short.ko': '한국어',
+            'lang.option.zh-CN': '简体中文',
+            'lang.option.en': 'English',
+            'lang.option.ja': '日本語',
+            'lang.option.ko': '한국어',
+
+            'sidebar.section.overview': '概要',
+            'sidebar.section.arch': 'プロジェクト構造',
+            'sidebar.section.api': 'API ドキュメント',
+
+            'nav.home': 'ホーム',
+            'nav.contributing': '貢献ガイド',
+            'nav.mysql': 'MySQL 統合',
+
+            'nav.arch.index': 'アーキテクチャ',
+            'nav.arch.diagram': '図',
+            'nav.arch.modules': 'モジュール',
+            'nav.arch.tech': '技術スタック',
+            'nav.arch.dataflow': 'データフロー',
+
+            'nav.api.index': 'API 概要',
+            'nav.api.repositories': 'リポジトリ',
+            'nav.api.services': 'サービス',
+            'nav.api.models': 'モデル',
+            'nav.api.enums': '列挙型',
+
+            'ui.backToTop.title': 'トップへ',
+            'ui.backToTop.aria': 'トップへ戻る',
+            'ui.copy': 'コピー',
+            'ui.copied': 'コピー済み ✓',
+            'ui.copyFailed': '失敗',
+            'ui.mermaid.close': '閉じる (Esc)',
+            'ui.mermaid.hint': 'Esc キーまたは背景クリックで閉じる · スクロールで拡大/縮小',
+        },
+        ko: {
+            'header.logo': 'DesktopMemo Docs',
+            'header.themeTitle': '테마 전환',
+            'header.langTitle': '언어 전환',
+
+            'theme.light': '라이트',
+            'theme.dark': '다크',
+
+            'lang.short.zh-CN': '中文',
+            'lang.short.en': 'EN',
+            'lang.short.ja': '日本語',
+            'lang.short.ko': '한국어',
+            'lang.option.zh-CN': '简体中文',
+            'lang.option.en': 'English',
+            'lang.option.ja': '日本語',
+            'lang.option.ko': '한국어',
+
+            'sidebar.section.overview': '개요',
+            'sidebar.section.arch': '프로젝트 구조',
+            'sidebar.section.api': 'API 문서',
+
+            'nav.home': '홈',
+            'nav.contributing': '기여 가이드',
+            'nav.mysql': 'MySQL 통합',
+
+            'nav.arch.index': '아키텍처',
+            'nav.arch.diagram': '다이어그램',
+            'nav.arch.modules': '모듈',
+            'nav.arch.tech': '기술 스택',
+            'nav.arch.dataflow': '데이터 흐름',
+
+            'nav.api.index': 'API 개요',
+            'nav.api.repositories': '리포지토리',
+            'nav.api.services': '서비스',
+            'nav.api.models': '모델',
+            'nav.api.enums': '열거형',
+
+            'ui.backToTop.title': '맨 위로',
+            'ui.backToTop.aria': '맨 위로 이동',
+            'ui.copy': '복사',
+            'ui.copied': '복사됨 ✓',
+            'ui.copyFailed': '실패',
+            'ui.mermaid.close': '닫기 (Esc)',
+            'ui.mermaid.hint': 'Esc 키 또는 배경 클릭으로 닫기 · 스크롤로 확대/축소',
+        },
+    };
+
+    const SIDEBAR_LINK_KEY_BY_SUFFIX = [
+        { suffix: '/project_structure/data_flow.html', key: 'nav.arch.dataflow' },
+        { suffix: '/project_structure/tech_stack.html', key: 'nav.arch.tech' },
+        { suffix: '/project_structure/modules.html', key: 'nav.arch.modules' },
+        { suffix: '/project_structure/architecture.html', key: 'nav.arch.diagram' },
+        { suffix: '/project_structure/index.html', key: 'nav.arch.index' },
+
+        { suffix: '/api/repositories.html', key: 'nav.api.repositories' },
+        { suffix: '/api/services.html', key: 'nav.api.services' },
+        { suffix: '/api/models.html', key: 'nav.api.models' },
+        { suffix: '/api/enums.html', key: 'nav.api.enums' },
+        { suffix: '/api/index.html', key: 'nav.api.index' },
+
+        { suffix: '/mysql_integration.html', key: 'nav.mysql' },
+        { suffix: '/contributing.html', key: 'nav.contributing' },
+        { suffix: '/index.html', key: 'nav.home' },
+    ];
+
+    let currentLang = 'zh-CN';
+
+    function normalizeLang(lang) {
+        const raw = (lang || '').toString().trim();
+        if (!raw) return 'zh-CN';
+
+        const lower = raw.toLowerCase();
+        if (lower === 'zh' || lower.startsWith('zh-')) return 'zh-CN';
+        if (lower === 'en' || lower.startsWith('en-')) return 'en';
+        if (lower === 'ja' || lower.startsWith('ja-')) return 'ja';
+        if (lower === 'ko' || lower.startsWith('ko-')) return 'ko';
+        return 'zh-CN';
+    }
+
+    function getSavedLang() {
+        try {
+            return localStorage.getItem('lang');
+        } catch {
+            return null;
+        }
+    }
+
+    function setSavedLang(lang) {
+        try {
+            localStorage.setItem('lang', lang);
+        } catch {
+            // ignore
+        }
+    }
+
+    function detectPreferredLang() {
+        const urlLang = new URLSearchParams(window.location.search).get('lang');
+        if (urlLang) return normalizeLang(urlLang);
+
+        const saved = getSavedLang();
+        if (saved) return normalizeLang(saved);
+
+        const langs = Array.isArray(navigator.languages) && navigator.languages.length
+            ? navigator.languages
+            : [navigator.language || navigator.userLanguage].filter(Boolean);
+
+        for (const lang of langs) {
+            const normalized = normalizeLang(lang);
+            if (SUPPORTED_LANGS.includes(normalized)) return normalized;
+        }
+
+        return 'zh-CN';
+    }
+
+    function t(key) {
+        const langTable = I18N_STRINGS[currentLang] || I18N_STRINGS['zh-CN'];
+        return (langTable && langTable[key]) || I18N_STRINGS['zh-CN'][key] || key;
+    }
+
+    function applyLangAttributes(lang) {
+        document.documentElement.setAttribute('data-lang', lang);
+        document.documentElement.lang = lang;
+    }
+
+    function getBasePath() {
+        const path = (window.location.pathname || '').replace(/\\/g, '/');
+        if (path.includes('/api/') || path.includes('/project_structure/')) return '../';
+        return '';
+    }
+
+    function prepareSidebarI18nKeys() {
+        const sidebar = document.querySelector('.sidebar');
+        if (!sidebar) return;
+
+        const headings = sidebar.querySelectorAll('h3');
+        if (headings[0] && !headings[0].dataset.i18n) headings[0].dataset.i18n = 'sidebar.section.overview';
+        if (headings[1] && !headings[1].dataset.i18n) headings[1].dataset.i18n = 'sidebar.section.arch';
+        if (headings[2] && !headings[2].dataset.i18n) headings[2].dataset.i18n = 'sidebar.section.api';
+
+        sidebar.querySelectorAll('a[href]').forEach(a => {
+            if (a.dataset.i18n) return;
+
+            const href = a.getAttribute('href');
+            if (!href || href.startsWith('#')) return;
+
+            let path;
+            try {
+                path = new URL(href, window.location.href).pathname || '';
+            } catch {
+                return;
+            }
+
+            const matched = SIDEBAR_LINK_KEY_BY_SUFFIX.find(x => path.endsWith(x.suffix));
+            if (!matched) return;
+
+            a.dataset.i18n = matched.key;
+
+            const text = (a.textContent || '').trim();
+            const prefixMatch = text.match(/^(\d+)(?:\.(?=\s)|\s)\s*/);
+            if (prefixMatch) {
+                const number = prefixMatch[1];
+                const hasDot = text.startsWith(number + '.');
+                a.dataset.i18nPrefix = hasDot ? `${number}.` : number;
+            }
+        });
+    }
+
+    function applyI18n() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (key) el.textContent = t(key);
+        });
+
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.dataset.i18nTitle;
+            if (key) el.title = t(key);
+        });
+
+        document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+            const key = el.dataset.i18nAriaLabel;
+            if (key) el.setAttribute('aria-label', t(key));
+        });
+
+        document.querySelectorAll('.sidebar a[data-i18n]').forEach(a => {
+            const key = a.dataset.i18n;
+            const prefix = (a.dataset.i18nPrefix || '').trim();
+            if (!key) return;
+            a.textContent = prefix ? `${prefix} ${t(key)}` : t(key);
+        });
+    }
+
+    function updateLangUI(lang) {
+        const langText = document.getElementById('lang-text');
+        if (langText) {
+            const key = `lang.short.${lang}`;
+            langText.dataset.i18n = key;
+            langText.textContent = t(key);
+        }
+
+        document.querySelectorAll('.lang-option').forEach(opt => {
+            opt.classList.toggle('active', opt.dataset.lang === lang);
+        });
+    }
+
+    function updateThemeText() {
+        const theme = document.documentElement.getAttribute('data-theme') || 'light';
+        const themeText = document.getElementById('theme-text');
+        if (!themeText) return;
+
+        const key = theme === 'dark' ? 'theme.dark' : 'theme.light';
+        themeText.dataset.i18n = key;
+        themeText.textContent = t(key);
+    }
+
     // ========== DOM Ready ==========
     document.addEventListener('DOMContentLoaded', init);
 
     function init() {
+        currentLang = detectPreferredLang();
+        applyLangAttributes(currentLang);
         initHeader();
         initTheme();
         initLanguage();
@@ -25,15 +379,26 @@
 
     // ========== Header Bar ==========
     function initHeader() {
+        if (document.querySelector('.header')) return;
+
+        const basePath = getBasePath();
+        const currentLangShortKey = `lang.short.${currentLang}`;
+
+        const langOptionsHTML = SUPPORTED_LANGS.map(code => {
+            const active = code === currentLang ? 'active' : '';
+            const labelKey = `lang.option.${code}`;
+            return `<button class="lang-option ${active}" data-lang="${code}" data-i18n="${labelKey}">${t(labelKey)}</button>`;
+        }).join('');
+
         // Create header element
         const header = document.createElement('header');
         header.className = 'header';
         header.innerHTML = `
             <div class="header-left">
-                <a href="/" class="header-logo">DesktopMemo Docs</a>
+                <a href="${basePath}index.html" class="header-logo" data-i18n="header.logo">${t('header.logo')}</a>
             </div>
             <div class="header-right">
-                <button class="header-btn" id="theme-toggle" title="切换主题">
+                <button class="header-btn" id="theme-toggle" title="${t('header.themeTitle')}" data-i18n-title="header.themeTitle">
                     <svg id="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"></circle>
                         <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -48,20 +413,19 @@
                     <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                     </svg>
-                    <span class="btn-text" id="theme-text">浅色</span>
+                    <span class="btn-text" id="theme-text" data-i18n="theme.light">${t('theme.light')}</span>
                 </button>
                 <div class="lang-dropdown" id="lang-dropdown">
-                    <button class="header-btn" id="lang-toggle" title="切换语言">
+                    <button class="header-btn" id="lang-toggle" title="${t('header.langTitle')}" data-i18n-title="header.langTitle">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="2" y1="12" x2="22" y2="12"></line>
                             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                         </svg>
-                        <span class="btn-text" id="lang-text">中文</span>
+                        <span class="btn-text" id="lang-text" data-i18n="${currentLangShortKey}">${t(currentLangShortKey)}</span>
                     </button>
                     <div class="lang-menu">
-                        <button class="lang-option active" data-lang="zh-CN">简体中文</button>
-                        <button class="lang-option" data-lang="en">English</button>
+                        ${langOptionsHTML}
                     </div>
                 </div>
             </div>
@@ -71,6 +435,8 @@
         // Language dropdown toggle
         const langDropdown = document.getElementById('lang-dropdown');
         const langToggle = document.getElementById('lang-toggle');
+
+        if (!langDropdown || !langToggle) return;
 
         langToggle.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -117,56 +483,47 @@
 
         const iconLight = document.getElementById('theme-icon-light');
         const iconDark = document.getElementById('theme-icon-dark');
-        const themeText = document.getElementById('theme-text');
 
         if (iconLight && iconDark) {
             if (theme === 'dark') {
                 iconLight.style.display = 'none';
                 iconDark.style.display = 'block';
-                if (themeText) themeText.textContent = '深色';
             } else {
                 iconLight.style.display = 'block';
                 iconDark.style.display = 'none';
-                if (themeText) themeText.textContent = '浅色';
             }
         }
+
+        updateThemeText();
     }
 
     // ========== Language Toggle ==========
     function initLanguage() {
-        // Detect system language
-        const systemLang = navigator.language || navigator.userLanguage;
-        const savedLang = localStorage.getItem('lang');
-
-        // Apply initial language
-        const lang = savedLang || (systemLang.startsWith('zh') ? 'zh-CN' : 'en');
-        setLanguage(lang);
+        setLanguage(currentLang);
 
         // Language option buttons
         document.querySelectorAll('.lang-option').forEach(btn => {
             btn.addEventListener('click', () => {
                 const selectedLang = btn.dataset.lang;
+                if (!selectedLang) return;
+
                 setLanguage(selectedLang);
-                localStorage.setItem('lang', selectedLang);
-                document.getElementById('lang-dropdown').classList.remove('open');
+
+                const dropdown = document.getElementById('lang-dropdown');
+                if (dropdown) dropdown.classList.remove('open');
             });
         });
     }
 
     function setLanguage(lang) {
-        const langText = document.getElementById('lang-text');
-        const langOptions = document.querySelectorAll('.lang-option');
+        currentLang = normalizeLang(lang);
+        setSavedLang(currentLang);
+        applyLangAttributes(currentLang);
 
-        langOptions.forEach(opt => {
-            opt.classList.toggle('active', opt.dataset.lang === lang);
-        });
-
-        if (langText) {
-            langText.textContent = lang.startsWith('zh') ? '中文' : 'EN';
-        }
-
-        // Store for potential future i18n use
-        document.documentElement.setAttribute('data-lang', lang);
+        prepareSidebarI18nKeys();
+        applyI18n();
+        updateLangUI(currentLang);
+        updateThemeText();
     }
 
     // ========== Syntax Highlighting with Prism.js ==========
@@ -216,8 +573,10 @@
         const btn = document.createElement('button');
         btn.className = 'back-to-top';
         btn.innerHTML = '↑';
-        btn.setAttribute('aria-label', 'Back to top');
-        btn.title = '返回顶部';
+        btn.dataset.i18nAriaLabel = 'ui.backToTop.aria';
+        btn.dataset.i18nTitle = 'ui.backToTop.title';
+        btn.setAttribute('aria-label', t('ui.backToTop.aria'));
+        btn.title = t('ui.backToTop.title');
         document.body.appendChild(btn);
 
         window.addEventListener('scroll', () => {
@@ -260,7 +619,8 @@
 
             const btn = document.createElement('button');
             btn.className = 'copy-button';
-            btn.textContent = '复制';
+            btn.dataset.i18n = 'ui.copy';
+            btn.textContent = t('ui.copy');
 
             btn.addEventListener('click', async () => {
                 const code = pre.querySelector('code');
@@ -268,17 +628,21 @@
 
                 try {
                     await navigator.clipboard.writeText(text);
-                    btn.textContent = '已复制 ✓';
+                    btn.dataset.i18n = 'ui.copied';
+                    btn.textContent = t('ui.copied');
                     btn.style.background = 'rgba(40, 200, 64, 0.3)';
 
                     setTimeout(() => {
-                        btn.textContent = '复制';
+                        btn.dataset.i18n = 'ui.copy';
+                        btn.textContent = t('ui.copy');
                         btn.style.background = '';
                     }, 2000);
                 } catch (err) {
-                    btn.textContent = '失败';
+                    btn.dataset.i18n = 'ui.copyFailed';
+                    btn.textContent = t('ui.copyFailed');
                     setTimeout(() => {
-                        btn.textContent = '复制';
+                        btn.dataset.i18n = 'ui.copy';
+                        btn.textContent = t('ui.copy');
                     }, 2000);
                 }
             });
@@ -470,9 +834,9 @@
         const modal = document.createElement('div');
         modal.className = 'mermaid-modal';
         modal.innerHTML = `
-            <button class="mermaid-modal-close" title="关闭 (Esc)">✕</button>
+            <button class="mermaid-modal-close" title="${t('ui.mermaid.close')}" data-i18n-title="ui.mermaid.close">✕</button>
             <div class="mermaid-modal-content"></div>
-            <div class="mermaid-modal-hint">按 Esc 键或点击背景关闭 · 滚动可缩放查看</div>
+            <div class="mermaid-modal-hint" data-i18n="ui.mermaid.hint">${t('ui.mermaid.hint')}</div>
         `;
         document.body.appendChild(modal);
 
