@@ -7,6 +7,26 @@
 
     const SUPPORTED_LANGS = ['zh-CN', 'en', 'ja', 'ko'];
 
+    // Utility: Throttle function for performance optimization
+    function throttle(func, wait) {
+        let timeout;
+        let lastRan;
+        return function executedFunction(...args) {
+            if (!lastRan) {
+                func.apply(this, args);
+                lastRan = Date.now();
+            } else {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    if ((Date.now() - lastRan) >= wait) {
+                        func.apply(this, args);
+                        lastRan = Date.now();
+                    }
+                }, wait - (Date.now() - lastRan));
+            }
+        };
+    }
+
     const I18N_STRINGS = {
         'zh-CN': {
             'header.logo': 'DesktopMemo Docs',
@@ -470,12 +490,15 @@
         });
 
         // Theme toggle button
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const newTheme = current === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const newTheme = current === 'dark' ? 'light' : 'dark';
+                setTheme(newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
     }
 
     function setTheme(theme) {
@@ -579,13 +602,16 @@
         btn.title = t('ui.backToTop.title');
         document.body.appendChild(btn);
 
-        window.addEventListener('scroll', () => {
+        // Throttled scroll handler for back-to-top button
+        const handleBackToTopScroll = throttle(() => {
             if (window.scrollY > 400) {
                 btn.classList.add('visible');
             } else {
                 btn.classList.remove('visible');
             }
-        });
+        }, 100);
+
+        window.addEventListener('scroll', handleBackToTopScroll);
 
         btn.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -780,7 +806,22 @@
 
         nodesToReplace.forEach(node => {
             const span = document.createElement('span');
-            span.innerHTML = node.textContent.replace(regex, '<mark>$1</mark>');
+            const text = node.textContent;
+            const parts = text.split(regex);
+
+            // 安全地构建高亮内容，避免 XSS
+            parts.forEach((part, index) => {
+                if (index > 0 && index % 2 === 1) {
+                    // 匹配的部分，使用 mark 标签高亮
+                    const mark = document.createElement('mark');
+                    mark.textContent = part;
+                    span.appendChild(mark);
+                } else if (part) {
+                    // 普通文本
+                    span.appendChild(document.createTextNode(part));
+                }
+            });
+
             node.parentNode.replaceChild(span, node);
         });
     }
@@ -805,12 +846,15 @@
         `;
         document.body.appendChild(progressBar);
 
-        window.addEventListener('scroll', () => {
+        // Throttled scroll handler for progress bar
+        const handleProgressScroll = throttle(() => {
             const scrollTop = window.scrollY;
             const docHeight = document.documentElement.scrollHeight - window.innerHeight;
             const progress = (scrollTop / docHeight) * 100;
             progressBar.style.width = Math.min(progress, 100) + '%';
-        });
+        }, 100);
+
+        window.addEventListener('scroll', handleProgressScroll);
     }
 
     // ========== Keyboard Shortcuts ==========
