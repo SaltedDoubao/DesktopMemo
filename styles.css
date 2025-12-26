@@ -7,6 +7,7 @@
     --bg-color: #fafafa;
     --text-color: #1a1a1a;
     --text-muted: #666;
+    --text-secondary: #374151;
     --sidebar-bg: linear-gradient(180deg, #f8f9fa 0%, #f1f3f4 100%);
     --sidebar-border: #e8e8e8;
     --primary-color: #2563eb;
@@ -15,6 +16,8 @@
     --accent-light: rgba(220, 74, 42, 0.1);
     --code-bg: #1e1e1e;
     --code-text: #d4d4d4;
+    --code-inline-bg: #f3f4f6;
+    --code-inline-color: #4b5563;
     --border-color: #e5e7eb;
     --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
     --card-shadow-hover: 0 10px 40px rgba(0, 0, 0, 0.12);
@@ -22,6 +25,11 @@
     --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --header-bg: #ffffff;
     --header-border: #e5e7eb;
+    --scrollbar-track: #f1f1f1;
+    --scrollbar-thumb: #d1d5db;
+    --scrollbar-thumb-hover: #9ca3af;
+    --link-color: #2563eb;
+    --link-underline: rgba(37, 99, 235, 0.3);
 
     /* Typography */
     --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -39,6 +47,7 @@
     --bg-color: #0d1117;
     --text-color: #e6edf3;
     --text-muted: #8b949e;
+    --text-secondary: #d1d5db;
     --sidebar-bg: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
     --sidebar-border: #30363d;
     --primary-color: #58a6ff;
@@ -47,10 +56,17 @@
     --accent-light: rgba(247, 129, 102, 0.15);
     --code-bg: #161b22;
     --code-text: #e6edf3;
+    --code-inline-bg: #21262d;
+    --code-inline-color: #f78166;
     --border-color: #30363d;
     --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     --header-bg: #161b22;
     --header-border: #30363d;
+    --scrollbar-track: #1f2937;
+    --scrollbar-thumb: #4b5563;
+    --scrollbar-thumb-hover: #6b7280;
+    --link-color: #58a6ff;
+    --link-underline: rgba(88, 166, 255, 0.3);
     --inline-code-bg: #21262d;
     --inline-code-color: #f78166;
     --inline-code-border: rgba(255, 255, 255, 0.1);
@@ -77,6 +93,23 @@ body {
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* Skip Link for Accessibility */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--primary-color);
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    z-index: 100;
+    border-radius: 0 0 4px 0;
+}
+
+.skip-link:focus {
+    top: 0;
 }
 
 /* Page Layout */
