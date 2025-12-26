@@ -14,34 +14,7 @@
 
 ## 📖 关于本项目
 
-DesktopMemo-docs 是 [DesktopMemo](https://github.com/SaltedDoubao/DesktopMemo) 桌面应用的官方文档中心，提供：
-
-- 📚 **完整的技术文档** - 涵盖架构设计、模块划分、数据流等
-- 🔧 **API 参考手册** - 详细的接口文档和领域模型说明
-- 🤝 **开发者指南** - 贡献流程、代码规范、开发环境配置
-- 🌐 **多语言支持** - 支持中文、英文、日文、韩文
-- 🎨 **现代化界面** - 响应式设计、深色/浅色主题切换
-
-## 📚 文档内容
-
-### 基础文档
-
-- **[贡献指南](contributing.html)** - 了解如何参与项目开发
-- **[MySQL 集成规范](mysql_integration.html)** - 云同步功能的数据库设计
-
-### 项目架构
-
-- **[架构图](project_structure/architecture.html)** - 三层架构设计（表示层、领域层、基础设施层）
-- **[模块划分](project_structure/modules.html)** - 各模块的详细职责说明
-- **[技术栈](project_structure/tech_stack.html)** - .NET 9.0、WPF、SQLite 等技术栈
-- **[数据流](project_structure/data_flow.html)** - 核心业务流程的数据流转
-
-### API 参考
-
-- **[仓储接口](api/repositories.html)** - IMemoRepository、ITodoRepository 等
-- **[服务接口](api/services.html)** - ISettingsService、IMemoSearchService 等
-- **[领域模型](api/models.html)** - Memo、TodoItem 等核心模型
-- **[枚举类型](api/enums.html)** - 系统中使用的枚举定义
+DesktopMemo-docs 是 [DesktopMemo](https://github.com/SaltedDoubao/DesktopMemo) 桌面应用的官方文档仓库
 
 ## 🤝 如何贡献
 
@@ -57,10 +30,10 @@ DesktopMemo-docs 是 [DesktopMemo](https://github.com/SaltedDoubao/DesktopMemo) 
 
 ### 贡献流程
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature`)
+1. Fork 本仓库并克隆到本地
+2. 切换到对应分支 (`git switch docs`)
 3. 提交更改 (`git commit -m 'Add some feature'`)
-4. 推送到分支 (`git push origin feature`)
+4. 推送到分支 (`git push origin docs`)
 5. 开启 Pull Request
 
 详细的贡献指南请查看 [contributing.html](https://salteddoubao.github.io/DesktopMemo/contributing.html)
