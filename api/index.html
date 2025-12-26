@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DesktopMemo API 文档概览，包括仓储接口、服务接口、领域模型和枚举类型的完整说明。">
     <title>API 文档概览 - DesktopMemo Docs</title>
 
     <script src="../theme-preload.js"></script>
@@ -40,10 +41,10 @@
             <h3>API 文档</h3>
             <ul>
                 <li><a href="index.html" class="active">API 概览</a></li>
-                <li><a href="repositories.html">1. 仓储接口</a></li>
-                <li><a href="services.html">2. 服务接口</a></li>
-                <li><a href="models.html">3. 领域模型</a></li>
-                <li><a href="enums.html">4. 枚举类型</a></li>
+                <li><a href="repositories.html">仓储接口</a></li>
+                <li><a href="services.html">服务接口</a></li>
+                <li><a href="models.html">领域模型</a></li>
+                <li><a href="enums.html">枚举类型</a></li>
             </ul>
         </nav>
 
@@ -149,11 +150,82 @@ private void ConfigureServices(IServiceCollection services)
                 <h2>⚡ 异步编程规范</h2>
                 <p>所有 I/O 操作必须异步，支持取消令牌。</p>
 
+                <h3>异步操作对比示例</h3>
+                <pre><code class="language-csharp">// ✅ 正确 - 使用 async Task
+public async Task SaveMemoAsync(Memo memo)
+{
+    await _repository.UpdateAsync(memo);
+}
+
+// ❌ 错误 - 使用 async void（仅限事件处理程序）
+public async void SaveMemo(Memo memo)
+{
+    await _repository.UpdateAsync(memo);
+    // 异常无法被捕获，可能导致应用崩溃
+}</code></pre>
+
+                <h3>支持取消令牌</h3>
+                <pre><code class="language-csharp">public async Task&lt;IEnumerable&lt;Memo&gt;&gt; SearchAsync(
+    string keyword,
+    CancellationToken cancellationToken = default)
+{
+    cancellationToken.ThrowIfCancellationRequested();
+
+    var results = await _repository.GetAllAsync(cancellationToken);
+
+    return results.Where(m =>
+        m.Content.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+}</code></pre>
+
+                <h3>UI 线程与后台线程切换</h3>
+                <pre><code class="language-csharp">// 在 ViewModel 中
+private async Task LoadMemosAsync()
+{
+    // 后台线程执行 I/O
+    var memos = await Task.Run(() =&gt; _repository.GetAllAsync());
+
+    // 自动回到 UI 线程更新集合
+    foreach (var memo in memos)
+    {
+        Memos.Add(memo);
+    }
+}</code></pre>
+
                 <h2>🔒 错误处理</h2>
-                <p>异常分层处理：无效操作、权限、IO、未知异常。</p>
+                <p>异常分层处理，按优先级从高到低：</p>
+
+                <h3>4 级异常处理层级</h3>
+                <pre><code class="language-csharp">try
+{
+    await _repository.UpdateAsync(memo);
+}
+catch (InvalidOperationException ex)
+{
+    // 第 1 级：无效操作（如版本冲突）
+    _logService.Log($"操作无效: {ex.Message}", LogLevel.Warning);
+    throw;
+}
+catch (UnauthorizedAccessException ex)
+{
+    // 第 2 级：权限问题
+    _logService.Log($"权限不足: {ex.Message}", LogLevel.Error);
+    throw;
+}
+catch (IOException ex)
+{
+    // 第 3 级：I/O 错误（文件/数据库）
+    _logService.Log($"I/O 错误: {ex.Message}", LogLevel.Error);
+    throw;
+}
+catch (Exception ex)
+{
+    // 第 4 级：未知异常
+    _logService.Log($"未知错误: {ex.Message}", LogLevel.Fatal);
+    throw;
+}</code></pre>
 
                 <hr>
-                <p><strong>最后更新</strong>: 2025-11-15</p>
+                <p><strong>最后更新</strong>: 2025-12-26</p>
 
             </div>
         </main>
