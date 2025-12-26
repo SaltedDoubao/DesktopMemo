@@ -98,6 +98,15 @@
     window.initSharedComponents = function () {
         const basePath = getBasePath();
 
+        // Add skip link if it doesn't exist
+        if (!document.querySelector('.skip-link')) {
+            const skipLink = document.createElement('a');
+            skipLink.href = '#main-content';
+            skipLink.className = 'skip-link';
+            skipLink.textContent = '跳转到主内容';
+            document.body.insertBefore(skipLink, document.body.firstChild);
+        }
+
         // Inject sidebar content if sidebar exists but is empty or has placeholder
         const sidebar = document.querySelector('.sidebar');
         if (sidebar && sidebar.dataset.shared !== 'false') {
@@ -111,6 +120,12 @@
             header.className = 'header';
             header.innerHTML = getHeaderHTML(basePath);
             document.body.insertBefore(header, document.body.firstChild);
+        }
+
+        // Add id to main content if it doesn't exist
+        const mainContent = document.querySelector('main') || document.querySelector('.content');
+        if (mainContent && !mainContent.id) {
+            mainContent.id = 'main-content';
         }
     };
 
