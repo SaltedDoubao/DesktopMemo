@@ -18,6 +18,8 @@ export default defineConfig({
     root: {
       label: "简体中文",
       lang: "zh-CN",
+      // 必须显式指定 root locale 的 link，否则在部分子路由下切换语言会出现 URL 拼接异常
+      link: "/",
       ...zhConfig,
     },
     en: {
@@ -71,4 +73,3 @@ export default defineConfig({
     },
   },
 });
-
