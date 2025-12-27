@@ -3,25 +3,41 @@ layout: home
 
 hero:
   name: DesktopMemo
-  text: Sticky Notes / Memo / Todo
-  tagline: English docs are not available yet.
+  text: Desktop Sticky Notes / Memo / Todo
+  tagline: User Guide + Developer Guide + Architecture & API Documentation
   image:
     src: /logo.svg
     alt: DesktopMemo
   actions:
     - theme: brand
-      text: Go to Chinese Docs
-      link: /
+      text: User Guide
+      link: /en/Guide/README
     - theme: alt
-      text: GitHub
-      link: https://github.com/SaltedDoubao/DesktopMemo
+      text: Developer Guide
+      link: /en/Dev/README
+    - theme: alt
+      text: Architecture & API
+      link: /en/project_structure/README
+
+features:
+  - title: For Users
+    details: Installation & updates, keyboard shortcuts, data backup, FAQ, and privacy & security.
+  - title: For Developers
+    details: Build & release, debugging logs, data migration, contribution guidelines, and architecture index.
+  - title: Static Deployment
+    details: Built with VitePress (Vue) to generate static sites, compatible with GitHub Pages.
 ---
 
-## Status
+## Quick Links
 
-This is a placeholder for future English documentation.
+- [User Guide](/en/Guide/README)
+- [Developer Guide](/en/Dev/README)
+- [Project Architecture](/en/project_structure/README)
+- [API Documentation](/en/api/README)
+- [Contributing Guide](/en/CONTRIBUTING)
+- [MySQL Cloud Storage Integration Spec](/en/mysql-integration)
 
-For now, please use the Chinese documentation:
+## Related Repositories
 
-- [中文文档首页](/)
-
+- GitHub: <https://github.com/SaltedDoubao/DesktopMemo>
+- Releases: <https://github.com/SaltedDoubao/DesktopMemo/releases>
