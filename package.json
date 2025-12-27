@@ -1,0 +1,14 @@
+{
+  "name": "desktopmemo-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev .",
+    "build": "node -e \"require('fs').rmSync('docs',{ recursive: true, force: true })\" && vitepress build .",
+    "preview": "vitepress preview . --port 4173"
+  },
+  "devDependencies": {
+    "mermaid": "^11.12.0",
+    "vitepress": "^1.6.4"
+  }
+}
